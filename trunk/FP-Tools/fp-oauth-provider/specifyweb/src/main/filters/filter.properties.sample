@@ -1,0 +1,7 @@
+oauth.consumer.key = secret
+oauth.consumer.description = Description of OAuth Client
+
+specify.dbdriver = org.hsqldb.jdbc.JDBCDriver
+specify.dburl = jdbc:hsqldb:hsql://localhost
+specify.dbuser = admin
+specify.dbpassword = password

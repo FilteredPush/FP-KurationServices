@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<default_mappings>
+<default_mapping name="eventid" specify_field="10.collectingevent.id" fieldname="id" table_path="10" is_relationship="false" active="true"/>
+<default_mapping name="locationid" specify_field="10,2.locality.id" fieldname="id" table_path="10,2" is_relationship="false" active="true"/>
+<default_mapping name="locality" specify_field="10,2.locality.localityName" fieldname="localityName" table_path="10,2" is_relationship="false" active="true"/>
+<default_mapping name="habitat" specify_field="10.collectingevent.remarks" fieldname="remarks" table_path="10" is_relationship="false" active="true"/>
+<default_mapping name="fieldnumber" specify_field="10.collectingevent.stationFieldNumber" fieldname="stationFieldNumber" table_path="10" is_relationship="false" active="true"/>
+<default_mapping name="verbatimlocality" specify_field="10.collectingevent.verbatimLocality" fieldname="verbatimLocality" table_path="10" is_relationship="false" active="true"/>
+<default_mapping name="verbatimeventdate" specify_field="10.collectingevent.verbatimDate" fieldname="verbatimDate" table_path="10" is_relationship="false" active="true"/>
+<default_mapping name="eventdate" specify_field="10.collectingevent.startDate" fieldname="startDate" table_path="10" is_relationship="false" active="true"/>
+<default_mapping name="collector" specify_field="10,30-collectors.collector.collectors" fieldname="collectors" table_path="10,30-collectors" is_relationship="true" active="true"/>
+<default_mapping name="minimumdepthinmeters" specify_field="10,92.collectingeventattribute.text1" fieldname="text1" table_path="10,92" is_relationship="false" active="true"/>
+<default_mapping name="recordedby" specify_field="10,30-collectors.collector.collectors" fieldname="collectors" table_path="10,30-collectors" is_relationship="true" active="true"/>
+<default_mapping name="maximumdepthinmeters" specify_field="10,92.collectingeventattribute.text2" fieldname="text2" table_path="10,92" is_relationship="false" active="true"/>
+<default_mapping name="minimumelevationinmeters" specify_field="10,2.locality.minElevation" fieldname="minElevation" table_path="10,2" is_relationship="false" active="true"/>
+</default_mappings>

@@ -1,0 +1,4 @@
+oauth.provider.baseURL = http://localhost:8080/oauth-provider/
+oauth.provider.name = OAuthProvider
+oauth.consumer.key = clientId
+oauth.consumer.secret = secret

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<default_mappings>
+<default_mapping name="taxonid" specify_field="4.id" fieldname="id" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="higherclassification" specify_field="4.parent.fullName" fieldname="fullName" table_path="4,4-parent" is_relationship="false" active="true"/>
+<default_mapping name="taxonrank" specify_field="4.77-definitionItem" fieldname="name" table_path="4,77-definitionItem" is_relationship="false" active="true"/>
+<default_mapping name="family" specify_field="4.taxon.Family" fieldname="Family" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="class" specify_field="4.taxon.Class" fieldname="Class" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="subgenus" specify_field="4.taxon.Subgenus" fieldname="Subgenus" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="phylum" specify_field="4.taxon.Phylum" fieldname="Phylum" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="kingdom" specify_field="4.taxon.Kingdom" fieldname="Kingdom" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="order" specify_field="4.taxon.Order" fieldname="Order" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="scientificname" specify_field="4.taxon.fullName" fieldname="fullName" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="scientificnameauthorship" specify_field="4.taxon.author" fieldname="author" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="genus" specify_field="4.taxon.Genus" fieldname="Genus" table_path="4" is_relationship="false" active="true"/>
+<default_mapping name="taxonremarks" specify_field="4.taxon.remarks" fieldname="remarks" table_path="4" is_relationship="false" active="false"/>
+</default_mappings>

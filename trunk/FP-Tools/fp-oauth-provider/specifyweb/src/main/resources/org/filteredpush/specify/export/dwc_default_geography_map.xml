@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<default_mappings>
+<default_mapping name="decimallongitude" specify_field="2.locality.longitude1" fieldname="longitude1" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="georeferencedby" specify_field="2,123-geoCoordDetails,5-geoRefDetBy.agent.geoRefDetBy" fieldname="geoRefDetBy" table_path="2,123-geoCoordDetails,5-geoRefDetBy" is_relationship="false" active="false"/>
+<default_mapping name="verbatimelevation" specify_field="2.locality.verbatimElevation" fieldname="verbatimElevation" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="maximumelevationinmeters" specify_field="2.locality.maxElevation" fieldname="maxElevation" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="georeferencesources" specify_field="2,123-geoCoordDetails.geocoorddetail.source" fieldname="source" table_path="2,123-geoCoordDetails" is_relationship="true" active="false"/>
+<default_mapping name="georeferenceremarks" specify_field="2,123-geoCoordDetails.geocoorddetail.geoRefRemarks" fieldname="geoRefRemarks" table_path="2,123-geoCoordDetails" is_relationship="false" active="false"/>
+<default_mapping name="country" specify_field="2,3.geography.Country" fieldname="Country" table_path="2,3" is_relationship="false" active="true"/>
+<default_mapping name="habitat" specify_field="2.locality.remarks" fieldname="remarks" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="decimallatitude" specify_field="2.locality.latitude1" fieldname="latitude1" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="county" specify_field="2,3.geography.County" fieldname="County" table_path="2,3" is_relationship="false" active="true"/>
+<default_mapping name="globaluniqueidentifier" specify_field="2.locality.guid" fieldname="guid" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="stateprovince" specify_field="2,3.geography.State" fieldname="State" table_path="2,3" is_relationship="false" active="true"/>
+<default_mapping name="georeferenceverificationstatus" specify_field="2,123-geoCoordDetails.geocoorddetail.geoRefVerificationStatus" fieldname="geoRefVerificationStatus" table_path="2,123-geoCoordDetails" is_relationship="false" active="false"/>
+<default_mapping name="island" specify_field="2,124-localityDetails.localitydetail.island" fieldname="island" table_path="2,124-localityDetails" is_relationship="false" active="true"/>
+<default_mapping name="waterbody" specify_field="2,124-localityDetails.localitydetail.waterBody" fieldname="waterBody" table_path="2,124-localityDetails" is_relationship="false" active="true"/>
+<default_mapping name="geodeticdatum" specify_field="2.locality.datum" fieldname="datum" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="locationremarks" specify_field="2.locality.remarks" fieldname="remarks" table_path="2" is_relationship="false" active="false"/>
+<default_mapping name="islandgroup" specify_field="2,124-localityDetails.localitydetail.islandGroup" fieldname="islandGroup" table_path="2,124-localityDetails" is_relationship="false" active="true"/>
+<default_mapping name="georeferenceprotocol" specify_field="2,123-geoCoordDetails.geocoorddetail.protocol" fieldname="protocol" table_path="2,123-geoCoordDetails" is_relationship="false" active="true"/>
+<default_mapping name="continent" specify_field="2,3.geography.Continent" fieldname="Continent" table_path="2,3" is_relationship="false" active="true"/>
+<default_mapping name="locality" specify_field="2.locality.localityName" fieldname="localityName" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="coordinateuncertaintyinmeters" specify_field="2.locality.latLongAccuracy" fieldname="latLongAccuracy" table_path="2" is_relationship="false" active="true"/>
+<default_mapping name="minimumelevationinmeters" specify_field="2.locality.minElevation" fieldname="minElevation" table_path="2" is_relationship="false" active="true"/>
+</default_mappings>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<default_mappings>
+<default_mapping name="identificationid" specify_field="9.id" fieldname="id" table_path="9" is_relationship="false" active="true"/>
+<default_mapping name="occurrenceid" specify_field="9.collectionObject,1.id" fieldname="id" table_path="9,1" is_relationship="false" active="true"/>
+<default_mapping name="taxonid" specify_field="9.4-taxon.id" fieldname="id" table_path="9,4-taxon" is_relationship="false" active="true"/>
+<default_mapping name="taxonrank" specify_field="9.4-taxon,77-definitionItem" fieldname="name" table_path="9,4-taxon,77-definitionItem" is_relationship="false" active="true"/>
+<default_mapping name="higherclassification" specify_field="9.4.parent.fullName" fieldname="fullName" table_path="9,4-taxon,4-parent" is_relationship="false" active="true"/>
+<default_mapping name="gci_botanistID" specify_field="9.determination.determiner.agentId" fieldname="agentId" table_path="9,5-determiner" is_relationship="false" active="true"/>
+<default_mapping name="identificationreferences" specify_field="9.determination,38-determinationCitations.determinationcitation.determinationCitations" fieldname="determinationCitations" table_path="9,38-determinationCitations" is_relationship="true" active="true"/>
+<default_mapping name="identificationqualifier" specify_field="9.determination.qualifier" fieldname="qualifier" table_path="9" is_relationship="false" active="true"/>
+<default_mapping name="identificationremarks" specify_field="9.determination.remarks" fieldname="remarks" table_path="9" is_relationship="false" active="true"/>
+<default_mapping name="dateidentified" specify_field="9.determination.determinedDate" fieldname="determinedDate" table_path="9" is_relationship="false" active="true"/>
+<default_mapping name="typestatus" specify_field="9.determination.typeStatusName" fieldname="typeStatusName" table_path="9" is_relationship="false" active="true"/>
+<default_mapping name="class" specify_field="9.determination,4.taxon.Class" fieldname="Class" table_path="9,4-taxon" is_relationship="false" active="true"/>
+<default_mapping name="family" specify_field="9.determination,4.taxon.Family" fieldname="Family" table_path="9,4-taxon" is_relationship="false" active="true"/>
+<default_mapping name="genus" specify_field="9.determination,4.taxon.Genus" fieldname="Genus" table_path="9,4-taxon" is_relationship="false" active="true"/>
+<default_mapping name="subgenus" specify_field="4.taxon.Subgenus" fieldname="Subgenus" table_path="9,4-taxon" is_relationship="false" active="true"/>
+<default_mapping name="scientificname" specify_field="9.determination,4-preferredTaxon.taxon.fullName" fieldname="fullName" table_path="9,4-taxon" is_relationship="false" active="true"/>
+</default_mappings>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<default_mappings>
+<default_mapping name="gci_botanistID" specify_field="5.agentId" fieldname="agentId" table_path="5" is_relationship="false" active="true"/>
+<default_mapping name="gci_labelName" specify_field="5.lastName" fieldname="lastName" table_path="5" is_relationship="false" active="true"/>
+<default_mapping name="gci_startDate" specify_field="5.dateofBirth" fieldname="dateOfBirth" table_path="5" is_relationship="false" active="true"/>
+<default_mapping name="gci_endDate" specify_field="5.dateOfDeath" fieldname="dateOfDeath" table_path="5" is_relationship="false" active="true"/>
+<default_mapping name="gci_datesType" specify_field="5.dateType" fieldname="dateType" table_path="5" is_relationship="false" active="true"/>
+</default_mappings>

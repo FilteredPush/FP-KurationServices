@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="symbiota" default="deploy">
+	<property file="build.properties"/>
+
+	<property name="src.dir" value="."/>
+
+	<target name="deploy">
+		<copy todir="${includes.dir}">
+			<fileset dir="${src.dir}">
+			    <exclude name=".buildpath"/>
+			    <exclude name=".project"/>
+			    <exclude name=".settings/"/>
+				<exclude name="build.xml"/>
+				<exclude name="build.properties"/>
+				<exclude name="readme.txt"/>
+				<exclude name="license.txt"/>
+			</fileset>
+		</copy>
+	</target>
+	
+</project>
