@@ -4,8 +4,12 @@ import java.util.HashMap;
 
 public final class SpecimenRecordTypeConf {
 
+    private final Integer lock = 1;
+
 	private SpecimenRecordTypeConf() {
-		initialize();
+        synchronized (lock) {
+		    initialize();
+        }
 	}
 
 	private void initialize(){

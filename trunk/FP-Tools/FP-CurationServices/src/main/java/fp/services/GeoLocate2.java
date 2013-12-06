@@ -1,11 +1,10 @@
 package fp.services;
 
-import fp.util.CurationComment;
-import fp.util.CurationStatus;
-import fp.util.CurrationException;
-import fp.util.GEOUtil;
+import fp.util.*;
+import org.apache.axis.utils.ByteArray;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -17,20 +16,12 @@ import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 public class GeoLocate2 implements IGeoRefValidationService {
 
     private boolean useCache;
-
-    public void setCacheFile(String file) throws CurrationException {
-		initializeCacheFile(file);
-		importFromCache();
-        this.useCache = true;
-	}
+    private Cache cache;
 	
 	/*
 	 * If latitude or longitude is null, it means such information is missing in the original records
@@ -42,16 +33,17 @@ public class GeoLocate2 implements IGeoRefValidationService {
 		correctedLatitude = -1;
 		correctedLongitude = -1;
 		comment = "";
+        log = new LinkedList<List>();
 
 		try {
 			String key = constructCachedMapKey(country,stateProvince,county,locality);
 			double foundLat;
 			double foundLng;
-			if(useCache && cachedCoordinates.containsKey(key)){
+			if (useCache && cachedCoordinates.containsKey(key)){
 				String[] coordinates = cachedCoordinates.get(key).split(";");
 				foundLat = Double.valueOf(coordinates[0]);
 				foundLng = Double.valueOf(coordinates[1]);
-			}else{
+            } else {
 				Vector<Double> coordinatesInfo = queryGeoLocate(country, stateProvince, county, locality);
 				
 				if(coordinatesInfo == null || coordinatesInfo.size()<2){
@@ -153,11 +145,25 @@ public class GeoLocate2 implements IGeoRefValidationService {
 		}		
 	}
 
+    @Override
+    public List<List> getLog() {
+        return log;
+    }
+
     public void setUseCache(boolean use) {
         this.useCache = use;
         cachedCoordinates = new HashMap<String,String>();
         newFoundCoordinates = new Vector<String>();
+        if (use) {
+            cache = new GeoRefDBCache();
+        }
     }
+
+    public void setCacheFile(String file) throws CurrationException {
+		initializeCacheFile(file);
+		importFromCache();
+        this.useCache = true;
+	}
 
     public String getServiceName(){
 		return serviceName;
@@ -222,56 +228,99 @@ public class GeoLocate2 implements IGeoRefValidationService {
 		return country+" "+state+" "+county+" "+locality;
 	}	
 
-	private Vector<Double> queryGeoLocate(String country, String stateProvience, String county, String locality) throws CurrationException {
-		org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
-        httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
-        httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
+	private Vector<Double> queryGeoLocate(String country, String stateProvince, String county, String locality) throws CurrationException {
 
-        List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-		parameters.add(new BasicNameValuePair("Country", country));
-        parameters.add(new BasicNameValuePair("State", stateProvience));
-        parameters.add(new BasicNameValuePair("County", county));
-        parameters.add(new BasicNameValuePair("LocalityString", locality));
-        parameters.add(new BasicNameValuePair("FindWaterbody", "False"));
-        parameters.add(new BasicNameValuePair("HwyX", "False"));
-		
-		try {
-            HttpResponse resp;
-            HttpPost httpPost = new HttpPost(url);
-            httpPost.setEntity(new UrlEncodedFormEntity(parameters));
+        Reader stream = null;
+        Document document = null;
+        long starttime = System.currentTimeMillis();
 
-            resp = httpclient.execute(httpPost);
-            if (resp.getStatusLine().getStatusCode() != 200) {
-				throw new CurrationException("GeoLocateService failed to send request to Geolocate for "+resp.getStatusLine().getStatusCode());
-			}				
-            InputStream reponseStream = resp.getEntity().getContent();
-			
-			//parse the response
-		    SAXReader reader = new SAXReader();
+        List<String> skey = new ArrayList<String>(5);
+        skey.add(country);
+        skey.add(stateProvince);
+        skey.add(county);
+        skey.add(locality);
+        if (useCache && cache != null && cache.lookup(skey) != null) {
+            String x = cache.lookup(skey);
+            stream = new StringReader(x);
+        } else {
+            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
+            httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
+            httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
+
+            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+            parameters.add(new BasicNameValuePair("Country", country));
+            parameters.add(new BasicNameValuePair("State", stateProvince));
+            parameters.add(new BasicNameValuePair("County", county));
+            parameters.add(new BasicNameValuePair("LocalityString", locality));
+            parameters.add(new BasicNameValuePair("FindWaterbody", "False"));
+            parameters.add(new BasicNameValuePair("HwyX", "False"));
+
+            try {
+                HttpResponse resp;
+                HttpPost httpPost = new HttpPost(url);
+                httpPost.setEntity(new UrlEncodedFormEntity(parameters));
+
+                resp = httpclient.execute(httpPost);
+                if (resp.getStatusLine().getStatusCode() != 200) {
+                    throw new CurrationException("GeoLocateService failed to send request to Geolocate for "+resp.getStatusLine().getStatusCode());
+                }
+                BufferedReader br = new BufferedReader(new InputStreamReader(resp.getEntity().getContent()));
+                StringBuilder sb = new StringBuilder();
+                while (br.ready()) {
+                    sb.append(br.readLine());
+                }
+                stream = new StringReader(sb.toString());
+                httpPost.releaseConnection();
+
+                if (useCache && cache != null) {
+                    skey.add(sb.toString());
+                    cache.insert(skey);
+                }
+            } catch (ClientProtocolException e) {
+                throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
+            } catch (UnsupportedEncodingException e) {
+                throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
+            } catch (IOException e) {
+                throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
+            }
+        }
+
+        SAXReader reader = new SAXReader();
+        HashMap<String,String> map = new HashMap<String,String>();
+        map.put( "geo", defaultNameSpace);
+        reader.getDocumentFactory().setXPathNamespaceURIs(map);
+        try {
+            document = reader.read(stream);
+        } catch (DocumentException e) {
+            throw new CurrationException("GeoLocateService failed to get the coordinates information by parsing the response from GeoLocate service at: "+url+" for: "+e.getMessage());
+        }
+
+        Node latitudeNode = document.selectSingleNode("/geo:Georef_Result_Set/geo:ResultSet[1]/geo:WGS84Coordinate/geo:Latitude");
+        Node longitudeNode = document.selectSingleNode("/geo:Georef_Result_Set/geo:ResultSet[1]/geo:WGS84Coordinate/geo:Longitude");
 		    
-		    HashMap<String,String> map = new HashMap<String,String>();
-		    map.put( "geo", defaultNameSpace);		    
-		    reader.getDocumentFactory().setXPathNamespaceURIs(map);
-		    
-		    Document document = reader.read(reponseStream);		    
-		    Node latitudeNode = document.selectSingleNode("/geo:Georef_Result_Set/geo:ResultSet[1]/geo:WGS84Coordinate/geo:Latitude");
-		    Node longitudeNode = document.selectSingleNode("/geo:Georef_Result_Set/geo:ResultSet[1]/geo:WGS84Coordinate/geo:Longitude");
-		    
-		    if(latitudeNode == null || longitudeNode == null){
-		    	//can't find the coordinates in the first result set which has the highest confidence 
-		    	return null;
-		    }
-		    
-		    Vector<Double> coordinatesInfo = new Vector<Double>();
-		    coordinatesInfo.add(Double.valueOf(latitudeNode.getText()));
-		    coordinatesInfo.add(Double.valueOf(longitudeNode.getText()));	
-		    return coordinatesInfo;
-		} catch (IOException e) {
-			throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
-		} catch (DocumentException e) {
-			throw new CurrationException("GeoLocateService failed to get the coordinates information by parsing the response from GeoLocate service at: "+url+" for: "+e.getMessage());
-		}		
-	}		
+        if(latitudeNode == null || longitudeNode == null){
+            //can't find the coordinates in the first result set which has the highest confidence
+            List l = new LinkedList();
+            l.add(this.getClass().getSimpleName());
+            l.add(starttime);
+            l.add(System.currentTimeMillis());
+            l.add("POST");
+            log.add(l);
+            return null;
+        }
+
+        Vector<Double> coordinatesInfo = new Vector<Double>();
+        coordinatesInfo.add(Double.valueOf(latitudeNode.getText()));
+        coordinatesInfo.add(Double.valueOf(longitudeNode.getText()));
+        List l = new LinkedList();
+        l.add(this.getClass().getSimpleName());
+        l.add(starttime);
+        l.add(System.currentTimeMillis());
+        l.add("POST");
+        log.add(l);
+        return coordinatesInfo;
+	}
+
 	
 	private File cacheFile = null;
 
@@ -280,7 +329,7 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	private double correctedLongitude;
 	private String comment = "";	
 //	private boolean isCoordinatesFound;
-
+    private List<List> log = new LinkedList<List>();
 	
 	private HashMap<String, String> cachedCoordinates;
 	private Vector<String> newFoundCoordinates;
@@ -288,6 +337,8 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	
 	private final String serviceName = "GEOLocate";
 	
-	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
+	//private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
+    //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
+    private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
 	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
 }
