@@ -12,10 +12,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.CoreConnectionPNames;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 
 /**
@@ -43,6 +40,7 @@ public class IPNIService implements IScientificNameValidationService {
 		IPNIlsid = null;
 		comment = "";
 		curationStatus = CurationComment.UNABLE_CURATED;
+        log = new LinkedList<List>();
 
 		//try to find information from the cached file
 		//if failed, then access IPNI service or even GNI service
@@ -210,6 +208,11 @@ public class IPNIService implements IScientificNameValidationService {
 		}
 	}
 
+    @Override
+    public List<List> getLog() {
+        return log;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
     public void setUseCache(boolean use) {
         this.useCache = use;
         cachedScientificName = new HashMap<String,HashMap<String,String>>();
@@ -286,6 +289,7 @@ public class IPNIService implements IScientificNameValidationService {
 		
 	private String simplePlantNameSearch(String taxon, String author) throws CurrationException {
 		String outputFormat = "delimited-minimal";
+        long starttime = System.currentTimeMillis();
 		
         HttpClient httpclient = new DefaultHttpClient();
         httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
@@ -335,6 +339,13 @@ public class IPNIService implements IScientificNameValidationService {
 				strLine = responseReader.readLine();
 			}
 			responseReader.close();
+            httpPost.releaseConnection();
+            List l = new LinkedList();
+            l.add(this.getClass().getSimpleName());
+            l.add(starttime);
+            l.add(System.currentTimeMillis());
+            l.add(httpPost.toString());
+            log.add(l);
 			return id;
 		} catch (IOException e) {
 			throw new CurrationException("IPNIService failed to access IPNI service for "+e.getMessage());
@@ -400,6 +411,7 @@ public class IPNIService implements IScientificNameValidationService {
 	private HashMap<String, HashMap<String,String>> cachedScientificName;
 	private Vector<String> newFoundScientificName;
 	private static final String ColumnDelimiterInCacheFile = "\t";
+    private List<List> log = new LinkedList<List>();
 
 	private CurationStatus curationStatus;
 	private String correctedScientificName = null;
@@ -408,10 +420,12 @@ public class IPNIService implements IScientificNameValidationService {
 	private String comment = "";
 	
 	private String IPNISourceId = null;	
-	
+
+
 	private final static String IPNIurl = "http://www.ipni.org/ipni/simplePlantNameSearch.do";
+    //private final static String IPNIurl = "http://lore.genomecenter.ucdavis.edu/cache/ipni.php";
+    //private final static String IPNIurl = "http://localhost/cache/ipni.php";
 	private final static String ipniLSIDPrefix = "urn:lsid:ipni.org:names:";
 	private final String serviceName = "IPNI";
-
 
 }

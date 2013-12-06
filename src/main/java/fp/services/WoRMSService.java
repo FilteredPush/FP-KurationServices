@@ -9,6 +9,7 @@ import org.marinespecies.aphia.v1_0.AphiaRecord;
 import java.io.*;
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -204,6 +205,11 @@ public class WoRMSService implements IScientificNameValidationService{
 			throw new CurrationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
 		}		
 	}
+
+    @Override
+    public List<List> getLog() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 
     public void setUseCache(boolean use) {
         this.useCache = use;

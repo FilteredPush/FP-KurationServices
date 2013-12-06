@@ -356,6 +356,11 @@ public class NewGeoLocate implements IGeoRefValidationService {
 	}
 
     @Override
+    public List<List> getLog() {
+        return null;
+    }
+
+    @Override
     public void setUseCache(boolean use) {
         this.useCache = use;
         cachedCoordinates = new HashMap<String,String>();

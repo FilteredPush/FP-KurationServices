@@ -330,6 +330,11 @@ public class GBIFService implements IScientificNameValidationService{
        }
    }
 
+    @Override
+    public List<List> getLog() {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
     public void setUseCache(boolean use) {
         this.useCache = use;
         cachedScientificName = new HashMap<String,HashMap<String,String>>();
