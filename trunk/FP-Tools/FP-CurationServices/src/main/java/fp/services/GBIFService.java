@@ -16,6 +16,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import org.apache.http.client.HttpClient;
+
 import java.io.*;
 import java.util.*;
 
@@ -421,7 +423,9 @@ public class GBIFService implements IScientificNameValidationService{
    private String checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, boolean useCanonical) throws CurrationException {
        String outputFormat = "delimited-minimal";
        
-       org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
+       //org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
+       //DefaultHttpClient httpclient = new DefaultHttpClient();
+       HttpClient httpclient = new DefaultHttpClient();
        httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
        httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
 
