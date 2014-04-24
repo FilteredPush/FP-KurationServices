@@ -36,7 +36,12 @@ public final class SpecimenRecordTypeConf {
             {"CollectionCode","oaiId","String"},
            // {"DatasetName","datasetName","String"},
             {"Id", "id", "String"},
-            {"IdentificationTaxon", "IdentificationTaxon", "String"}
+            {"IdentificationTaxon", "IdentificationTaxon", "String"},
+            {"EventDate", "eventDate", "String"},
+            {"Modified", "modified", "String"},
+            {"StartDayOfYear", "startDayOfYear", "String"},
+            {"VerbatimEventDate", "verbatimEventDate", "String"}
+
         };
 
         //Type[] typeArray = new Type[bic.length];

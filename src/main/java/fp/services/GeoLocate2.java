@@ -1,7 +1,6 @@
 package fp.services;
 
 import fp.util.*;
-import org.apache.axis.utils.ByteArray;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -337,8 +336,7 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	
 	private final String serviceName = "GEOLocate";
 	
-	//private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
+	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
     //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
-    private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
 	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
 }
