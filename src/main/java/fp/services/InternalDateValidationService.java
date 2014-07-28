@@ -8,9 +8,17 @@ import org.joda.time.DateMidnight;
 import org.joda.time.IllegalFieldValueException;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -20,14 +28,21 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     private boolean useCache;
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
-         comment = "";
+        comment = "";
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
-           if(checkWithAuthor(consesEventDate, collector)){
-               curationStatus = CurationComment.CORRECT;
-               comment = comment + "| eventDate is valid after checking internal inconsistency";
-               correctEventDate = consesEventDate;
-           }
+            if (collector == null || collector == ""){
+                comment = comment + " | collector name is not available";
+            }else{
+                // can switch between using old Harvard list or new Solr dataset
+                boolean inAuthorLife = false;
+                if (UsingSolr){
+                    inAuthorLife = checkWithAuthorSolr(consesEventDate, collector);
+                }
+               else{
+                    inAuthorLife = checkWithAuthorHarvard(consesEventDate, collector);
+                }
+            }
         }
     }
 
@@ -41,7 +56,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         importFromCache();
     }
 
-	public DateMidnight getCorrectedDate() {
+	public String getCorrectedDate() {
 		return correctEventDate;
 	}
 	
@@ -127,43 +142,56 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         DateMidnight constructedDate = null;
         DateTimeFormatter format = ISODateTimeFormat.date();
 
+        //get two eventDate first
+
         try{
             parsedEventDate = DateMidnight.parse(eventDate, format);
         } catch(IllegalFieldValueException e){
             //can't parse eventDate
-            System.out.println("can't parse eventDate");
+            //System.out.println("can't parse eventDate");
+            comment = comment + " | Can't parse eventDate";
             parsedEventDate=null;
+        } catch(NullPointerException e){
+            System.out.println("eventDate = " + eventDate);
+            comment = comment + " | eventDate is null?";
         }
 
         try{
-            //first convert string to int
             int yearInt = Integer.parseInt(year);
             int monthInt = Integer.parseInt(month);
             int dayInt = Integer.parseInt(day);
             constructedDate = new DateMidnight(yearInt, monthInt, dayInt);
         }catch (NumberFormatException e) {
            // System.out.println("unable to cast date string to int = " + e);
-            System.out.println("can't construct eventDate from atomic fields: string casting error");
+            //System.out.println("can't construct eventDate from atomic fields: string casting error");
+            comment = comment +" | can't construct eventDate from atomic fields: string casting error";
             constructedDate = null;
         }catch (IllegalFieldValueException e) {
             //can't construct eventDate
-            System.out.println("can't construct eventDate from atomic fields: parsing error");
+            //System.out.println("can't construct eventDate from atomic fields: parsing error");
+            comment = comment +" | can't construct eventDate from atomic fields: parsing error";
             constructedDate = null;
         }
 
+        //second, compare in different cases
         if (parsedEventDate == null && constructedDate == null){
             curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-            comment = "Can't get a valid eventDate from the record";
+            comment = " | Can't get a valid eventDate from the record";
             return null;
         }else if (parsedEventDate != null && constructedDate == null){
             if (!parsedEventDate.toString(format).equals(eventDate)) {
                 curationStatus = CurationComment.CURATED;
-                comment = "eventDate:" + eventDate + " has been formatted to ISO format: " + parsedEventDate.toString(format) +".";
-            }  //todo: status will be overwritten if inconsistent, needs to be preserved?
+                comment = comment + " | eventDate:" + eventDate + " has been formatted to ISO format: " + parsedEventDate.toString(format) +".";
+                correctEventDate=parsedEventDate.toString(format);
+            }else{
+                comment = comment + " | eventDate is in ISO format";
+            }
+            //todo: status will be overwritten if inconsistent, needs to be preserved?
         }else if (parsedEventDate == null && constructedDate != null){
             curationStatus = CurationComment.Filled_in;
-            comment = "EventDate is constructed from atomic fileds";
+            comment = comment + " | EventDate is constructed from atomic fields";
             parsedEventDate = constructedDate;
+            correctEventDate=parsedEventDate.toString(format);
         }else{
             //if two dates don't conform, use startDayOfYear to distinguish
             if(!parsedEventDate.isEqual(constructedDate)){
@@ -173,14 +201,17 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                         parsedEventDate = constructedDate;
                     }else if (parsedEventDate.dayOfYear().get() != startDayInt){
                         curationStatus = CurationComment.UNABLE_CURATED;
-                        comment = comment + "\nInternal inconsistent: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.";
+                        comment = comment + " | Internal inconsistent: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.";
                         return null;
                     }
                 }else{
                     curationStatus = CurationComment.UNABLE_CURATED;
-                    comment = comment + "\nInternal inconsistent: EventDate:" + parsedEventDate.toString(format) + " doesn't conform to constructed date:" + constructedDate;
+                    comment = comment + " | Internal inconsistent: EventDate:" + parsedEventDate.toString(format) + " doesn't conform to constructed date:" + constructedDate;
                     return null;
                 }
+            }else{
+                curationStatus = CurationComment.CORRECT;
+                comment = comment + " | eventDate is consistent with atomic fields";
             }
         }
 
@@ -188,22 +219,27 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         try{
             if (parsedEventDate.isAfter(DateMidnight.parse(modified.split(" ")[0], format)) ) {
                 curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + "\nInternal inconsistent: EventDate:" + parsedEventDate.toString(format) + " occurs after modified date:" + DateMidnight.parse(modified, format) + ".";
+                comment = comment + " | Internal inconsistent: EventDate:" + parsedEventDate.toString(format) + " occurs after modified date:" + DateMidnight.parse(modified.split(" ")[0], format) + ".";
                 return null;
+            } else{
+                comment = comment + " | eventDate is consistent with modified date";
             }
+
         }catch(IllegalFieldValueException e) {
             //can't format modified date
+            comment = comment + " | cannot parse modified date";
         }
 
         return parsedEventDate;
     }
 
-    private Boolean checkWithAuthor(DateMidnight eventDate, String collector){
+    private Boolean checkWithAuthorHarvard(DateMidnight eventDate, String collector){
 
         String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
         String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
         Model model = ModelFactory.createDefaultModel();
+        //System.out.println("url = " + url);
         model.read(url);
         //model.write(System.out);
         //use object to find subject
@@ -247,18 +283,53 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             comment = "Internal inconsistent: eventDate:" + eventDate + " doesn't lie within the life span of collector:" + collector;
             return false;
         }else if (birthDate == null || deathDate == null){
-            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+            //curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
             comment = comment + " | Unable to get the Life span data of collector:" + collector;
             return false;
-        }else return true;
+        }else{
+            curationStatus = CurationComment.CORRECT;
+            comment = comment + " | life span check is OK";
+            return true;
+        }
+    }
+
+    private Boolean checkWithAuthorSolr(DateMidnight eventDate, String collector){
+        String url = "http://fp1.acis.ufl.edu:8983/solr/biologist" ;
+        String birthLabel = "_birth_date_index";
+        String deathLabel = "_death_date_index";
+
+        try {
+            SolrServer server = new HttpSolrServer(url);
+            SolrQuery query = new SolrQuery();
+            query.setQuery( "_biologist_name_index:\"" + collector + "\"");// + "AND _birth_date_index:*" );
+            query.setFields(birthLabel, deathLabel);  //for efficiency
+            // query.setQuery("*:*");
+            QueryResponse rsp = server.query( query );
+            SolrDocumentList docs = rsp.getResults();
+            Iterator it = docs.iterator();
+            while (it.hasNext()){
+                //System.out.println(it.next().toString());
+                SolrDocument doc = (SolrDocument)it.next();
+                String birth = doc.get(birthLabel).toString();
+                String death = doc.get(deathLabel).toString();
+                //todo: handle multiple results
+            }
+
+        } catch (SolrServerException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        //todo: code to compare birth and death of eventDate
+        return true;
     }
 	
 	
 	private File cacheFile = null;
+    private boolean UsingSolr = false;
 
 	private CurationStatus curationStatus;
 	private String comment = "";
-    private DateMidnight correctEventDate;
+    private String correctEventDate;
 	
 	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
 	private static final String ColumnDelimiterInCacheFile = "\t";

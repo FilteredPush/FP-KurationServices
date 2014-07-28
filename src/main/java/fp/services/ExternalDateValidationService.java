@@ -3,16 +3,22 @@ package fp.services;
 import com.mongodb.*;
 import com.mongodb.util.JSON;
 import fp.util.*;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.joda.time.DateMidnight;
+import org.joda.time.Days;
+import org.joda.time.IllegalFieldValueException;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
 import java.io.*;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 //todo: cache machanism is not finished
 public class ExternalDateValidationService implements IExternalDateValidationService {
@@ -21,7 +27,15 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
 
 
     public void validateDate(DateMidnight eventDate, String collector, String latitude, String longitude) {
-        HashSet<HashMap<String, String>> resultSet = queryMongodb(collector);
+        HashSet<HashMap<String, String>> resultSet;
+        // can switch between querying mongoDB or Solr index
+        if (useSolr){
+            resultSet = querySolr(collector, eventDate);
+        }
+        else {
+            resultSet = queryMongodb(collector, eventDate);
+        }
+
         if (resultSet != null){
              checkForOutlier(eventDate, latitude, longitude, resultSet);
         }
@@ -104,7 +118,21 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
 
 
     //////////////////////////////////
-    private HashSet<HashMap<String, String>> queryMongodb (String collector) {
+
+    private DateMidnight parseEventDate(String eventDate){
+        DateMidnight eventDateInReference = null;
+        DateTimeFormatter format = ISODateTimeFormat.date();
+        try{
+            eventDateInReference = DateMidnight.parse(eventDate, format);
+        } catch(IllegalFieldValueException e){
+            //can't parse eventDate
+            System.out.println("can't parse eventDate"+ eventDate + "in reference record");
+            eventDateInReference=null;
+        }
+        return eventDateInReference;
+    }
+
+    private HashSet<HashMap<String, String>> queryMongodb (String collector, DateMidnight eventDate) {
         HashSet<HashMap<String, String>> resultSet = null;
 
         String mongodbQuery = "{recordBy:\"" + collector + "\"}";
@@ -125,28 +153,66 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
                 System.out.println("external validation Without query!");
             }
 
-            do {
+            while (cursor.hasNext()) {
                 DBObject dbo = cursor.next();
-                HashMap<String, String> outMap = new SpecimenRecord();
-
-                for (String key : dbo.keySet()) {
-                    if (key.contains("eventDate")) outMap.put("eventDate", dbo.get(key).toString());
-                    else{
-                        //there is no point of putting coordinates in if eventDate is missing
-                        if (outMap.keySet().contains("eventDate")){
-                            if (key.contains("decimalLatitude")) outMap.put("decimalLatitude", dbo.get(key).toString());
-                            else if (key.contains("decimalLongitude")) outMap.put("decimalLongitude", dbo.get(key).toString());
-                        }
+                // first check whether the record has eventDate or not
+                if (dbo.keySet().contains("eventDate")){
+                    //second, check whether the reference record is close to the eventDate of the validating record
+                    DateMidnight eventDateInReference = parseEventDate(dbo.get("eventDate").toString());
+                    if (!eventDateInReference.equals(null) && Math.abs(Days.daysBetween(eventDate, eventDateInReference).getDays()) < temporalDistanceThreshold) {
+                        HashMap<String, String> outMap = new SpecimenRecord();
+                        outMap.put("eventDate", dbo.get("eventDate").toString());
+                        outMap.put("decimalLatitude", dbo.get("decimalLatitude").toString());
+                        outMap.put("decimalLongitude", dbo.get("decimalLongitude").toString());
+                        resultSet.add(outMap);
                     }
                 }
-                resultSet.add(outMap);
-            } while (cursor.hasNext());
+            }
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
         if (cursor != null) cursor.close();
+        return resultSet;
+    }
+
+    private HashSet<HashMap<String, String>> querySolr (String collector , DateMidnight eventDate) {
+        HashSet<HashMap<String, String>> resultSet = null;
+        String url = "http://fp1.acis.ufl.edu:8983/solr/biologist" ;
+        String dateLabel = "eventDate";
+        String latitudeLabel = "decimalLatitude";
+        String longitudeLabel = "decimalLongitude";
+
+        try {
+            SolrServer server = new HttpSolrServer(url);
+            SolrQuery query = new SolrQuery();
+            query.setQuery( "recordedBy:\"" + collector + "\"");
+            query.setFields(dateLabel, latitudeLabel, longitudeLabel);  //for efficiency
+
+            QueryResponse rsp = server.query( query );
+            SolrDocumentList docs = rsp.getResults();
+            Iterator it = docs.iterator();
+            while (it.hasNext()){
+                HashMap<String, String> outMap = new SpecimenRecord();
+                SolrDocument doc = (SolrDocument)it.next();
+
+                // first check whether the record has eventDate or not
+                if (doc.keySet().contains(dateLabel)){
+                    //second, check whether the reference record is close to the eventDate of the validating record
+                    String date = doc.get(dateLabel).toString();
+                    DateMidnight eventDateInReference = parseEventDate(doc.get(dateLabel).toString());
+                    if (!eventDateInReference.equals(null) && Math.abs(Days.daysBetween(eventDate, eventDateInReference).getDays()) < temporalDistanceThreshold) {
+                        outMap.put("eventDate", date);
+                        outMap.put("decimalLatitude", doc.get(latitudeLabel).toString());
+                        outMap.put("decimalLongitude", doc.get(longitudeLabel).toString());
+                        resultSet.add(outMap);
+                    }
+                }
+            }
+        } catch (SolrServerException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
         return resultSet;
     }
 
@@ -186,6 +252,11 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
     //private String _mongodbQuery = "{year:\"1898\"}";
     private DBCursor cursor = null;
     private int totalRecords = 0;
+    private boolean useSolr = false;
+
+    // the range of date interval for querying reference record
+    // assume the record occurs 7 days after/before the eventDate, no point to use as reference
+    private int referenceEventDateRange = 7;
 
     private final int temporalDistanceThreshold = 7; //in day
     private final int travelDistanceThreshold = 1000; //in km/day

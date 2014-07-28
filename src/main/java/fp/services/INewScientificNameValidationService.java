@@ -1,12 +1,20 @@
 package fp.services;
 
-public interface IAdvancedScientificNameValidationService extends ICurationWithFileService {
+import fp.util.CurationStatus;
+
+public interface INewScientificNameValidationService {
 	
 	public void validateScientificName(String scientificName, String author);
 	
 	public String getCorrectedScientificName();
 	
 	public String getCorrectedAuthor();
+
+    public CurationStatus getCurationStatus();
+
+    public String getComment();
+
+    public String getServiceName();
 	
 	//public String getLSID();
 

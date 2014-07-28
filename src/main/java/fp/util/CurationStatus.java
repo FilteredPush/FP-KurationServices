@@ -10,7 +10,7 @@ package fp.util;
 public class CurationStatus {
     private String status;
 
-    CurationStatus(String msg){
+    public CurationStatus(String msg){
         status = msg;
     }
 

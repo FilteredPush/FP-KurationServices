@@ -1,21 +1,24 @@
 package fp.services;
 
 import fp.util.*;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.CoreConnectionPNames;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 
+import org.nocrala.tools.gis.data.esri.shapefile.ShapeFileReader;
+import org.nocrala.tools.gis.data.esri.shapefile.ValidationPreferences;
+import org.nocrala.tools.gis.data.esri.shapefile.exception.InvalidShapeFileException;
+import org.nocrala.tools.gis.data.esri.shapefile.shape.AbstractShape;
+import org.nocrala.tools.gis.data.esri.shapefile.shape.PointData;
+import org.nocrala.tools.gis.data.esri.shapefile.shape.shapes.PolygonShape;
+
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
+import java.awt.geom.Path2D;
 
 public class GeoLocate2 implements IGeoRefValidationService {
 
@@ -46,9 +49,14 @@ public class GeoLocate2 implements IGeoRefValidationService {
 				Vector<Double> coordinatesInfo = queryGeoLocate(country, stateProvince, county, locality);
 				
 				if(coordinatesInfo == null || coordinatesInfo.size()<2){
+                    //todo: very ad-hoc way for now, need to handle all the combinations of the twoo missings
+                    if(latitude == null || longitude == null){
+                        comment = comment + " | The original coordinates are missing.";
+                    }
 					curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-					comment = "Can't find coordiantes by searching for locaility in GeoLocate service.";
-					return;
+					comment = " | Can't find coordinates by searching for locality in GeoLocate service.";
+                    serviceName = serviceName + " | GeoLocate";
+                    return;
 				}else{
 					foundLat = coordinatesInfo.get(0);
 					foundLng = coordinatesInfo.get(1);
@@ -71,31 +79,230 @@ public class GeoLocate2 implements IGeoRefValidationService {
 				curationStatus = CurationComment.CURATED;				
 				correctedLatitude = foundLat;
 				correctedLongitude = foundLng;
-				comment = "Insert the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are missing.";				
+				comment = comment + " | Insert the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are missing.";
 			}else{
 				//calculate the distance from the returned point and original point in the record
 				//If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
 				//Otherwise, use the point returned from GeoLocate
-				double originalLat = Double.valueOf(latitude);
-				double originalLng = Double.valueOf(longitude);
-				double distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
-				if(distance>Double.valueOf(certainty)){
-					//use the found coordinates
-					curationStatus = CurationComment.CURATED;				
-					correctedLatitude = foundLat;
-					correctedLongitude = foundLng;
-					comment = "Update the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are not consistent to the specified localities.";
-				}else{
-					//use the original coordinates
-					curationStatus = CurationComment.CORRECT;
-					correctedLatitude = originalLat;
-					correctedLongitude = originalLng;				
-					comment = "The coordinates is correct by checking with GeoLocate Service.";
-				}				
-			}					
+
+                double originalLat = Double.valueOf(latitude);
+                double originalLng = Double.valueOf(longitude);
+
+                //start insertion
+                //First, domain check, if wrong, switch
+                if (originalLat > 90 || originalLat < -90) {
+                    if (originalLng < 90 || originalLng > -90) {
+                        double temp=originalLat;
+                        originalLat = originalLng;
+                        originalLng=temp;
+                        curationStatus = CurationComment.CURATED;
+                        comment = comment + " | The original latitude is out of range. Transposing longitude and latitude. ";
+                    }
+                    else {
+                        if (originalLng > 180 || originalLng < -180){
+                            curationStatus = CurationComment.UNABLE_CURATED;
+                            comment = comment + " | Both original latitude \""+ originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ";
+                            return;
+                        }
+                        else {
+                            curationStatus = CurationComment.UNABLE_CURATED;
+                            comment = comment + " | The original latitude \"" + originalLat + "\" is out of range. ";
+                            return;
+                        }
+                    }
+                }
+                else{
+                    if (originalLng > 180 || originalLng < -180){
+                        curationStatus = CurationComment.UNABLE_CURATED;
+                        comment = " | The original longitude \"" + originalLng + "\" is out of range. ";
+                        return;
+                    }
+                }
+
+
+                //System.out.println("down to second");
+                //Second, check whether it's on land
+                Set<Path2D> setPolygon = null;
+                try {
+                    setPolygon = ReadLandData();
+                    //System.out.println("read data");
+                } catch (IOException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                } catch (InvalidShapeFileException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+
+                boolean originalInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                //If not in polygon, try some sign changing/swapping
+                if (!originalInPolygon){
+                    //sign changing
+                    originalLng = 0 - originalLng;
+                    boolean swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                    if (!swapInPolygon){
+                        originalLat = 0 - originalLat;
+                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                    }
+                    if (!swapInPolygon){
+                        originalLng = 0 - originalLng;
+                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                    }
+
+                    //if it's still not in land, swap lat and lng and do the sign changing again
+                    if (!swapInPolygon && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90) ){
+                        double temp2=originalLat;
+                        originalLat = originalLng;
+                        originalLng=temp2;
+
+                        originalLng = 0 - originalLng;
+                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                        if (!swapInPolygon){
+                            originalLat = 0 - originalLat;
+                            swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                        }
+                        if (!swapInPolygon){
+                            originalLng = 0 - originalLng;
+                            swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                        }
+                    }
+
+                    //check the result
+                    if (swapInPolygon){
+                        curationStatus = CurationComment.CURATED;
+                        comment = comment + " | sign changed coordinates are on the Earth's surface. ";
+                        serviceName = serviceName + " | Land data from Natural Earth";
+                    }
+                    else{
+                        curationStatus = CurationComment.UNABLE_CURATED;
+                        comment = " | Can't transpose/sign change coordinates to place them on the Earth's surface.";
+                        return;
+                    }
+                }
+
+                //System.out.println("down to third");
+                //Third, check whether it's in the country
+                HashMap <String, Set<Path2D>> boundaries;
+                try
+                {
+                    // FileInputStream fileIn = new FileInputStream("/home/tianhong/Downloads/political/country_boundary.ser");
+                    FileInputStream fileIn = new FileInputStream("/etc/filteredpush/descriptors/country_boundary.ser");
+                    ObjectInputStream in = new ObjectInputStream(fileIn);
+                    boundaries = (HashMap) in.readObject();
+                    in.close();
+                    fileIn.close();
+                    //System.out.println("read boundary data");
+                }catch(IOException i)
+                {
+                    i.printStackTrace();
+                    return;
+                }catch(ClassNotFoundException c)
+                {
+                    System.out.println("boundaries data not found");
+                    c.printStackTrace();
+                    return;
+                }
+
+                //standardize country names
+                //country = countryNormalization(country);
+
+                if (country.toUpperCase().equals("USA")){
+                    country = "UNITED STATES";
+                }else if (country.equals("United States of America"))    {
+                    country = "UNITED STATES";
+                }
+                else {
+                    country = country.toUpperCase();
+                    //System.out.println("not in !##"+country+"##");
+                }
+
+                Set<Path2D> boundary = boundaries.get(country);
+                if(boundary == null){
+                    curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+                    comment = " | Can't find country: " + country + " in country name list";
+                    serviceName = serviceName + " | Country boundary data from GeoCommunity";
+                }else{
+                    boolean originalInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                    //If not in polygon, try some swapping
+                    if (!originalInBoundary){
+                        comment = comment + " | Coordinates not inside country. ";
+                        originalLng = 0 - originalLng;
+                        boolean swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                        if (!swapInBoundary){
+                            originalLat = 0 - originalLat;
+                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                        }
+                        if (!swapInBoundary){
+                            originalLng = 0 - originalLng;
+                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                        }
+
+                        //if it's still not in country, swap lat and lng and do the sign changing again
+                        if (!swapInBoundary && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90) ){
+                            double temp3=originalLat;
+                            originalLat = originalLng;
+                            originalLng=temp3;
+
+                            originalLng = 0 - originalLng;
+                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                            if (!swapInBoundary){
+                                originalLat = 0 - originalLat;
+                                swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                            }
+                            if (!swapInBoundary){
+                                originalLng = 0 - originalLng;
+                                swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                            }
+                        }
+
+                        if (swapInBoundary){
+                            curationStatus = CurationComment.CURATED;
+                            comment = comment + " | transposed/sign changed coordinates to place inside country.";
+                            serviceName = serviceName + " | Country boundary data from GeoCommunity";
+                        }
+                        else {
+                            curationStatus = CurationComment.UNABLE_CURATED;
+                            comment = comment + " | Can't transpose/sign change coordinates to place inside country. ";
+                            return;
+                        }
+                    }
+                }
+
+                //System.out.println("curationStatus = " + curationStatus);
+                //System.out.println("comment = " + comment);
+
+                //System.out.println("originalLng = " + originalLng);
+                //System.out.println("originalLat = " + originalLat);
+                //System.out.println("country = " + country);
+                //System.out.println("foundLng = " + foundLng);
+                //System.out.println("foundLat = " + foundLat);
+
+                //finally, check whether it's close to GeoLocate referecne or not
+                double distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
+                serviceName = serviceName + " | GeoLocate";
+                if(distance>Double.valueOf(certainty)){
+                    //use the found coordinates
+                    curationStatus = CurationComment.UNABLE_CURATED;
+                    comment = comment+ " | Coordinates are not near georeference of locality from geolocate with certainty: " + certainty;
+                }else{
+                    //use the original coordinates
+                    if (curationStatus == CurationComment.CURATED){
+                        comment = comment + " | Transposed/sign changed coordinates are near georeference of locality from Geolocate.";
+                        correctedLatitude = originalLat;
+                        correctedLongitude = originalLng;
+                    }
+                    else {
+                        curationStatus = CurationComment.CORRECT;
+                        correctedLatitude = originalLat;
+                        correctedLongitude = originalLng;
+                        comment = comment + " | Original coordinates are near georeference of locality from Geolocate with certainty: " + certainty;
+                    }
+                }
+                //end insertion
+
+			}
+
 		} catch (CurrationException e) {
 			curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-			comment = e.getMessage();
+			comment = comment + " | " + e.getMessage();
 			return;
 		}
 	}	
@@ -225,13 +432,78 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	
 	private String constructCachedMapKey(String country, String state, String county, String locality){
 		return country+" "+state+" "+county+" "+locality;
-	}	
+	}
+
+    private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue){
+        //System.out.println("Xvalue = " + Xvalue);
+        //System.out.println("Yvalue = " + Yvalue);
+        Boolean foundInPolygon = false;
+        Iterator it = polygonSet.iterator();
+        while(it.hasNext()){
+            Path2D poly=(Path2D)it.next();
+            if (poly.contains(Xvalue, Yvalue)) {
+                //System.out.println("Found in polygon");
+                foundInPolygon = true;
+            }
+        }
+        return foundInPolygon;
+    }
+
+    private Set<Path2D> ReadLandData () throws IOException, InvalidShapeFileException {
+        FileInputStream is = null;
+        try {
+            //is = new FileInputStream("/home/tianhong/Downloads/ne2/ne_10m_land.shp");
+            is = new FileInputStream("/etc/filteredpush/descriptors/ne_10m_land.shp");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            //todo
+        }
+
+        ValidationPreferences prefs = new ValidationPreferences();
+        prefs.setMaxNumberOfPointsPerShape(420000);
+        ShapeFileReader reader = null;
+        reader = new ShapeFileReader(is, prefs);
+
+        Set<Path2D> polygonSet = new HashSet<Path2D>();
+
+        AbstractShape shape;
+        while ((shape = reader.next()) != null) {
+
+            PolygonShape aPolygon = (PolygonShape) shape;
+
+            //System.out.println("content: " + aPolygon.toString());
+            //System.out.println("I read a Polygon with "
+            //    + aPolygon.getNumberOfParts() + " parts and "
+            //    + aPolygon.getNumberOfPoints() + " points. "
+            //     + aPolygon.getShapeType());
+
+            for (int i = 0; i < aPolygon.getNumberOfParts(); i++) {
+                PointData[] points = aPolygon.getPointsOfPart(i);
+                //System.out.println("- part " + i + " has " + points.length + " points");
+
+                Path2D polygon = new Path2D.Double();
+                for (int j = 0; j < points.length; j++) {
+                    if (j==0) polygon.moveTo(points[j].getX(), points[j].getY());
+                    else polygon.lineTo(points[j].getX(), points[j].getY());
+                    //System.out.println("- point " + i + " has " + points[j].getX() + " and " + points[j].getY());
+                }
+                polygonSet.add(polygon);
+            }
+        }
+        is.close();
+        return polygonSet;
+    }
 
 	private Vector<Double> queryGeoLocate(String country, String stateProvince, String county, String locality) throws CurrationException {
 
         Reader stream = null;
         Document document = null;
         long starttime = System.currentTimeMillis();
+
+        if(country == null) comment = comment +  " | country is missing in the orignial record";
+        if(stateProvince == null) comment = comment +  " | stateProvince is missing in the orignial record";
+        if(county == null) comment = comment +  " | county is missing in the orignial record";
+        if(locality == null) comment = comment +  " | locality is missing in the orignial record";
 
         List<String> skey = new ArrayList<String>(5);
         skey.add(country);
@@ -242,6 +514,7 @@ public class GeoLocate2 implements IGeoRefValidationService {
             String x = cache.lookup(skey);
             stream = new StringReader(x);
         } else {
+            /*
             org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
             httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
             httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
@@ -263,24 +536,36 @@ public class GeoLocate2 implements IGeoRefValidationService {
                 if (resp.getStatusLine().getStatusCode() != 200) {
                     throw new CurrationException("GeoLocateService failed to send request to Geolocate for "+resp.getStatusLine().getStatusCode());
                 }
-                BufferedReader br = new BufferedReader(new InputStreamReader(resp.getEntity().getContent()));
+                   */
+            try{
+                //temp switch to plain url
+
+                String urlString = url +  "country=" + country + "&state=" + stateProvince + "&county=" + county +
+                         "&LocalityString=" + locality + "&FindWaterbody=False&HwyX=False";
+                //URL url2 = new URL("http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?country=USA&state=california&county=yolo&LocalityString=%22I80%22&hwyx=false&FindWaterbody=false");
+                urlString = urlString.replace(" ", "%20");
+                URL url2 = new URL(urlString);
+
+                URLConnection connection = url2.openConnection();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder sb = new StringBuilder();
                 while (br.ready()) {
                     sb.append(br.readLine());
                 }
                 stream = new StringReader(sb.toString());
-                httpPost.releaseConnection();
+                //httpPost.releaseConnection();
 
                 if (useCache && cache != null) {
                     skey.add(sb.toString());
                     cache.insert(skey);
                 }
             } catch (ClientProtocolException e) {
-                throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
+                throw new CurrationException("GeoLocateService failed to access GeoLocate service for A "+e.getMessage());
             } catch (UnsupportedEncodingException e) {
-                throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
+                throw new CurrationException("GeoLocateService failed to access GeoLocate service for B "+e.getMessage());
             } catch (IOException e) {
-                throw new CurrationException("GeoLocateService failed to access GeoLocate service for "+e.getMessage());
+                throw new CurrationException("GeoLocateService failed to access GeoLocate service for C "+e.getMessage());
             }
         }
 
@@ -334,9 +619,9 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	private Vector<String> newFoundCoordinates;
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	
-	private final String serviceName = "GEOLocate";
+	private String serviceName = "";
 	
-	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
+	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
     //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
 	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
 }

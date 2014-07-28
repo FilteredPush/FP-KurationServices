@@ -12,7 +12,7 @@ public class CurationComment {
         return new CurationCommentType(info);
 	}	
 	
-	public static CurationStatus CORRECT = new CurationStatus("Correct   ");
+	public static CurationStatus CORRECT = new CurationStatus("Valid     ");
 	public static CurationStatus CURATED = new CurationStatus("Curated   ");
     public static CurationStatus Filled_in = new CurationStatus("Filled in ");
 	public static CurationStatus UNABLE_CURATED = new CurationStatus("NotCurated");

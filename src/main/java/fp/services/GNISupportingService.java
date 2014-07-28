@@ -62,7 +62,7 @@ public class GNISupportingService {
                HttpResponse resp = httpclient.execute(httpPost);
 	           long statusCode = resp.getStatusLine().getStatusCode();
 	           if(statusCode!=200){
-	               throw new CurrationException("Failed to parse name of "+ name+" by accessing GNI service at: " +GNINameParsingURL);
+	               throw new CurrationException("Failed to parse name of "+ name+" by accessing GNI name parser service at: " +GNINameParsingURL);
 	           }           
                InputStream reponseStream = resp.getEntity().getContent();
 	           

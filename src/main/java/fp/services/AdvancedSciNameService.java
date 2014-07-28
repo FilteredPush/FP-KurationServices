@@ -1,12 +1,10 @@
 package fp.services;
 
 
+import edu.harvard.mcz.nametools.NameUsage;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurrationException;
-import org.apache.commons.codec.EncoderException;
-import org.apache.commons.codec.language.Soundex;
-import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.nameparser.NameParser;
 import org.gbif.nameparser.UnparsableException;
@@ -18,12 +16,7 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
-
-
+import java.util.*;
 
 
 /**
@@ -40,7 +33,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
    private HashMap<String, HashMap<String,String>> cachedScientificName;
    private Vector<String> newFoundScientificName;
    private static final String ColumnDelimiterInCacheFile = "\t";
-    private static final String GBIF_SERVICE = "http://api.gbif.org";
+    private static final String GBIF_SERVICE = "http://api.gbif.org/v0.9";
 
    private CurationStatus curationStatus;
    private String validatedScientificName = null;
@@ -82,7 +75,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
    // Use instead: http://api.gbif.org/dev
    // Documented at http://dev.gbif.org/wiki/display/POR/Webservice+API
 
-   private  String serviceName = "GBIF";
+   private  String serviceName;
 
    private JSONParser parser;
 
@@ -94,13 +87,14 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
    }
 
    public void validateScientificName(String scientificName, String author){
-	   validateScientificName(scientificName, author, "", "", "", "", "", "");
+	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
    }
 
    //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
-   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank){
+   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
        GBIF_name_GUID = null;
        comment = "";
+       serviceName = "";
        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 
        //try to find information from the cached file
@@ -135,14 +129,18 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
            //try to find it in GBIF service failing over to check against GNI
            //validateScientificNameAgainstServices(scientificNameToValidate, authorToValidate, key, rank, kingdom, phylum, tclass);
 
-           validatedAuthor = authorToValidate;
+          // validatedAuthor = authorToValidate;
+           curationStatus = CurationComment.CORRECT;
            // start with consistency check
            String consistentName = checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
            // second check misspelling
            if (consistentName != null){
-               checkMisspelling(consistentName);
+               String resovledName = checkMisspelling(consistentName);
+               // third, go to GBIF checklist bank
+               if (resovledName != null){
+                   validateScientificNameAgainstServices(resovledName, authorToValidate, taxonRank, kingdom, phylum, tclass, order, family);
+               }
            }
-           // third, go to GBIF checklist bank
        }
    }
 
@@ -177,13 +175,12 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
             } else{
                 //validatedAuthor = null;
                 curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + "scientificName is inconsistent with atomic fields";
-                serviceName = null;
+                comment = comment + "| scientificName is inconsistent with atomic fields";
                 return null;
             }
 
         }else{
-            comment = comment + "can't construct sciName from atomic fields";
+            comment = comment + "| can't construct sciName from atomic fields";
             return scientificName;
         }
     }
@@ -215,6 +212,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 
 
     private String checkMisspelling (String name){
+        serviceName = serviceName + " | Global Name Resolver";
         StringBuilder result = new StringBuilder();
         URL url;
         try {
@@ -246,13 +244,17 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
             JSONArray jresults = (JSONArray)jone.get("results");
             //if there is no possible correction, return now
             if (jresults == null){
+                curationStatus = CurationComment.UNABLE_CURATED;
+                //comment = comment + " | the name is misspelled and cannot be corrected.";
+                comment = comment + " | the provided name cannot be found in Global Name Resolver";
                 return null;
             }
             last = (JSONObject)jresults.get(0);
             //System.out.println("last = " + last.toString());
 
         } catch (ParseException e) {
-            System.out.println("Provided name: " + name + " is not solvable");
+            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+            comment = comment + " | cannot get result from global name resolver due to error";
             return null;
         }
         double score = Double.parseDouble(getValFromKey(last,"score"));
@@ -273,10 +275,15 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
         //if not exact match, print out reminder
         if (type > 2){
             if (score > 0.9){
-                System.out.println("The provided name: \"" + name + "\" is misspelled, changed to \"" + resolvedName + "\".");
+                //System.out.println("The provided name: \"" + name + "\" is misspelled, changed to \"" + resolvedName + "\".");
+                comment = comment + " | The provided name: " + name + " is misspelled, changed to " + resolvedName;
             }
             else {
-                System.out.println("The provided name: \"" + name + "\" has spelling issue, changed to \"" + resolvedName + "\" for now.");
+                //System.out.println("The provided name: \"" + name + "\" has spelling issue, changed to \"" + resolvedName + "\" for now.");
+                //System.out.println("The provided name: \"" + name + "\" has spelling issue and it cannot be curated");
+                curationStatus = CurationComment.UNABLE_CURATED;
+                comment = comment + " | The provided name: " + name + " has spelling issue and it cannot be curated";
+                return null;
             }
         }
 
@@ -292,13 +299,14 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
     }
 
 
-    private void validateScientificNameAgainstServices(String scientificNameToValidate, String authorToValidate, String key, String rank, String kingdom, String phylum, String tclass) {
-	   System.out.println("Validate:" + scientificNameToValidate);
+    private void validateScientificNameAgainstServices(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String order, String family) {
+	   //System.out.println("Validate:" + scientificNameToValidate);
 	   // Tests follow on authorship String object methods, so make sure it isn't null
-	   if (authorToValidate==null)  { authorToValidate = ""; }
-       try{
+	    if (authorToValidate==null)  { authorToValidate = ""; }
+        String datasetKey = "7ddf754f-d193-4cc9-b351-99906754a03b";
+        try{
            String source = "";
-           // Check name against GBIF checklist bank
+           /*// Check name against GBIF checklist bank
            String id = checklistBankNameSearch(scientificNameToValidate, authorToValidate, rank, kingdom, phylum, tclass, false);
            // Was there a result?
            if(id == null){
@@ -308,17 +316,19 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
            }
            if(id == null){
                // no match was found
-        	   // Perhaps the authorship is in the name and isn't matching on the service, try parsing authorship from scientificName
+        	   // Perhaps the authorship is in the name and is"7ddf754f-d193-4cc9-b351-99906754a03b"n't matching on the service, try parsing authorship from scientificName
         	   Vector<String> nameBits = GNISupportingService.parseName(scientificNameToValidate);
         	   if (nameBits.size()==2) {
         		   id = checklistBankNameSearch(nameBits.get(0), nameBits.get(1), rank, kingdom, phylum, tclass, false);
         	   }
            }
+           */
+           boolean hasResult = checklistBankNameSearch(scientificNameToValidate, authorToValidate, rank, kingdom, phylum, tclass, order, family, datasetKey);
            // Was there a result?
-           if(id == null){
+           if(!hasResult){
                // no match was found
-
-
+               comment = comment + " | result is empty or homonyms cannot be solved after querying Checklistbank, accessing GNI...";
+               serviceName = serviceName + " | Global Name Index";
                // access the GNI and try to get the name that is in the lexical group and from IPNI
                Vector<String> resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNI(scientificNameToValidate);
 
@@ -326,31 +336,33 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 
                if(resolvedNameInfo == null || resolvedNameInfo.size()==0){
                    //failed to find it in GNI
-                   comment = "Can't find the scientific name and authorship by searching in IPNI and the lexical group from IPNI in GNI.";
+                   curationStatus = CurationComment.UNABLE_CURATED;
+                   comment = comment + " | Can't find the scientific name and authorship by searching in IPNI and the lexical group from IPNI in GNI.";
                }else{
                    //find it in GNI
                    String resolvedScientificName = resolvedNameInfo.get(0);
                    String resolvedScientificNameAuthorship = resolvedNameInfo.get(1);
 
                    //searching for this name in GNI again.
-                   id = checklistBankNameSearch(resolvedScientificName, resolvedScientificNameAuthorship, rank, kingdom, phylum, tclass, false);
-                   if(id == null){
+                   boolean hasResult2 = checklistBankNameSearch(resolvedScientificName, resolvedScientificNameAuthorship, rank, kingdom, phylum, tclass, order, family, datasetKey);
+                   if(!hasResult2){
                        //failed to find the name got from GNI in the IPNI
-                       comment = "Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.";
+                       curationStatus = CurationComment.UNABLE_CURATED;
+                       comment = comment + " | Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.";
                    }else{
                        //correct the wrong scientific name or author by searching in both IPNI and GNI
                        validatedScientificName = resolvedScientificName;
                        validatedAuthor = resolvedScientificNameAuthorship;
-                       GBIF_name_GUID = constructGBIFGUID(id);
-                       comment = "Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.";
+                       //GBIF_name_GUID = constructGBIFGUID(id);
+                       comment = comment + " | Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.";
                        curationStatus = CurationComment.CURATED;
                        source = "IPNI/GNI";
                    }
                }
            }else{
-        	   Soundex soundex = new Soundex();
-               // Yes, got a match by searching in GBIF Checklist bank
-               GBIF_name_GUID = id;   // which is the GBIF name ID, not an IPNI LSID in this case.
+        	   //Soundex soundex = new Soundex();
+               // Yes, got a match by searching in GBIF Checklist bank                                       SpecimenRecord cleanedSpecimenRecord = new SpecimenRecord(inputSpecimenRecord);
+               /*GBIF_name_GUID = id;   // which is the GBIF name ID, not an IPNI LSID in this case.
                if (validatedAuthor.trim().toLowerCase().equals(authorToValidate.trim().toLowerCase())) {
             	   comment = "The scientific name and authorship are correct.";
             	   curationStatus = CurationComment.CORRECT;
@@ -364,14 +376,15 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 				   }
             	   curationStatus = CurationComment.CURATED;
                }
-               source = "GBIFChecklistBank";
+
                System.out.println("Matched in advanced sciNameValidator");
-               System.out.println("id:" + id);
+               //System.out.println("id:" + id);
                System.out.println("scientificName:" + scientificNameToValidate);
                System.out.println("correctedScientificName:" + getCorrectedScientificName());
                System.out.println("authorship:" + authorToValidate);
                System.out.println("correctedAuthorship:" + getCorrectedAuthor());
                System.out.println("comment:" + comment);
+               */
            }
 
            //write newly found information into hashmap and later write into the cached file if it exists
@@ -383,28 +396,28 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                }else{
                    cachedScientificNameInfo.put("author", validatedAuthor);
                }
-
+               /*
                if(id == null){
                    cachedScientificNameInfo.put("id", "");
-               }else{
+               }else{                                        source = "GBIFChecklistBank";
                    cachedScientificNameInfo.put("id", id);
-               }
+               }*/
 
                cachedScientificNameInfo.put("source", source);
 
-               cachedScientificName.put(key,cachedScientificNameInfo);
+              // cachedScientificName.put(key,cachedScientificNameInfo);
 
                newFoundScientificName.add(scientificNameToValidate);
                newFoundScientificName.add(authorToValidate);
                newFoundScientificName.add(validatedAuthor);
-               newFoundScientificName.add(id);
+               //newFoundScientificName.add(id);
                newFoundScientificName.add(source);
            }
-       }catch(CurrationException ex){
-           comment = ex.getMessage();
+        }catch(CurrationException ex){
+           comment = comment + " | " + ex.getMessage();
            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
            return;
-       }
+        }
    }
 
    public CurationStatus getCurationStatus(){
@@ -546,35 +559,94 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
     * @return the GBIF ChecklistBank ID for the name if found, otherwise null.
     * //@throws ptolemy.kernel.util.CurrationException
     */
-   private String checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, boolean useCanonical) throws CurrationException{
+   private boolean checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, String order, String family, String datasetKey) throws CurrationException{
 
-       //start of insertion
+       serviceName = serviceName + " | GBIFChecklistBank";
        //todo: add dataset selection code
        //taxon = "Amaranthus retroflexus";
 
+       //for selecting one result in a good dataset
+      // HashSet<String> authoritativeDatasets = new HashSet<String>();
+       //authoritativeDatasets.add("2d59e5db-57ad-41ff-97d6-11f5fb264527");    //WORMS
+      // authoritativeDatasets.add("046bbc50-cae2-47ff-aa43-729fbf53f7c5");    //IPNI
+       //authoritativeDatasets.add("bf3db7c9-5e5d-4fd0-bd5b-94539eaf9598");    //INDEXFUNGORUM
+      // authoritativeDatasets.add("7ddf754f-d193-4cc9-b351-99906754a03b");    //Catalog of Life
+       // authoritativeDatasets.add("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c ");  //backbone
 
 
        //String key = searchBackbone(taxon);
-       String json = fetchTaxon(taxon, null);
-       NameUsage match = parseNameUsageFromJSON(taxon, json);
-        if (json == null){
-         //System.out.println("jason null");
-       }
-       else {
-             //System.out.println("json = " + json.toString());
-         }
-       if (match == null){
+       //todo: need to handle result in multiple datsets
+       HashSet<NameUsage> nameUsageSet = fetchTaxonToUsage(taxon, datasetKey);
+
+       if (nameUsageSet.size() < 1){
            //System.out.println("No match");
            curationStatus=CurationComment.UNABLE_DETERMINE_VALIDITY;
-           comment = "Can't determine validity due to homonyms or empty results";
+           comment = "| Can't determine validity due to empty results";
+           return false;
        }
        else{
-            //System.out.println("match found");
-           curationStatus = CurationComment.CURATED;
-           validatedScientificName = match.getCanonicalName();
-           comment = "curated by search GBIF checklist bank API";
+           //switch off for scan (only need COL)
+           HashSet<NameUsage> cleanedNameUsageSet = resolveHomonyms(nameUsageSet, author, rank, kingdom, phylum, tclass, order, family);
+           //HashSet<NameUsage> cleanedNameUsageSet = nameUsageSet;
 
+           if(cleanedNameUsageSet == null){  //cannot solve homonyms
+                 return false;
+           }else{  //solved homonyms
+               for (NameUsage name : cleanedNameUsageSet){
+                       //first get the name form the result
+                   boolean isSynonyms = name.getSynonyms();
+                   if (isSynonyms){
+                       Vector<String> nameBits = null ;
+                       try{
+                            nameBits = GNISupportingService.parseName(name.getAcceptedName());
+                           if (nameBits.size()==2) {
+                               //todo check whether the match is senior or junior synonyms?
+                               validatedScientificName = nameBits.get(0);
+                               validatedAuthor = nameBits.get(1);
+                               curationStatus = CurationComment.CURATED;
+                               comment = comment + " | found synonyms and synonyms have been resolved";
+                           }else{
+                               throw new CurrationException("");
+                           }
+                       }catch (CurrationException e){
+                           comment = comment + " | found synonyms but can't parse accepted name";
+                           curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+                           return false;
+                       }
+
+                   } else{
+                       validatedScientificName = name.getCanonicalName();
+                       validatedAuthor = name.getAuthorship();
+                       System.out.println("XXXXXXXXXXXXXvalidatedAuthor = " + validatedAuthor);
+                   }
+
+                   System.out.println("taxon = " + taxon);
+                   System.out.println("author = " + author);
+                   System.out.println("validatedAuthor = " + validatedAuthor);
+                   System.out.println("validatedScientificName = " + validatedScientificName);
+                   System.out.println("curationStatus = " + curationStatus);
+
+                   if (validatedAuthor.trim().equals(author) && validatedScientificName.trim().equals(taxon)){
+                       curationStatus = CurationComment.CORRECT;
+                       comment = comment + " | The original SciName and Authorship are valid after checking with GBIF checklist bank";
+                   }else{
+                       validatedScientificName = name.getCanonicalName();
+                       validatedAuthor = name.getAuthorship();
+                       curationStatus = CurationComment.CURATED;
+                       comment = comment + " | Curated by searching GBIF checklist bank API";
+                   }
+               }
+               return true;
+           }
+           /*curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+           comment = comment + " | no result in authoritative list";
+           System.out.println("no result in authoritative list");
+           return false;
+           */
        }
+
+
+
 
        /*
        String foundId = match.getSourceID();
@@ -585,15 +657,12 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
        System.out.println("Match ID: " + id);
        // Set class properties
        GBIF_name_GUID = id;
-
-       validatedScientificName = match.getAcceptedName();
-       validatedAuthor = match.getAuthorship();
        */
 
-       return null;
    }
 
-    private String fetchTaxon(String taxon, String targetChecklist) {
+    private static HashSet fetchTaxonToUsage(String taxon, String targetChecklist) {
+        HashSet<NameUsage> nameUsageSet = new HashSet<NameUsage>();
         StringBuilder result = new StringBuilder();
         String datasetKey = "";
         if (targetChecklist!=null) {
@@ -601,58 +670,58 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
         }
         URL url;
         try {
-            url = new URL(GBIF_SERVICE + "/name_usage/" + taxon + "?limit=100&" + datasetKey);
+            url = new URL(GBIF_SERVICE + "/species?name=" + taxon.replace(" ", "%20") + "&limit=100&" + datasetKey);
+            //System.out.println("url.toString() = " + url.toString());
             URLConnection connection = url.openConnection();
-            System.out.println(connection.getContent().getClass().getName());
+
             String line;
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             while((line = reader.readLine()) != null) {
                 result.append(line);
             }
+            //System.out.println("result = " + result.toString());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-
-        return result.toString();
-    }
-
-
-    private NameUsage parseNameUsageFromJSON(String targetName, String json) {
+        //start parsing
         JSONParser parser=new JSONParser();
-
         try {
             JSONArray array = new JSONArray();
             try {
-                JSONObject o = (JSONObject)parser.parse(json);
+                JSONObject o = (JSONObject)parser.parse(result.toString());
                 if (o.get("results")!=null) {
                     array = (JSONArray)o.get("results");
                 } else {
                     // array = (JSONArray)parser.parse(json);
+                    System.out.println("no result in json object");
                 }
             } catch (ClassCastException e) {
-                array = (JSONArray)parser.parse(json);
+                // array = (JSONArray)parser.parse(json);
+                e.printStackTrace();
             }
 
             Iterator i = array.iterator();
             while (i.hasNext()) {
                 JSONObject obj = (JSONObject)i.next();
-                // System.out.println(obj.toJSONString());
-                //NameUsage name = new NameUsage(obj);
-                NameUsage name = new NameUsage();
-                if (name.getCanonicalName().equals(targetName)) {
-                    return name;
-                }
+                //System.out.println(obj.toJSONString());
+                NameUsage name = new NameUsage(obj);
+                //System.out.println("name = " + name.getCanonicalName());
+                //System.out.println("targetName = " + taxon);
+                //System.out.println("name = " + name.getAuthorship());
+                //System.out.println("name.getDatasetKey() = " + name.getDatasetKey());
+                // if (name.getCanonicalName().equals(taxon)) {
+                //return name;
+                nameUsageSet.add(name);
+
             }
 
         } catch (ParseException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        return null;
+        return nameUsageSet;
     }
-
        //end of insertion
 
 
@@ -713,17 +782,103 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 */
 
 
+    private HashSet resolveHomonyms(HashSet<NameUsage> originalSet, String author, String rank, String kingdom, String phylum, String tclass, String order, String family){
+        //HashSet<String> datasetKeySet = new HashSet<String>();
+        /* todo: no need for only one dataset
+        HashSet<String> duplicatedKeySet = new HashSet<String>();
+        for (NameUsage name : originalSet){
+            String datasetKey = name.getDatasetKey();
+            if (!datasetKeySet.contains(datasetKey)){     //not homonyms
+                datasetKeySet.add(datasetKey);
+            }else{
+                duplicatedKeySet.add(datasetKey);
+            }
+        }
 
-   
-   private String firstWord(String words) { 
-	   String result = words;
-	   if (words!=null) { 
-	      if (words.trim().contains(" ")) { 
-		     result = words.trim().substring(0, words.trim().indexOf(' '));
-	      }
-	   } 
-	   return result;
-   }
+        HashSet<NameUsage> duplicatedNameSet = new HashSet<NameUsage>();
+        if (duplicatedKeySet.size() == 1){
+            for (NameUsage name : originalSet){
+                if (duplicatedKeySet.contains(name.getDatasetKey())) duplicatedNameSet.add(name);
+            }
+        }else if (duplicatedKeySet.size() == 0){
+            return originalSet;
+        }else{
+            System.out.println("error: duplicatedKeySet has " + duplicatedKeySet.size() + "duplicated keys");
+            return null; //todo, for now...
+        }
+
+        HashSet<NameUsage> deletingNameSet = new HashSet<NameUsage>();
+        for (NameUsage name : duplicatedNameSet){
+         */
+
+        if (originalSet.size() > 1){ //homonyms
+            HashSet<NameUsage> deletingNameSet = new HashSet<NameUsage>();
+            for (NameUsage name : originalSet)  {
+
+                //System.out.println("name.getScientificName() = " + name.getScientificName());
+                //System.out.println("name.getAuthorship() = " + name.getAuthorship());
+                //System.out.println("author = " + author);
+
+                //check Hemihomonyms and higher taxon
+                boolean keepGoing = true;
+                if (rank != null){
+                    if (!name.getRank().equals(rank)) keepGoing = false;
+                }
+                if (keepGoing && kingdom != null) {
+                    if (!name.getKingdom().equals(kingdom)) keepGoing = false;
+                }
+                if (keepGoing && phylum != null){
+                    if (!name.getPhylum().equals(phylum)) keepGoing = false;
+                }
+                if (keepGoing && tclass != null){
+                    if (!name.getTclass().equals(tclass)) keepGoing = false;
+                }
+                if (keepGoing && order != null){
+                    if (!name.getOrder().equals(order)) keepGoing = false;
+                }
+                if (keepGoing && family != null){
+                    if (!name.getFamily().equals(family)) keepGoing = false;
+                }
+                System.out.println("keepGoing = " + keepGoing);
+                if (keepGoing && author != null){   //todo: may need better algorithm for matching two authorship
+                    if (!name.getAuthorship().contains(author) &&
+                            !author.contains(name.getAuthorship())) keepGoing = false;
+                }
+
+                //System.out.println("check: " + !name.getAuthorship().contains(author));
+                //System.out.println("keepGoing = " + keepGoing);
+
+
+                 //adding the nameUsage not matching the working taxon
+                if(!keepGoing) deletingNameSet.add(name);
+
+            }
+
+            //after numarate all the names, check whether solved or not
+            //still not unique
+            if (originalSet.size() - deletingNameSet.size() > 1){
+                curationStatus = CurationComment.UNABLE_CURATED;
+                comment = comment + " | homonyms detected but cannot be resolved";
+                return null;
+            }else{   //already unique
+                //curationStatus = CurationComment.CURATED;
+                comment = comment + " | homonyms resolved ";
+                //System.out.println("deletingNameSet.size() = " + deletingNameSet.size());
+                //System.out.println("originalSet.size() = " + originalSet.size());
+                originalSet.removeAll(deletingNameSet); //remove all the badNames
+                //System.out.println("originalSet.size() = " + originalSet.size());
+                if (originalSet.size() == 0){
+                    curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+                    comment = comment + " | homonyms detected but none of the results matches the record";
+                    return null;
+                }
+                return originalSet;
+            }
+
+        }else{  //no homonyms
+            return originalSet;
+        }
+    }
 
 
 }
