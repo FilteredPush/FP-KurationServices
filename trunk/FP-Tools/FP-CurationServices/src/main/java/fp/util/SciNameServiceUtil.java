@@ -114,12 +114,14 @@ public class SciNameServiceUtil {
                     name = pn.canonicalName();
                     //validatedAuthor = pn.getAuthorship();
                 } else{
-                    if(!cn.equals(null)){
+                    //if(!cn.equals(null)){
+                    if(cn != null){
                         //validatedAuthor = null;
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = comment + "| scientificName is inconsistent with atomic fields";
                         name = null;
                     }else{
+                        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                         name =  scientificName;
                     }
                 }
