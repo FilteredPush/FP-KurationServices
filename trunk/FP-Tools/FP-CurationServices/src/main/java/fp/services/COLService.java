@@ -52,8 +52,14 @@ public class COLService extends SciNameServiceParent {
             return false;
         }else{
             validatedScientificName = document.selectSingleNode("/results/result/name").getText();
-            if (!document.selectSingleNode("/results/result/rank").getText().equals("Species")){
-                comment = comment + " | The original scientificName is not at species level";
+            try {
+                if (!document.selectSingleNode("/results/result/rank").getText().equals("Species")){
+                    comment = comment + " | The original scientificName is not at species level";
+                }
+            } catch (Exception e) {
+                //e.printStackTrace();
+                //System.out.println("document = " + document.toString());
+                //System.out.println("name = " + name);
             }
             try{
                 validatedAuthor =  document.selectSingleNode("/results/result/author").getText();

@@ -35,6 +35,7 @@ public class GeoLocate2 implements IGeoRefValidationService {
 		correctedLatitude = -1;
 		correctedLongitude = -1;
 		comment = "";
+        serviceName = "";
         log = new LinkedList<List>();
 
 		try {

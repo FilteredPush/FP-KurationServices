@@ -25,6 +25,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
         comment = "";
+        serviceName = "";
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
             if (collector == null || collector.equals("")){
@@ -354,7 +355,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                             birthAdnDeath.put(birthLabel, doc.get(birthLabel).toString());
                             birthAdnDeath.put(deathLabel, doc.get(deathLabel).toString());
                         }catch(Exception e){
-                            System.out.println("doc.toString() = " + doc.toString());
+                            //System.out.println("doc.toString() = " + doc.toString());
                         }
 
                         lifeSpan.add(birthAdnDeath);
