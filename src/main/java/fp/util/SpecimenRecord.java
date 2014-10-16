@@ -20,7 +20,7 @@ public class SpecimenRecord extends HashMap<String,String> {
         super(map);
     }
    public String prettyPrint() {
-        String result = null;
+        String result = "";
         for (String item : this.keySet()){
             result = result + item + ": " + this.get(item) + ", ";
         }

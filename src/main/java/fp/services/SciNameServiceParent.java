@@ -25,16 +25,20 @@ public class SciNameServiceParent implements INewScientificNameValidationService
    protected String validatedAuthor = null;
    protected String comment = "";
    protected String serviceName;
+   private String _id = "";
 
 
    public void validateScientificName(String scientificName, String author){
-	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
+	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "", "");
    }
 
    //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
-   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
+   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family, String id){
+       _id = id;
+       //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
        comment = "";
-       serviceName = "";
+       //to carry over the orignial sciname and author
+       serviceName = "scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#";
        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 
        //try to find information from the cached file
@@ -50,7 +54,8 @@ public class SciNameServiceParent implements INewScientificNameValidationService
        HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
        comment = result1.get("comment");
        curationStatus = new CurationStatus(result1.get("curationStatus"));
-       serviceName = "";
+
+       //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());
 
        // second check misspelling
        if (result1.get("scientificName") != null){
@@ -59,6 +64,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
            comment = comment + result2.get("comment");
            curationStatus = new CurationStatus(result2.get("curationStatus"));
 
+           //System.err.println("step2#"+_id + "#" + System.currentTimeMillis());
            // third, go to GBIF checklist bank
            if (result2.get("scientificName") != null){
                boolean hasResult = validateScientificNameAgainstServices(result2.get("scientificName"), authorToValidate, taxonRank, kingdom, phylum, tclass, order, family);
@@ -81,14 +87,17 @@ public class SciNameServiceParent implements INewScientificNameValidationService
                //no result, stop
            }
        }else{
+           //System.err.println("step2not#"+_id + "#" + System.currentTimeMillis());
            //no result, stop
        }
-
+       //System.err.println("serviceend#"+_id + "#" + System.currentTimeMillis());
    }
 
     private boolean validateScientificNameAgainstServices(String taxon, String author, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
         boolean failedAtGNI = false;
-        boolean hasResult = nameSearchAgainstServices(taxon);
+        //System.err.println("remotestart#"+_id + "#" + System.currentTimeMillis());
+        boolean hasResult = nameSearchAgainstServices(taxon, author);
+        //System.err.println("remoteend#"+_id + "#" + System.currentTimeMillis());
         if(!hasResult){
             // no match was found, over to GNI
             serviceName = serviceName + " | Global Name Index";
@@ -126,7 +135,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
                 String resolvedScientificNameAuthorship = resolvedNameInfo.get(1);
 
                 //searching for this name in GNI again.
-                boolean hasResult2 = nameSearchAgainstServices(resolvedScientificName);
+                boolean hasResult2 = nameSearchAgainstServices(resolvedScientificName, resolvedScientificNameAuthorship);
                 if(!hasResult2){
                     //failed to find the name got from GNI in the IPNI
                     curationStatus = CurationComment.UNABLE_CURATED;
@@ -147,7 +156,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
 
     }
 
-    protected boolean nameSearchAgainstServices(String name){
+    protected boolean nameSearchAgainstServices(String name, String author){
         return true;
     }
 

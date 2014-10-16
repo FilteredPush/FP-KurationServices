@@ -422,7 +422,7 @@ public class SciNameServiceUtil {
         if (targetChecklist!=null) {
             datasetKey = "datasetKey=" + targetChecklist;
         }
-        URL url;
+        URL url = null;
         try {
             url = new URL(GBIF_SERVICE + "/species?name=" + taxon.replace(" ", "%20") + "&limit=100&" + datasetKey);
             //System.out.println("url.toString() = " + url.toString());
@@ -436,7 +436,10 @@ public class SciNameServiceUtil {
             //System.out.println("result = " + result.toString());
         } catch (IOException e) {
             // TODO Auto-generated catch block
+            System.out.println("---sciNameServiceUtil---");
             e.printStackTrace();
+            System.out.println("url = " + url.toString());
+            System.out.println("========================");
         }
         //start parsing
         JSONParser parser=new JSONParser();
@@ -473,6 +476,8 @@ public class SciNameServiceUtil {
         } catch (ParseException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }   catch (Exception e){
+            System.out.println("parsing error url = " + url.toString());
         }
         return nameUsageSet;
     }

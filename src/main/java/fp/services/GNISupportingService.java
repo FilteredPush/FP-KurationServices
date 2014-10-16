@@ -219,10 +219,10 @@ public class GNISupportingService {
 	           }           
 	           return idNode.getText();            
 	       } catch (IOException e) {
-	    	   System.out.println(e.getMessage());
+	    	   System.out.println("GNIsupportingService1: " + e.getMessage());
 	           throw new CurrationException("Failed to get the "+ title +" source ID by accessing GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
 	       } catch (DocumentException e) {
-	    	   System.out.println(e.getMessage());
+	    	   System.out.println("GNIsupportingService2: " + e.getMessage());
 	           throw new CurrationException("Failed to get the "+ title +" source ID by parsing the response from GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
 	       } 	   
 	   }
