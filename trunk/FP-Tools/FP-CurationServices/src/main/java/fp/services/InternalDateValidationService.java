@@ -10,6 +10,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.SolrException;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.joda.time.DateMidnight;
 import org.joda.time.IllegalFieldValueException;
@@ -25,7 +26,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
         comment = "";
-        serviceName = "";
+        serviceName = "eventDate:" + eventDate + "#";
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
             if (collector == null || collector.equals("")){
@@ -308,6 +309,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         String birthLabel = "birth";
         String deathLabel = "death";
         HashSet<HashMap<String, String>> lifeSpan = new HashSet<HashMap<String, String>>();
+        collector = collector.replace("\"", "");
 
         //insert space after a dot
         int index = collector.indexOf(".", 0);
@@ -326,9 +328,10 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             //System.out.println("one name:" + collector + "|" + oneName);
             return false;
         }else{
+            ModifiableSolrParams params = null;
             try {
                 SolrServer server = new HttpSolrServer(url);
-                ModifiableSolrParams params = new ModifiableSolrParams();
+                params = new ModifiableSolrParams();
                 //remove"[]"
                 params.set("q", "namePre:\""+ collector + "\"~3");
                 for (String item : collector.split(" ")){
@@ -337,7 +340,10 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     }
                 }
                 params.set("fl", "*,score");
-                QueryResponse rsp = server.query( params );
+                QueryResponse rsp = null;
+
+                rsp = server.query( params );
+
                 SolrDocumentList docs = rsp.getResults();
                 Iterator it = docs.iterator();
 
@@ -363,8 +369,13 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     //todo: handle multiple results
                 }
 
+            } catch (SolrException e) {
+                System.out.println("-----");
+                e.printStackTrace();
+                System.out.println("params = " + params.toString());
+                System.out.println("=====");
             } catch (SolrServerException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             }
 
             if(lifeSpan.size() == 0){
@@ -381,12 +392,12 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     if(birthAndDeath.containsKey(birthLabel) && !birthAndDeath.get(birthLabel).equals(" ")) {
                         birth = Integer.valueOf(birthAndDeath.get(birthLabel));
                     }else{
-                        System.out.println("birht collector = " + collector);
+                        //System.out.println("birht collector = " + collector);
                     }
                     if(birthAndDeath.containsKey(deathLabel) && !birthAndDeath.get(deathLabel).equals(" ")) {
                         death = Integer.valueOf(birthAndDeath.get(deathLabel));
                     } else{
-                        System.out.println("death collector = " + collector);
+                        //System.out.println("death collector = " + collector);
                     }
                     if(eventDate.getYear() > death || eventDate.getYear() < birth){
                          liesIn = false;

@@ -10,7 +10,8 @@ import java.net.URL;
 
 public class COLService extends SciNameServiceParent {
 
-    public boolean nameSearchAgainstServices(String name)  {
+    @Override
+    public boolean nameSearchAgainstServices(String name, String author)  {
         serviceName = serviceName + " | Catalog of Life";
         Document document = null;
         URL url;
@@ -51,18 +52,35 @@ public class COLService extends SciNameServiceParent {
             comment = comment + " | Cannot find matches in Catalog of Life service";
             return false;
         }else{
-            validatedScientificName = document.selectSingleNode("/results/result/name").getText();
+
+            String authorQuery = "";
             try {
-                if (!document.selectSingleNode("/results/result/rank").getText().equals("Species")){
-                    comment = comment + " | The original scientificName is not at species level";
+                if (document.selectSingleNode("/results/result/name_status").getText().contains("accepted name")){
+
+                    validatedScientificName = document.selectSingleNode("/results/result/name").getText();
+                    authorQuery = "/results/result/author";
+                }else if(document.selectSingleNode("/results/result/name_status").getText().equals("synonym")){
+                    validatedScientificName = document.selectSingleNode("/results/result/name").getText();
+                    authorQuery = "/results/result/accepted_name/author";
+                    comment = comment + " | found and solved synonym";
+                }else if(document.selectSingleNode("/results/result/name_status").getText().equals("ambiguous synonym")){
+                    comment = comment + " | found but could not solve synonym";
+                    return false;
+                }else {
+                    System.out.println("others document = " + document.toString());
                 }
+
+                   // comment = comment + " | The original scientificName is not at species level";
+
             } catch (Exception e) {
-                //e.printStackTrace();
-                //System.out.println("document = " + document.toString());
-                //System.out.println("name = " + name);
+                System.out.println("---");
+                e.printStackTrace();
+                System.out.println("document = " + document.toString());
+                System.out.println("name = " + name);
+                System.out.println("===");
             }
             try{
-                validatedAuthor =  document.selectSingleNode("/results/result/author").getText();
+                validatedAuthor =  document.selectSingleNode(authorQuery).getText();
             }catch(Exception e){
                 comment = comment + " | No author found in Catalog of Life service";
                 return false;

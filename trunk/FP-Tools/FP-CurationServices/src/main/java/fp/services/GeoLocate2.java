@@ -35,7 +35,7 @@ public class GeoLocate2 implements IGeoRefValidationService {
 		correctedLatitude = -1;
 		correctedLongitude = -1;
 		comment = "";
-        serviceName = "";
+        serviceName = "decimalLatitude:" + latitude + "#decimalLongitude:" + longitude + "#";
         log = new LinkedList<List>();
 
 		try {
@@ -81,10 +81,10 @@ public class GeoLocate2 implements IGeoRefValidationService {
 				correctedLatitude = foundLat;
 				correctedLongitude = foundLng;
 				comment = comment + " | Insert the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are missing.";
-			}else{
-				//calculate the distance from the returned point and original point in the record
-				//If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
-				//Otherwise, use the point returned from GeoLocate
+			}else {
+                //calculate the distance from the returned point and original point in the record
+                //If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
+                //Otherwise, use the point returned from GeoLocate
 
                 double originalLat = Double.valueOf(latitude);
                 double originalLng = Double.valueOf(longitude);
@@ -93,27 +93,24 @@ public class GeoLocate2 implements IGeoRefValidationService {
                 //First, domain check, if wrong, switch
                 if (originalLat > 90 || originalLat < -90) {
                     if (originalLng < 90 || originalLng > -90) {
-                        double temp=originalLat;
+                        double temp = originalLat;
                         originalLat = originalLng;
-                        originalLng=temp;
+                        originalLng = temp;
                         curationStatus = CurationComment.CURATED;
                         comment = comment + " | The original latitude is out of range. Transposing longitude and latitude. ";
-                    }
-                    else {
-                        if (originalLng > 180 || originalLng < -180){
+                    } else {
+                        if (originalLng > 180 || originalLng < -180) {
                             curationStatus = CurationComment.UNABLE_CURATED;
-                            comment = comment + " | Both original latitude \""+ originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ";
+                            comment = comment + " | Both original latitude \"" + originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ";
                             return;
-                        }
-                        else {
+                        } else {
                             curationStatus = CurationComment.UNABLE_CURATED;
                             comment = comment + " | The original latitude \"" + originalLat + "\" is out of range. ";
                             return;
                         }
                     }
-                }
-                else{
-                    if (originalLng > 180 || originalLng < -180){
+                } else {
+                    if (originalLng > 180 || originalLng < -180) {
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = " | The original longitude \"" + originalLng + "\" is out of range. ";
                         return;
@@ -135,44 +132,43 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
                 boolean originalInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
                 //If not in polygon, try some sign changing/swapping
-                if (!originalInPolygon){
+                if (!originalInPolygon) {
                     //sign changing
                     originalLng = 0 - originalLng;
                     boolean swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
-                    if (!swapInPolygon){
+                    if (!swapInPolygon) {
                         originalLat = 0 - originalLat;
                         swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
                     }
-                    if (!swapInPolygon){
+                    if (!swapInPolygon) {
                         originalLng = 0 - originalLng;
                         swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
                     }
 
                     //if it's still not in land, swap lat and lng and do the sign changing again
-                    if (!swapInPolygon && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90) ){
-                        double temp2=originalLat;
+                    if (!swapInPolygon && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90)) {
+                        double temp2 = originalLat;
                         originalLat = originalLng;
-                        originalLng=temp2;
+                        originalLng = temp2;
 
                         originalLng = 0 - originalLng;
                         swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
-                        if (!swapInPolygon){
+                        if (!swapInPolygon) {
                             originalLat = 0 - originalLat;
                             swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
                         }
-                        if (!swapInPolygon){
+                        if (!swapInPolygon) {
                             originalLng = 0 - originalLng;
                             swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
                         }
                     }
 
                     //check the result
-                    if (swapInPolygon){
+                    if (swapInPolygon) {
                         curationStatus = CurationComment.CURATED;
                         comment = comment + " | sign changed coordinates are on the Earth's surface. ";
                         serviceName = serviceName + " | Land data from Natural Earth";
-                    }
-                    else{
+                    } else {
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = " | Can't transpose/sign change coordinates to place them on the Earth's surface.";
                         return;
@@ -181,9 +177,8 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
                 //System.out.println("down to third");
                 //Third, check whether it's in the country
-                HashMap <String, Set<Path2D>> boundaries;
-                try
-                {
+                HashMap<String, Set<Path2D>> boundaries;
+                try {
                     // FileInputStream fileIn = new FileInputStream("/home/tianhong/Downloads/political/country_boundary.ser");
                     FileInputStream fileIn = new FileInputStream("/etc/filteredpush/descriptors/country_boundary.ser");
                     ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -191,12 +186,10 @@ public class GeoLocate2 implements IGeoRefValidationService {
                     in.close();
                     fileIn.close();
                     //System.out.println("read boundary data");
-                }catch(IOException i)
-                {
+                } catch (IOException i) {
                     i.printStackTrace();
                     return;
-                }catch(ClassNotFoundException c)
-                {
+                } catch (ClassNotFoundException c) {
                     System.out.println("boundaries data not found");
                     c.printStackTrace();
                     return;
@@ -204,69 +197,70 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
                 //standardize country names
                 //country = countryNormalization(country);
+                if (country != null){
 
-                if (country.toUpperCase().equals("USA")){
-                    country = "UNITED STATES";
-                }else if (country.equals("United States of America"))    {
-                    country = "UNITED STATES";
-                }
-                else {
-                    country = country.toUpperCase();
-                    //System.out.println("not in !##"+country+"##");
-                }
+                    if (country.toUpperCase().equals("USA")) {
+                        country = "UNITED STATES";
+                    } else if (country.equals("United States of America")) {
+                        country = "UNITED STATES";
+                    } else {
+                        country = country.toUpperCase();
+                        //System.out.println("not in !##"+country+"##");
+                    }
 
-                Set<Path2D> boundary = boundaries.get(country);
-                if(boundary == null){
-                    curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-                    comment = " | Can't find country: " + country + " in country name list";
-                    serviceName = serviceName + " | Country boundary data from GeoCommunity";
-                }else{
-                    boolean originalInBoundary = testInPolygon(boundary, originalLng, originalLat);
-                    //If not in polygon, try some swapping
-                    if (!originalInBoundary){
-                        comment = comment + " | Coordinates not inside country. ";
-                        originalLng = 0 - originalLng;
-                        boolean swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
-                        if (!swapInBoundary){
-                            originalLat = 0 - originalLat;
-                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
-                        }
-                        if (!swapInBoundary){
+                    Set<Path2D> boundary = boundaries.get(country);
+                    if (boundary == null) {
+                        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+                        comment = " | Can't find country: " + country + " in country name list";
+                        serviceName = serviceName + " | Country boundary data from GeoCommunity";
+                    } else {
+                        boolean originalInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                        //If not in polygon, try some swapping
+                        if (!originalInBoundary) {
+                            comment = comment + " | Coordinates not inside country. ";
                             originalLng = 0 - originalLng;
-                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
-                        }
-
-                        //if it's still not in country, swap lat and lng and do the sign changing again
-                        if (!swapInBoundary && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90) ){
-                            double temp3=originalLat;
-                            originalLat = originalLng;
-                            originalLng=temp3;
-
-                            originalLng = 0 - originalLng;
-                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
-                            if (!swapInBoundary){
+                            boolean swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                            if (!swapInBoundary) {
                                 originalLat = 0 - originalLat;
                                 swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
                             }
-                            if (!swapInBoundary){
+                            if (!swapInBoundary) {
                                 originalLng = 0 - originalLng;
                                 swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
                             }
-                        }
 
-                        if (swapInBoundary){
-                            curationStatus = CurationComment.CURATED;
-                            comment = comment + " | transposed/sign changed coordinates to place inside country.";
-                            serviceName = serviceName + " | Country boundary data from GeoCommunity";
-                        }
-                        else {
-                            curationStatus = CurationComment.UNABLE_CURATED;
-                            comment = comment + " | Can't transpose/sign change coordinates to place inside country. ";
-                            return;
+                            //if it's still not in country, swap lat and lng and do the sign changing again
+                            if (!swapInBoundary && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90)) {
+                                double temp3 = originalLat;
+                                originalLat = originalLng;
+                                originalLng = temp3;
+
+                                originalLng = 0 - originalLng;
+                                swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                                if (!swapInBoundary) {
+                                    originalLat = 0 - originalLat;
+                                    swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                                }
+                                if (!swapInBoundary) {
+                                    originalLng = 0 - originalLng;
+                                    swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                                }
+                            }
+
+                            if (swapInBoundary) {
+                                curationStatus = CurationComment.CURATED;
+                                comment = comment + " | transposed/sign changed coordinates to place inside country.";
+                                serviceName = serviceName + " | Country boundary data from GeoCommunity";
+                            } else {
+                                curationStatus = CurationComment.UNABLE_CURATED;
+                                comment = comment + " | Can't transpose/sign change coordinates to place inside country. ";
+                                return;
+                            }
                         }
                     }
+                }else{
+                    comment = comment + " | country name is empty";
                 }
-
                 //System.out.println("curationStatus = " + curationStatus);
                 //System.out.println("comment = " + comment);
 
