@@ -69,12 +69,18 @@ public class SciNameServiceParent implements INewScientificNameValidationService
            if (result2.get("scientificName") != null){
                boolean hasResult = validateScientificNameAgainstServices(result2.get("scientificName"), authorToValidate, taxonRank, kingdom, phylum, tclass, order, family);
                if (hasResult){
-                   if (validatedAuthor.trim().equals(authorToValidate) && validatedScientificName.trim().equals(scientificNameToValidate)){
-                       curationStatus = CurationComment.CORRECT;
-                       comment = comment + " | The original SciName and Authorship are valid";
-                   }else{
-                       curationStatus = CurationComment.CURATED;
-                       comment = comment + " | The original SciName and Authorship are curated";
+                   if(validatedAuthor.trim().equals("") || validatedScientificName.trim().equals("")){
+                       curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+                       if (validatedAuthor.trim().equals("")) comment = comment + " | validated author is empty";
+                       if (validatedScientificName.trim().equals("")) comment = comment + " | validated sciName is empty";
+                   }else {
+                       if (validatedAuthor.trim().equals(authorToValidate) && validatedScientificName.trim().equals(scientificNameToValidate)) {
+                           curationStatus = CurationComment.CORRECT;
+                           comment = comment + " | The original SciName and Authorship are valid";
+                       } else {
+                           curationStatus = CurationComment.CURATED;
+                           comment = comment + " | The original SciName and Authorship are curated";
+                       }
                    }
                }else{
                    curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
