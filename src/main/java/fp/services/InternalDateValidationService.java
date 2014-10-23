@@ -26,9 +26,10 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
         comment = "";
-        serviceName = "eventDate:" + eventDate + "#";
+        serviceName = "";
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
+            serviceName = "eventDate:" + eventDate + "#";
             if (collector == null || collector.equals("")){
                 comment = comment + " | collector name is not available";
             }else{

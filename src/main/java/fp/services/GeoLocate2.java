@@ -179,8 +179,9 @@ public class GeoLocate2 implements IGeoRefValidationService {
                 //Third, check whether it's in the country
                 HashMap<String, Set<Path2D>> boundaries;
                 try {
-                    // FileInputStream fileIn = new FileInputStream("/home/tianhong/Downloads/political/country_boundary.ser");
-                    FileInputStream fileIn = new FileInputStream("/etc/filteredpush/descriptors/country_boundary.ser");
+
+                    InputStream fileIn = GeoLocate2.class.getResourceAsStream("/fp.services/country_boundary.ser");
+                    //FileInputStream fileIn = new FileInputStream("/etc/filteredpush/descriptors/country_boundary.ser");
                     ObjectInputStream in = new ObjectInputStream(fileIn);
                     boundaries = (HashMap) in.readObject();
                     in.close();
@@ -445,14 +446,10 @@ public class GeoLocate2 implements IGeoRefValidationService {
     }
 
     private Set<Path2D> ReadLandData () throws IOException, InvalidShapeFileException {
-        FileInputStream is = null;
-        try {
-            //is = new FileInputStream("/home/tianhong/Downloads/ne2/ne_10m_land.shp");
-            is = new FileInputStream("/etc/filteredpush/descriptors/ne_10m_land.shp");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            //todo
-        }
+
+        InputStream is = GeoLocate2.class.getResourceAsStream("/fp.services/ne_10m_land.shp");
+        //FileInputStream is = null;
+        //is = new FileInputStream("/etc/filteredpush/descriptors/ne_10m_land.shp");
 
         ValidationPreferences prefs = new ValidationPreferences();
         prefs.setMaxNumberOfPointsPerShape(420000);
