@@ -37,6 +37,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 boolean inAuthorLife = false;
                 if (UsingSolr){
                     inAuthorLife = checkWithAuthorSolr(consesEventDate, collector);
+                    //if(inAuthorLife) curationStatus = CurationComment.CORRECT;
                 }
                else{
                     inAuthorLife = checkWithAuthorHarvard(consesEventDate, collector);
@@ -205,10 +206,15 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     int startDayInt = Integer.parseInt(startDayOfYear);
                     if (constructedDate.dayOfYear().get() == startDayInt) {
                         parsedEventDate = constructedDate;
+                        curationStatus = CurationComment.CURATED;
+                        comment += " | found and solved internal inconsistency with constructed date";
                     }else if (parsedEventDate.dayOfYear().get() != startDayInt){
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = comment + " | Internal inconsistent: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.";
                         return null;
+                    }else if((parsedEventDate.dayOfYear().get() == startDayInt)) {
+                        curationStatus = CurationComment.CORRECT;
+                        comment += " | found and solved internal inconsistency with original date";
                     }
                 }else{
                     curationStatus = CurationComment.UNABLE_CURATED;
