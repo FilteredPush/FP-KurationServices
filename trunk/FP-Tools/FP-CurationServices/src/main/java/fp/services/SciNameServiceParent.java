@@ -29,12 +29,12 @@ public class SciNameServiceParent implements INewScientificNameValidationService
 
 
    public void validateScientificName(String scientificName, String author){
-	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "", "");
+	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
    }
 
    //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
-   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family, String id){
-       _id = id;
+   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
+
        //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
        comment = "";
        //to carry over the orignial sciname and author
