@@ -72,7 +72,7 @@ public class SciNameServiceUtil {
         String name = "";
         HashMap<String, String> resultMap = new HashMap <String, String>();
 
-        if (genus != null && specificEpithet != null && infraspecificEpithet != null){
+        if (genus != null && !genus.equals("") && specificEpithet != null && !specificEpithet.equals("") && infraspecificEpithet != null && !infraspecificEpithet.equals("")){
             String constructName= genus + " ";
 
             if (subgenus != null){
@@ -101,7 +101,7 @@ public class SciNameServiceUtil {
                 System.out.println("Parsing error: " + e);
             }
 
-            if(!cn.getGenusOrAbove().equals(pn.getGenusOrAbove())){
+            if(cn != null && pn != null && !cn.getGenusOrAbove().equals(pn.getGenusOrAbove())){
                 //add the following line in order to handle dwc:genus and dwc:subgenus
                 //check against global name resolver to check whether this genus exist
                 HashMap<String, String> result2 = SciNameServiceUtil.checkMisspelling(pn.getGenusOrAbove());
@@ -115,6 +115,7 @@ public class SciNameServiceUtil {
                     comment += " | Genus in SciName is not consistent to atomic field, but dwc:Genus: \"" + genus + "\" cannot be found in Global Name Resolver";
                 }
             }
+
 
             if(pn == null){
                 if(pn.equals(cn)){
@@ -137,15 +138,14 @@ public class SciNameServiceUtil {
                 } else{
 
                     if(cn != null){
-
                         //validatedAuthor = null;
-
-
 
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = comment + "| scientificName is inconsistent with atomic fields";
                         name = null;
                     }else{
+
+
                         curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                         name =  scientificName;
                     }
