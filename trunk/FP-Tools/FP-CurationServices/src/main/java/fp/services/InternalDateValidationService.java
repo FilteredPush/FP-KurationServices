@@ -25,6 +25,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     private boolean useCache;
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
+        curationStatus = CurationComment.CORRECT;
         comment = "";
         serviceName = "";
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);

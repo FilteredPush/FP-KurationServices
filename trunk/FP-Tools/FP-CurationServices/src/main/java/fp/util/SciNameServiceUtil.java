@@ -75,13 +75,16 @@ public class SciNameServiceUtil {
         if (genus != null && specificEpithet != null && infraspecificEpithet != null){
             String constructName= genus + " ";
 
-            if (subgenus != null) constructName = constructName + subgenus + " ";
-            constructName = constructName + specificEpithet + " ";
+            if (subgenus != null){
+                if(!subgenus.equals("")) constructName += subgenus + " ";
+            }
+            if (!specificEpithet.equals("")) constructName = constructName + specificEpithet + " ";
 
             if (verbatimTaxonRank != null) constructName = constructName + verbatimTaxonRank + " ";
             else if (taxonRank != null) constructName = constructName + taxonRank + " ";
 
             constructName = constructName + infraspecificEpithet;
+
 
             NameParser parser = new NameParser();
             ParsedName pn = null;
@@ -89,13 +92,31 @@ public class SciNameServiceUtil {
             //System.out.println("scientificName = " + scientificName);
             //System.out.println("constructName = " + constructName);
             try {
+
+                //System.out.println("constructName111 = " + constructName.trim());
+                //System.out.println("scientificName = " + scientificName.equals(constructName.trim()));
                 pn = parser.parse(scientificName);
-                cn = parser.parse(constructName);
+                cn = parser.parse(constructName.trim());
             } catch (UnparsableException e) {
                 System.out.println("Parsing error: " + e);
             }
 
-            if(pn.equals(null)){
+            if(!cn.getGenusOrAbove().equals(pn.getGenusOrAbove())){
+                //add the following line in order to handle dwc:genus and dwc:subgenus
+                //check against global name resolver to check whether this genus exist
+                HashMap<String, String> result2 = SciNameServiceUtil.checkMisspelling(pn.getGenusOrAbove());
+                CurationStatus returnedStatus = new CurationStatus(result2.get("curationStatus"));
+                if(returnedStatus.equals(CurationComment.CORRECT) || returnedStatus.equals(CurationComment.CURATED)){
+                    pn.setGenusOrAbove(result2.get("scientificName"));
+                    comment = comment + "| Genus in SciName is not consistent to atomic field, genus has been changed to dwc:Genus: \"" + genus + "\"";
+                    //todo: need to handle overwritten status
+                }else{
+                    cn.setGenusOrAbove(pn.getGenusOrAbove());
+                    comment += " | Genus in SciName is not consistent to atomic field, but dwc:Genus: \"" + genus + "\" cannot be found in Global Name Resolver";
+                }
+            }
+
+            if(pn == null){
                 if(pn.equals(cn)){
                     curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                     comment = comment + "| cannot get a valid scientificName from the record";
@@ -109,14 +130,18 @@ public class SciNameServiceUtil {
                 }
             }else{
                 if(pn.equals(cn)){
-                    curationStatus = CurationComment.CURATED;
+                    curationStatus = CurationComment.CORRECT;
                     comment = comment + "| scientificName is consistent with atomic fields";
                     name = pn.canonicalName();
                     //validatedAuthor = pn.getAuthorship();
                 } else{
-                    //if(!cn.equals(null)){
+
                     if(cn != null){
+
                         //validatedAuthor = null;
+
+
+
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = comment + "| scientificName is inconsistent with atomic fields";
                         name = null;
@@ -369,7 +394,7 @@ public class SciNameServiceUtil {
                                curationStatus = CurationComment.CURATED;
                                comment = comment + " | found synonyms and synonyms have been resolved";
                            }else{
-                               throw new CurrationException("");
+                               throw new CurrationException("can't solve synonyms");
                            }
                        }catch (CurrationException e){
                            comment = comment + " | found synonyms but can't parse accepted name";
@@ -405,6 +430,7 @@ public class SciNameServiceUtil {
                    resultMap.put("author", resultAuthor);
                    resultMap.put("curationStatus", curationStatus.toString());
                    resultMap.put("comment", comment);
+                   resultMap.put("guid", name.getSourceID());
                    return resultMap;
                }
            }

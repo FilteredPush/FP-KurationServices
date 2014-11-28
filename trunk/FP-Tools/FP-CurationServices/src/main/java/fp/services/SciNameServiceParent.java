@@ -25,7 +25,9 @@ public class SciNameServiceParent implements INewScientificNameValidationService
    protected String validatedAuthor = null;
    protected String comment = "";
    protected String serviceName;
-   private String _id = "";
+   private String GBIF_name_GUID = "";
+    private final static String GBIF_GUID_Prefix = "http://ecat-dev.gbif.org/ws/usage/?nid=";
+    // Documented at http://dev.gbif.org/wiki/display/POR/Webservice+API
 
 
    public void validateScientificName(String scientificName, String author){
@@ -37,9 +39,10 @@ public class SciNameServiceParent implements INewScientificNameValidationService
 
        //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
        comment = "";
+       GBIF_name_GUID = "";
        //to carry over the orignial sciname and author
        serviceName = "scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#";
-       curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+       //curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 
        //try to find information from the cached file
        //if failed, then access GBIF service, or if that fails, GNI service
@@ -54,6 +57,8 @@ public class SciNameServiceParent implements INewScientificNameValidationService
        HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
        comment = result1.get("comment");
        curationStatus = new CurationStatus(result1.get("curationStatus"));
+
+
 
        //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());
 
@@ -126,10 +131,12 @@ public class SciNameServiceParent implements INewScientificNameValidationService
                 serviceName = serviceName + " | GBIF CheckListBank Backbone";
                 comment = comment + result2.get("comment");
                 curationStatus = new CurationStatus(result2.get("curationStatus"));
+
                 if(result2.get("scientificName") != null){
                     validatedScientificName = result2.get("scientificName");
                     validatedAuthor = result2.get("author");
                     comment = comment + " | Got a valid result from GBIF checklistbank Backbone";
+                    GBIF_name_GUID = GBIF_GUID_Prefix + result2.get("guid");
                     return true;
                 }else{
                     return false;
@@ -184,6 +191,11 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     @Override
     public String getComment() {
         return comment;
+    }
+
+    @Override
+    public String getLSID(){
+        return GBIF_name_GUID;
     }
 
     @Override
