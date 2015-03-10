@@ -4,6 +4,7 @@ import com.hp.hpl.jena.rdf.model.*;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurrationException;
+import fp.util.CacheValue;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -22,14 +23,32 @@ import java.util.*;
 //todo: cache machanism is not finished
 public class InternalDateValidationService implements IInternalDateValidationService {
 
-    private boolean useCache;
+    private static boolean useCache = true;
+    private static int count = 0;
+    HashMap<String, CacheValue> eventDateCache = new HashMap<String, CacheValue>();
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
         curationStatus = CurationComment.CORRECT;
         comment = "";
         serviceName = "";
+
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
+            // insert cache check functionality, put after consistency check to maximize hit rate
+
+            if(useCache){
+                if(eventDateCache.containsKey(collector)){
+                    CacheValue hitValue = eventDateCache.get(collector);
+                    comment += hitValue.getComment();
+                    curationStatus = hitValue.getStatus();
+                    serviceName = hitValue.getSource();
+                    //System.out.println("count  = " + count++);
+                    //System.out.println(collector);
+                    return;
+                }
+            }
+
+
             serviceName = "eventDate:" + eventDate + "#";
             if (collector == null || collector.equals("")){
                 comment = comment + " | collector name is not available";
@@ -358,6 +377,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 if(docs.size() == 0){
                     //System.out.println("no result: " + collector);
                     comment = comment + " | Unable to get the Life span data of collector:" + collector;
+                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return false;
                 }
 
@@ -381,6 +401,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 System.out.println("-----");
                 e.printStackTrace();
                 System.out.println("params = " + params.toString());
+                System.out.println("collector = " + collector);
                 System.out.println("=====");
             } catch (SolrServerException e) {
                 e.printStackTrace();
@@ -389,6 +410,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             if(lifeSpan.size() == 0){
                 //System.out.println("no valid result: " + collector);
                 comment = comment + " | Unable to get the valid life span data of collector:" + collector;
+                if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                 return false;
             }else{
                 //System.out.println("has result: " + collector);
@@ -414,10 +436,14 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
                 if(liesIn){
                     comment += " | eventDate lies within the life span data of collector:" + collector;
+
+                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return true;
+
                 } else{
                     comment += " | eventDate lies outside of the life span of collector" + collector;
                     curationStatus = CurationComment.UNABLE_CURATED;
+                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return false;
                 }
             }

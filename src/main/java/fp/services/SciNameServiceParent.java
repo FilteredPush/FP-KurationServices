@@ -1,10 +1,7 @@
 package fp.services;
 
 
-import fp.util.CurationComment;
-import fp.util.CurationStatus;
-import fp.util.CurrationException;
-import fp.util.SciNameServiceUtil;
+import fp.util.*;
 
 import java.util.HashMap;
 import java.util.Vector;
@@ -20,15 +17,18 @@ import java.util.Vector;
 public class SciNameServiceParent implements INewScientificNameValidationService {
 
 
-   protected CurationStatus curationStatus;
-   protected String validatedScientificName = null;
-   protected String validatedAuthor = null;
-   protected String comment = "";
-   protected String serviceName;
-   private String GBIF_name_GUID = "";
+    protected CurationStatus curationStatus;
+    protected String validatedScientificName = null;
+    protected String validatedAuthor = null;
+    protected String comment = "";
+    protected String serviceName;
+    private String GBIF_name_GUID = "";
     private final static String GBIF_GUID_Prefix = "http://ecat-dev.gbif.org/ws/usage/?nid=";
     // Documented at http://dev.gbif.org/wiki/display/POR/Webservice+API
 
+    protected static HashMap<String, CacheValue> sciNameCache = new HashMap<String, CacheValue>();
+    boolean useCache = true;
+    protected static int count = 0;
 
    public void validateScientificName(String scientificName, String author){
 	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
@@ -147,10 +147,10 @@ public class SciNameServiceParent implements INewScientificNameValidationService
                 String resolvedScientificName = resolvedNameInfo.get(0);
                 String resolvedScientificNameAuthorship = resolvedNameInfo.get(1);
 
-                //searching for this name in GNI again.
+                //searching for this name in service again.
                 boolean hasResult2 = nameSearchAgainstServices(resolvedScientificName, resolvedScientificNameAuthorship);
                 if(!hasResult2){
-                    //failed to find the name got from GNI in the IPNI
+                    //failed to find the name got from GNI in service
                     curationStatus = CurationComment.UNABLE_CURATED;
                     comment = comment + " | Found name which is in the same lexical group as the searched scientific name but failed to find this name really in remote service.";
                 }else{
@@ -170,6 +170,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     }
 
     protected boolean nameSearchAgainstServices(String name, String author){
+
         return true;
     }
 
@@ -202,4 +203,20 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     public String getServiceName() {
         return serviceName;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    protected String getKey(String name, String author){
+        return name+author;
+    }
+
+    protected void addToCache(){
+        String key = getKey(validatedScientificName, validatedAuthor);
+        CacheValue newValue = new SciNameCacheValue().setAuthor(validatedAuthor).setTaxon(validatedScientificName).setComment(comment).setStatus(curationStatus).setSource(serviceName);
+        if(!sciNameCache.containsKey(key)) sciNameCache.put(key, newValue);
+        else {
+            if (!sciNameCache.get(key).equals(newValue)) {
+                //need to handle the case where the cached value is different than the new value
+            }
+        }
+    }
+
 }

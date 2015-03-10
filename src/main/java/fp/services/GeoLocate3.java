@@ -21,7 +21,7 @@ import java.util.*;
 
 public class GeoLocate3 implements IGeoRefValidationService {
 
-    private boolean useCache;
+    private boolean useCache = true;
     private Cache cache;
 	
 	/*
@@ -41,10 +41,12 @@ public class GeoLocate3 implements IGeoRefValidationService {
         double foundLat;
         double foundLng;
         String key = country+" "+stateProvince+" "+county+" "+locality;
-        if (useCache && cachedCoordinates.containsKey(key)){
-            String[] coordinates = cachedCoordinates.get(key).split(";");
-            foundLat = Double.valueOf(coordinates[0]);
-            foundLng = Double.valueOf(coordinates[1]);
+        if (useCache && coordinatesCache.containsKey(key)){
+            GeoRefCacheValue cachedValue = (GeoRefCacheValue) coordinatesCache.get(key);
+            foundLat = cachedValue.getLat();
+            foundLng = cachedValue.getLng();
+            //System.out.println("geocount = " + count++);
+            //System.out.println("key = " + key);
         } else {
 
             Vector<Double> coordinatesInfo = null;
@@ -69,7 +71,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
                 foundLng = coordinatesInfo.get(1);
             }
 
-            if(useCache) addToCache(key, foundLat,foundLng, country,stateProvince,county,locality);
+            if(useCache) addNewToCache(foundLat, foundLng, country, stateProvince, county, locality);
         }
 				
 
@@ -290,6 +292,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
                     correctedLongitude = originalLng;
                 } else {
                     System.out.println("wrong status in GeoLocate3: no change but near");
+                    System.out.println("debugging = " + serviceName);
                 }
 
 
@@ -299,6 +302,14 @@ public class GeoLocate3 implements IGeoRefValidationService {
 	}
 
 
+    public void addNewToCache(double Lat, double Lng, String country, String stateProvince, String county, String locality) {
+        String key = constructCachedMapKey(country, stateProvince, county, locality);
+        if(!coordinatesCache.containsKey(key)){
+            CacheValue newValue = new GeoRefCacheValue(Lat, Lng);
+            coordinatesCache.put(key, newValue);
+        }
+
+    }
 //	public boolean isCoordinatesFound(){
 //		return isCoordinatesFound;
 //	}
@@ -318,6 +329,16 @@ public class GeoLocate3 implements IGeoRefValidationService {
 	public CurationStatus getCurationStatus() {
 		return curationStatus;
 	}
+
+    @Override
+    public List<List> getLog() {
+        return log;
+    }
+
+    private String constructCachedMapKey(String country, String state, String county, String locality){
+        return country+" "+state+" "+county+" "+locality;
+    }
+
 
 	public void flushCacheFile() throws CurrationException {
 		if(cacheFile == null){
@@ -343,10 +364,19 @@ public class GeoLocate3 implements IGeoRefValidationService {
 		}		
 	}
 
-    @Override
-    public List<List> getLog() {
-        return log;
+    public String getServiceName(){
+        return serviceName;
     }
+
+    public void setUseCache(boolean use) {
+        //old interface
+
+    }
+
+    public void setCacheFile(String file) {
+
+    }
+    /*  switch off old cache machanism based on files
 
     public void setUseCache(boolean use) {
         this.useCache = use;
@@ -363,10 +393,9 @@ public class GeoLocate3 implements IGeoRefValidationService {
         this.useCache = true;
 	}
 
-    public String getServiceName(){
-		return serviceName;
-	}
-	
+
+
+
 	private void initializeCacheFile(String fileStr) throws CurrationException {
 		cacheFile = new File(fileStr);
 		
@@ -422,9 +451,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 		}
 	}
 	
-	private String constructCachedMapKey(String country, String state, String county, String locality){
-		return country+" "+state+" "+county+" "+locality;
-	}
+
 
     private double [] searchCache(String country, String stateProvince, String county,String locality) {
         String key = country + " " + stateProvince + " " + county + " " + locality;
@@ -449,6 +476,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
         newFoundCoordinates.add(String.valueOf(latitude));
         newFoundCoordinates.add(String.valueOf(longitude));
     }
+    */
 
     private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue){
         //System.out.println("Xvalue = " + Xvalue);
@@ -605,8 +633,9 @@ public class GeoLocate3 implements IGeoRefValidationService {
 	private String comment = "";	
 //	private boolean isCoordinatesFound;
     private List<List> log = new LinkedList<List>();
-	
-	private HashMap<String, String> cachedCoordinates;
+
+    static int count = 0;
+	private static HashMap<String, CacheValue> coordinatesCache = new HashMap<String, CacheValue>();
 	private Vector<String> newFoundCoordinates;
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	

@@ -19,6 +19,7 @@ public class SpecimenRecord extends HashMap<String,String> {
     public SpecimenRecord(Map<? extends String, ? extends String> map) {
         super(map);
     }
+
    public String prettyPrint() {
         String result = "";
         for (String item : this.keySet()){
