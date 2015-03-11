@@ -208,9 +208,9 @@ public class SciNameServiceParent implements INewScientificNameValidationService
         return name+author;
     }
 
-    protected void addToCache(){
+    protected void addToCache(boolean hasResult){
         String key = getKey(validatedScientificName, validatedAuthor);
-        CacheValue newValue = new SciNameCacheValue().setAuthor(validatedAuthor).setTaxon(validatedScientificName).setComment(comment).setStatus(curationStatus).setSource(serviceName);
+        CacheValue newValue = new SciNameCacheValue().setHasResult(hasResult).setAuthor(validatedAuthor).setTaxon(validatedScientificName).setComment(comment).setStatus(curationStatus).setSource(serviceName);
         if(!sciNameCache.containsKey(key)) sciNameCache.put(key, newValue);
         else {
             if (!sciNameCache.get(key).equals(newValue)) {

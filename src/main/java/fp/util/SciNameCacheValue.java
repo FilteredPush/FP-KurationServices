@@ -7,6 +7,13 @@ public class SciNameCacheValue extends CacheValue {
 
     String taxon;
     String author;
+    boolean hasResult;
+
+    public SciNameCacheValue setHasResult(boolean hasResult){
+        this.hasResult = hasResult;
+        return this;
+    }
+
     public SciNameCacheValue setTaxon(String taxon){
         this.taxon = taxon;
         return this;
@@ -23,6 +30,10 @@ public class SciNameCacheValue extends CacheValue {
 
     public String getTaxon(){
         return taxon;
+    }
+
+    public boolean getHasResult(){
+        return hasResult;
     }
 
     //@Override   todo: not sure if need to override
