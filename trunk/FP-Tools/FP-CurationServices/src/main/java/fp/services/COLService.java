@@ -25,7 +25,7 @@ public class COLService extends SciNameServiceParent {
             validatedScientificName = hitValue.getTaxon();
             //System.out.println("count  = " + count++);
             //System.out.println(key);
-            return true;
+            return hitValue.getHasResult();
         }
 
         serviceName = serviceName + " | Catalog of Life";
@@ -58,7 +58,7 @@ public class COLService extends SciNameServiceParent {
             document = reader.read(url);
         } catch (DocumentException e) {
             comment = comment + " | Failed to get information by parsing the response from Catalog of Life service for: "+e.getMessage();
-            addToCache();
+            addToCache(false);
             return false;
         } catch (MalformedURLException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -67,7 +67,7 @@ public class COLService extends SciNameServiceParent {
         //no homonyms.synomyns handling for now
         if (Integer.valueOf(document.getRootElement().attribute(3).getText()) < 1) {
             comment = comment + " | Cannot find matches in Catalog of Life service";
-            addToCache();
+            addToCache(false);
             return false;
         }else{
 
@@ -83,7 +83,7 @@ public class COLService extends SciNameServiceParent {
                     comment = comment + " | found and solved synonym";
                 }else if(document.selectSingleNode("/results/result/name_status").getText().equals("ambiguous synonym")){
                     comment = comment + " | found but could not solve synonym";
-                    addToCache();
+                    addToCache(false);
                     return false;
                 }else {
                     System.out.println("others document = " + document.toString());
@@ -102,12 +102,12 @@ public class COLService extends SciNameServiceParent {
                 validatedAuthor =  document.selectSingleNode(authorQuery).getText();
             }catch(Exception e){
                 comment = comment + " | No author found in Catalog of Life service";
-                addToCache();
+                addToCache(false);
                 return false;
             }
         }
 
-        addToCache();
+        addToCache(true);
         return true;
 
         //}
