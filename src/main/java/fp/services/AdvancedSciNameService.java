@@ -4,7 +4,7 @@ package fp.services;
 import edu.harvard.mcz.nametools.NameUsage;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.nameparser.NameParser;
 import org.gbif.nameparser.UnparsableException;
@@ -413,7 +413,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                //newFoundScientificName.add(id);
                newFoundScientificName.add(source);
            }
-        }catch(CurrationException ex){
+        }catch(CurationException ex){
            comment = comment + " | " + ex.getMessage();
            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
            return;
@@ -440,13 +440,13 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
        return comment;
    }
 
-   public void setCacheFile(String file) throws CurrationException{
+   public void setCacheFile(String file) throws CurationException{
 	   initializeCacheFile(file);
 	   importFromCache();
        this.useCache = true;
    }
 
-   public void flushCacheFile() throws CurrationException{
+   public void flushCacheFile() throws CurationException{
        if(cacheFile == null){
            return;
        }
@@ -466,7 +466,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                writer.close();
            }
        } catch (IOException e) {
-           throw new CurrationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
+           throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
        }
    }
 
@@ -486,7 +486,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
        return serviceName;
    }
 
-   private void initializeCacheFile(String fileStr) throws CurrationException {
+   private void initializeCacheFile(String fileStr) throws CurationException {
        cacheFile = new File(fileStr);
 
        if(!cacheFile.exists()){
@@ -495,16 +495,16 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                FileWriter writer = new FileWriter(fileStr);
                writer.close();
            } catch (IOException e) {
-               throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+               throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
            }
        }
 
        if(!cacheFile.isFile()){
-           throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+           throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
        }
    }
 
-   private void importFromCache() throws CurrationException{
+   private void importFromCache() throws CurationException{
        cachedScientificName = new HashMap<String,HashMap<String,String>>();
        newFoundScientificName = new Vector<String>();
 
@@ -515,7 +515,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
            while(strLine!=null){
                String[] info = strLine.split(ColumnDelimiterInCacheFile);
                if(info.length != 5){
-                   throw new CurrationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
+                   throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
                }
 
                String taxon = info[0];
@@ -536,9 +536,9 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
            cachedFileReader.close();
        } catch (FileNotFoundException e) {
            //Since whether the file exist or not has been tested before, this exception should never be reached.
-           throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+           throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
        } catch (IOException e) {
-           throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+           throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
        }
    }
 
@@ -559,7 +559,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
     * @return the GBIF ChecklistBank ID for the name if found, otherwise null.
     * //@throws ptolemy.kernel.util.CurrationException
     */
-   private boolean checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, String order, String family, String datasetKey) throws CurrationException{
+   private boolean checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, String order, String family, String datasetKey) throws CurationException{
 
        serviceName = serviceName + " | GBIFChecklistBank";
        //todo: add dataset selection code
@@ -606,9 +606,9 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                                curationStatus = CurationComment.CURATED;
                                comment = comment + " | found synonyms and synonyms have been resolved";
                            }else{
-                               throw new CurrationException("");
+                               throw new CurationException("");
                            }
-                       }catch (CurrationException e){
+                       }catch (CurationException e){
                            comment = comment + " | found synonyms but can't parse accepted name";
                            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                            return false;

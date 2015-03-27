@@ -2,7 +2,7 @@ package fp.services;
 
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import org.marinespecies.aphia.v1_0.AphiaNameServicePortTypeProxy;
 import org.marinespecies.aphia.v1_0.AphiaRecord;
 
@@ -146,7 +146,7 @@ public class WoRMSService implements IScientificNameValidationService{
 					newFoundScientificName.add(id);
 					newFoundScientificName.add(source);					
 				}
-			}catch(CurrationException ex){
+			}catch(CurationException ex){
 				comment = ex.getMessage();
 				curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 				return;
@@ -174,13 +174,13 @@ public class WoRMSService implements IScientificNameValidationService{
 		return comment;
 	}	
 
-	public void setCacheFile(String file) throws CurrationException{
+	public void setCacheFile(String file) throws CurationException{
 		initializeCacheFile(file);		
 		importFromCache();
         this.useCache = true;
 	}
 
-	public void flushCacheFile() throws CurrationException{
+	public void flushCacheFile() throws CurationException{
 		if(cacheFile == null){
 			return;
 		}
@@ -202,7 +202,7 @@ public class WoRMSService implements IScientificNameValidationService{
 				writer.close();
 			}
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
 		}		
 	}
 
@@ -221,7 +221,7 @@ public class WoRMSService implements IScientificNameValidationService{
 		return serviceName;
 	}
 
-	private void initializeCacheFile(String fileStr) throws CurrationException{
+	private void initializeCacheFile(String fileStr) throws CurationException{
 		cacheFile = new File(fileStr);
 
 		if(!cacheFile.exists()){
@@ -230,16 +230,16 @@ public class WoRMSService implements IScientificNameValidationService{
 				FileWriter writer = new FileWriter(fileStr);
 				writer.close();
 			} catch (IOException e) {
-				throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
 			}			
 		}
 
 		if(!cacheFile.isFile()){
-			throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
 		}
 	}
 
-	private void importFromCache() throws CurrationException{
+	private void importFromCache() throws CurationException{
 		cachedScientificName = new HashMap<String,HashMap<String,String>>();
 		newFoundScientificName = new Vector<String>();
 
@@ -250,7 +250,7 @@ public class WoRMSService implements IScientificNameValidationService{
 			while(strLine!=null){
 				String[] info = strLine.split(ColumnDelimiterInCacheFile,-1);
 				if(info.length != 5){
-					throw new CurrationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
+					throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
 				}
 
 				String taxon = info[0];
@@ -271,9 +271,9 @@ public class WoRMSService implements IScientificNameValidationService{
 			cachedFileReader.close();
 		} catch (FileNotFoundException e) {
 			//Since whether the file exist or not has been tested before, this exception should never be reached.
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		}
 	}
 
@@ -291,9 +291,9 @@ public class WoRMSService implements IScientificNameValidationService{
 	 * @param taxon name to look for
 	 * @param author authority to look for
 	 * @return aphia id for the taxon
-	 * @throws CurrationException
+	 * @throws CurationException
 	 */
-	private String simpleNameSearch(String taxon, String author) throws CurrationException{
+	private String simpleNameSearch(String taxon, String author) throws CurationException{
 		String id  = null;
 
 		AphiaNameServicePortTypeProxy wormsService = new AphiaNameServicePortTypeProxy();
@@ -320,7 +320,7 @@ public class WoRMSService implements IScientificNameValidationService{
 			// no match found
 			id = null;
 		} catch (RemoteException e) {
-			throw new CurrationException("WoRMSService failed to access WoRMS Aphia service for " + taxon + ". " +e.getMessage());
+			throw new CurationException("WoRMSService failed to access WoRMS Aphia service for " + taxon + ". " +e.getMessage());
 		} 
 
 		return id;
@@ -332,9 +332,9 @@ public class WoRMSService implements IScientificNameValidationService{
 	 * 
 	 * @param scientificName
 	 * @return
-	 * @throws CurrationException
+	 * @throws CurationException
 	 */
-	private Vector<String> resolveIPNINameInLexicalGroupFromGNI(String scientificName) throws CurrationException {
+	private Vector<String> resolveIPNINameInLexicalGroupFromGNI(String scientificName) throws CurationException {
 		//get IPNI service Id at the first time 
 		if(wormsSourceId == null){
 			wormsSourceId = GNISupportingService.getGNIDataSourceID("WoRMS");

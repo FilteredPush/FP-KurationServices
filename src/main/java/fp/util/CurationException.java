@@ -7,8 +7,8 @@ package fp.util;
  * Time: 13:30
  * To change this template use File | Settings | File Templates.
  */
-public class CurrationException extends Exception {
-    public CurrationException(String s) {
+public class CurationException extends Exception {
+    public CurationException(String s) {
         super(s);
     }
 }

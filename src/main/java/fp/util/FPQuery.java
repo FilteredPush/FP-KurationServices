@@ -31,7 +31,7 @@ public class FPQuery {
 		queryConditions.add(qc);
 	}
 	
-	public LinkedList<SpecimenRecord> search() throws CurrationException {
+	public LinkedList<SpecimenRecord> search() throws CurationException {
         try{
 			String[] fieldList = {"datasource","taxon","collector","collectornumber","year","locality","Catalognumber","id","state","country","county","day","month","latitude","longitude","family","author","collection_code"};	
 			ArrayList<HashMap<String,String>> result = triageQuery(fieldList,queryConditions,"object");			
@@ -70,7 +70,7 @@ public class FPQuery {
 			return recordTokenList;
 			
 		}catch(Exception ex){
-			throw new CurrationException("search failed in SearchSpecimenRecord for: "+ex.getMessage());
+			throw new CurationException("search failed in SearchSpecimenRecord for: "+ex.getMessage());
 		}
 	}
 

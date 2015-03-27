@@ -2,7 +2,7 @@ package fp.services;
 
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -159,7 +159,7 @@ public class IndexFungorumService implements IScientificNameValidationService {
 					newFoundScientificName.add(id);
 					newFoundScientificName.add(source);					
 				}
-			}catch(CurrationException ex){
+			}catch(CurationException ex){
 				comment = ex.getMessage();
 				curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 				return;
@@ -187,12 +187,12 @@ public class IndexFungorumService implements IScientificNameValidationService {
 		return comment;
 	}	
 	
-	public void setCacheFile(String file) throws CurrationException {
+	public void setCacheFile(String file) throws CurationException {
 		initializeCacheFile(file);		
 		importFromCache();
 	}
 	
-	public void flushCacheFile() throws CurrationException{
+	public void flushCacheFile() throws CurationException{
 		if(cacheFile == null){
 			return;
 		}
@@ -214,7 +214,7 @@ public class IndexFungorumService implements IScientificNameValidationService {
 				writer.close();
 			}
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
 		}		
 	}
 
@@ -233,7 +233,7 @@ public class IndexFungorumService implements IScientificNameValidationService {
 		return serviceName;
 	}
 	
-	private void initializeCacheFile(String fileStr) throws CurrationException{
+	private void initializeCacheFile(String fileStr) throws CurationException{
 		cacheFile = new File(fileStr);
 		
 		if(!cacheFile.exists()){
@@ -242,16 +242,16 @@ public class IndexFungorumService implements IScientificNameValidationService {
 				FileWriter writer = new FileWriter(fileStr);
 				writer.close();
 			} catch (IOException e) {
-				throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
 			}			
 		}
 		
 		if(!cacheFile.isFile()){
-			throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
 		}
 	}
 	
-	private void importFromCache() throws CurrationException{
+	private void importFromCache() throws CurationException{
 		cachedScientificName = new HashMap<String,HashMap<String,String>>();
 		newFoundScientificName = new Vector<String>();
 		
@@ -262,7 +262,7 @@ public class IndexFungorumService implements IScientificNameValidationService {
 			while(strLine!=null){
 				String[] info = strLine.split(ColumnDelimiterInCacheFile,-1);
 				if(info.length != 5){
-					throw new CurrationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
+					throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
 				}
 				
 				String taxon = info[0];
@@ -283,9 +283,9 @@ public class IndexFungorumService implements IScientificNameValidationService {
 			cachedFileReader.close();
 		} catch (FileNotFoundException e) {
 			//Since whether the file exist or not has been tested before, this exception should never be reached.
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		}
 	}
 	
@@ -305,9 +305,9 @@ public class IndexFungorumService implements IScientificNameValidationService {
 	 * @param taxon to search for
 	 * @param author for name
 	 * @return IndexFungorum ID if found, otherwise null;
-	 * @throws CurrationException
+	 * @throws CurationException
 	 */
-	private String simpleFungusNameSearch(String taxon, String author) throws CurrationException{
+	private String simpleFungusNameSearch(String taxon, String author) throws CurationException{
 	    // http://www.indexfungorum.org/IXFWebService/Fungus.asmx/NameSearch?SearchText=string&AnywhereInText=string&MaxNumber=string
         org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
         httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
@@ -324,7 +324,7 @@ public class IndexFungorumService implements IScientificNameValidationService {
             resp = httpclient.execute(httpPost);
             long statusCode = resp.getStatusLine().getStatusCode();
             if (statusCode != 200) {
-                throw new CurrationException("IFService failed to send request to IndexFungorum for "+statusCode);
+                throw new CurationException("IFService failed to send request to IndexFungorum for "+statusCode);
             }
             InputStream response = resp.getEntity().getContent();
 			
@@ -344,7 +344,7 @@ public class IndexFungorumService implements IScientificNameValidationService {
 				NodeList nodeList = root.getElementsByTagName("IndexFungorum");
 				System.out.println(nodeList.toString() + " " + nodeList.getLength());
 				if (nodeList==null)  {
-					throw new CurrationException("IndexFungorumService failed in NameSearch for " + taxon + ".");
+					throw new CurationException("IndexFungorumService failed in NameSearch for " + taxon + ".");
 				} else {
                    for (int i=0; i<nodeList.getLength(); i++) {
                 	   org.w3c.dom.Node node = nodeList.item(i);
@@ -367,23 +367,23 @@ public class IndexFungorumService implements IScientificNameValidationService {
             		    	 // IF node with no Record, Name, or Authors.
             		      }
             		   } else { 
-					      throw new CurrationException("IndexFungorumService failed in NameSearch for " + taxon + ".  Response not formatted as expected"  );
+					      throw new CurationException("IndexFungorumService failed in NameSearch for " + taxon + ".  Response not formatted as expected"  );
             		   }
                    } 
 				}
 				
 
 			}catch(ParserConfigurationException epc) {
-				throw new CurrationException("IndexFungorumService failed in name search for " + taxon + "." + epc.getMessage());
+				throw new CurationException("IndexFungorumService failed in name search for " + taxon + "." + epc.getMessage());
 			}catch(SAXException es) {
-				throw new CurrationException("IndexFungorumService failed in name search for " + taxon + "." + es.getMessage());
+				throw new CurationException("IndexFungorumService failed in name search for " + taxon + "." + es.getMessage());
 			}catch(IOException eio) {
-				throw new CurrationException("IndexFungorumService failed in name search for " + taxon + "." + eio.getMessage());
+				throw new CurationException("IndexFungorumService failed in name search for " + taxon + "." + eio.getMessage());
 			}			
 			
 			return id;
 		} catch (IOException e) {
-			throw new CurrationException("IndexFungorumService failed to access IF service for "+e.getMessage());
+			throw new CurationException("IndexFungorumService failed to access IF service for "+e.getMessage());
 		}				
 	}
 	
@@ -393,9 +393,9 @@ public class IndexFungorumService implements IScientificNameValidationService {
 	 * 
 	 * @param scientificName
 	 * @return
-	 * @throws CurrationException
+	 * @throws CurationException
 	 */
-	private Vector<String> resolveIFNameInLexicalGroupFromGNI(String scientificName) throws CurrationException {
+	private Vector<String> resolveIFNameInLexicalGroupFromGNI(String scientificName) throws CurationException {
 		//get IPNI service Id at the first time 
 		if(IFSourceId == null){
 			IFSourceId = GNISupportingService.getGNIDataSourceID("Index Fungorum");

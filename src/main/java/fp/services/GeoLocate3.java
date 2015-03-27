@@ -52,7 +52,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
             Vector<Double> coordinatesInfo = null;
             try {
                 coordinatesInfo = queryGeoLocate(country, stateProvince, county, locality);
-            } catch (CurrationException e) {
+            } catch (CurationException e) {
                 curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                 comment = comment + " | " + e.getMessage();
                 return;
@@ -340,7 +340,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
     }
 
 
-	public void flushCacheFile() throws CurrationException {
+	public void flushCacheFile() throws CurationException {
 		if(cacheFile == null){
 			return;
 		}
@@ -360,7 +360,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 				writer.close();
 			}
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to write newly found coordinates into cache file "+cacheFile.toString()+" since "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to write newly found coordinates into cache file "+cacheFile.toString()+" since "+e.getMessage());
 		}		
 	}
 
@@ -387,7 +387,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
         }
     }
 
-    public void setCacheFile(String file) throws CurrationException {
+    public void setCacheFile(String file) throws CurationException {
 		initializeCacheFile(file);
 		importFromCache();
         this.useCache = true;
@@ -396,7 +396,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 
 
 
-	private void initializeCacheFile(String fileStr) throws CurrationException {
+	private void initializeCacheFile(String fileStr) throws CurationException {
 		cacheFile = new File(fileStr);
 		
 		if(!cacheFile.exists()){
@@ -405,16 +405,16 @@ public class GeoLocate3 implements IGeoRefValidationService {
 				FileWriter writer = new FileWriter(fileStr);
 				writer.close();
 			} catch (IOException e) {
-				throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
 			}			
 		}
 		
 		if(!cacheFile.isFile()){
-			throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
 		}
 	}
 	
-	private void importFromCache() throws CurrationException{
+	private void importFromCache() throws CurationException{
 		cachedCoordinates = new HashMap<String,String>();
 		newFoundCoordinates = new Vector<String>();
 		
@@ -425,7 +425,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 			while(strLine!=null){
 				String[] info = strLine.split(ColumnDelimiterInCacheFile);
 				if(info.length != 6){
-					throw new CurrationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
+					throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
 				}
 				
 				String country = info[0];
@@ -445,9 +445,9 @@ public class GeoLocate3 implements IGeoRefValidationService {
 			cachedFileReader.close();
 		} catch (FileNotFoundException e) {
 			//Since whether the file exist or not has been tested before, this exception should never be reached.
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		}
 	}
 	
@@ -534,7 +534,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
         return polygonSet;
     }
 
-	private Vector<Double> queryGeoLocate(String country, String stateProvince, String county, String locality) throws CurrationException {
+	private Vector<Double> queryGeoLocate(String country, String stateProvince, String county, String locality) throws CurationException {
 
         serviceName += " | GeoLocate";
         Reader stream = null;
@@ -580,11 +580,11 @@ public class GeoLocate3 implements IGeoRefValidationService {
                     cache.insert(skey);
                 }
             } catch (ClientProtocolException e) {
-                throw new CurrationException("GeoLocateService failed to access GeoLocate service for A "+e.getMessage());
+                throw new CurationException("GeoLocateService failed to access GeoLocate service for A "+e.getMessage());
             } catch (UnsupportedEncodingException e) {
-                throw new CurrationException("GeoLocateService failed to access GeoLocate service for B "+e.getMessage());
+                throw new CurationException("GeoLocateService failed to access GeoLocate service for B "+e.getMessage());
             } catch (IOException e) {
-                throw new CurrationException("GeoLocateService failed to access GeoLocate service for C "+e.getMessage());
+                throw new CurationException("GeoLocateService failed to access GeoLocate service for C "+e.getMessage());
             }
         }
 
@@ -595,7 +595,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
         try {
             document = reader.read(stream);
         } catch (DocumentException e) {
-            throw new CurrationException("GeoLocateService failed to get the coordinates information by parsing the response from GeoLocate service at: "+url+" for: "+e.getMessage());
+            throw new CurationException("GeoLocateService failed to get the coordinates information by parsing the response from GeoLocate service at: "+url+" for: "+e.getMessage());
         }
 
         Node latitudeNode = document.selectSingleNode("/geo:Georef_Result_Set/geo:ResultSet[1]/geo:WGS84Coordinate/geo:Latitude");

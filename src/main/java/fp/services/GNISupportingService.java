@@ -1,6 +1,6 @@
 package fp.services;
 
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -45,9 +45,9 @@ public class GNISupportingService {
 	    * @param name Scientific Name string including authorship.
 	    * @return String vector containing the canonical scientificName as the first element and the
 	    * scientificNameAuthorship as the second element.
-	    * @throws CurrationException on encountering problems with the web service call.
+	    * @throws CurationException on encountering problems with the web service call.
 	    */
-	   public static Vector<String> parseName(String name) throws CurrationException {
+	   public static Vector<String> parseName(String name) throws CurationException {
 	       Vector<String> result = new Vector<String>();
            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
            httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
@@ -62,7 +62,7 @@ public class GNISupportingService {
                HttpResponse resp = httpclient.execute(httpPost);
 	           long statusCode = resp.getStatusLine().getStatusCode();
 	           if(statusCode!=200){
-	               throw new CurrationException("Failed to parse name of "+ name+" by accessing GNI name parser service at: " +GNINameParsingURL);
+	               throw new CurationException("Failed to parse name of "+ name+" by accessing GNI name parser service at: " +GNINameParsingURL);
 	           }           
                InputStream reponseStream = resp.getEntity().getContent();
 	           
@@ -80,9 +80,9 @@ public class GNISupportingService {
 	               result.add(scientificNameAuthorshipNode.getText());
 	           } 
 	       } catch (IOException e) {
-	           throw new CurrationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
+	           throw new CurationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
 	       } catch (DocumentException e) {
-	           throw new CurrationException("Failed to get the IPNI source ID by parsing the response from GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
+	           throw new CurationException("Failed to get the IPNI source ID by parsing the response from GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
 	       }       
 	       return result;
 	   }
@@ -96,9 +96,9 @@ public class GNISupportingService {
 	    * @param sourceID the GNI ID of the data source which must provide the returned name.  
 	    * @return the scientific name string in the same lexical group as the scientificName provided
 	    * which is also a name provided to GNI by the sourceID.
-	    * @throws CurrationException
+	    * @throws CurationException
 	    */
-	   public static String searchLexicalGroupInGNI(String scientificName, String sourceID) throws CurrationException{
+	   public static String searchLexicalGroupInGNI(String scientificName, String sourceID) throws CurationException{
            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
            httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
            httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
@@ -115,7 +115,7 @@ public class GNISupportingService {
                HttpResponse resp = httpclient.execute(httpPost);
 	           long statusCode = resp.getStatusLine().getStatusCode();
 	           if(statusCode!=200){
-	               throw new CurrationException("Failed to search for the ScientificName in the same lexical group as "+ scientificName+" and from source "+sourceID+ " by accessing GNI service at: " +GNINameResolverURL);
+	               throw new CurationException("Failed to search for the ScientificName in the same lexical group as "+ scientificName+" and from source "+sourceID+ " by accessing GNI service at: " +GNINameResolverURL);
 	           }           
                InputStream reponseStream = resp.getEntity().getContent();
 	           
@@ -130,9 +130,9 @@ public class GNISupportingService {
 	           System.out.println("GNI match: " + nameStringNode.getText());
 	           return nameStringNode.getText();            
 	       } catch (IOException e) {
-	           throw new CurrationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
+	           throw new CurationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
 	       } catch (DocumentException e) {
-	           throw new CurrationException("Failed to get the IPNI source ID by parsing the response from GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
+	           throw new CurationException("Failed to get the IPNI source ID by parsing the response from GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
 	       }           
 	   }	   
 	   
@@ -143,9 +143,9 @@ public class GNISupportingService {
 	    * 
 	    * @param scientificName the name to check.
 	    * @return a string vector containing the scientificName and the scientificNameAuthorship.
-	    * @throws CurrationException
+	    * @throws CurationException
 	    */
-	   public static Vector<String> resolveDataSourcesNameInLexicalGroupFromGNI(String scientificName) throws CurrationException{
+	   public static Vector<String> resolveDataSourcesNameInLexicalGroupFromGNI(String scientificName) throws CurationException{
 		   
 		   ArrayList<String> sourcesToCheck = new ArrayList<String>();
 		   // List of targets, returns first matching target.
@@ -193,7 +193,7 @@ public class GNISupportingService {
 	    * @param title
 	    * @return
 	    */
-	   public static String getGNIDataSourceID(String title)  throws CurrationException  {
+	   public static String getGNIDataSourceID(String title)  throws CurationException  {
            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
            httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
            httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
@@ -204,7 +204,7 @@ public class GNISupportingService {
                long statusCode = resp.getStatusLine().getStatusCode();
 	           if(statusCode!=200){
 	        	   System.out.println(GNIResourceURL + "is returning status " + Long.toString(statusCode));
-	               throw new CurrationException("Failed to get the " + title + " source ID by accessing GNI service at: "+GNIResourceURL);
+	               throw new CurationException("Failed to get the " + title + " source ID by accessing GNI service at: "+GNIResourceURL);
 	           }           
                InputStream reponseStream = resp.getEntity().getContent();
 	           
@@ -220,19 +220,19 @@ public class GNISupportingService {
 	           return idNode.getText();            
 	       } catch (IOException e) {
 	    	   System.out.println("GNIsupportingService1: " + e.getMessage());
-	           throw new CurrationException("Failed to get the "+ title +" source ID by accessing GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
+	           throw new CurationException("Failed to get the "+ title +" source ID by accessing GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
 	       } catch (DocumentException e) {
 	    	   System.out.println("GNIsupportingService2: " + e.getMessage());
-	           throw new CurrationException("Failed to get the "+ title +" source ID by parsing the response from GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
+	           throw new CurationException("Failed to get the "+ title +" source ID by parsing the response from GNI service at: "+GNIResourceURL+" for: "+e.getMessage());
 	       } 	   
 	   }
 	   
 	   /**
 	    * Wrapper for getGNIDataSourceID("IPNI"). 
 	    * @return GNI dataSourceID for data source with the title IPNI.
-	    * @throws CurrationException
+	    * @throws CurationException
 	    */
-	   public static String getIPNISourceId() throws CurrationException {
+	   public static String getIPNISourceId() throws CurationException {
 		   return getGNIDataSourceID("IPNI");         
 	   }	   
 	   
