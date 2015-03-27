@@ -394,9 +394,9 @@ public class SciNameServiceUtil {
                                curationStatus = CurationComment.CURATED;
                                comment = comment + " | found synonyms and synonyms have been resolved";
                            }else{
-                               throw new CurrationException("can't solve synonyms");
+                               throw new CurationException("can't solve synonyms");
                            }
-                       }catch (CurrationException e){
+                       }catch (CurationException e){
                            comment = comment + " | found synonyms but can't parse accepted name";
                            resultMap.put("scientificName", null);
                            resultMap.put("curationStatus", CurationComment.UNABLE_DETERMINE_VALIDITY.toString());

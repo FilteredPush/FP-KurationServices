@@ -1,8 +1,12 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.ICNafpAuthorNameComparator;
+import edu.harvard.mcz.nametools.NameComparison;
+import edu.harvard.mcz.nametools.NameUsage;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
-import fp.util.CurrationException;
+import fp.util.CurationException;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -70,7 +74,62 @@ public class IPNIService implements IScientificNameValidationService {
 			//try to find it in IPNI service			
 			try{
 				String source = "";
-				String id = simplePlantNameSearch(scientificName, author);
+				List<NameUsage> searchResults = plantNameSearch(scientificName, author);
+				String id = null;
+				if (searchResults.size()==1) { 
+					// found exactly one match on scientific name, check if the author is a plausible match.
+					source = "IPNI";
+					NameUsage match = searchResults.get(0);
+					int iid = match.getKey();
+					id = Integer.toString(iid);
+					//got one  match by searching in IPNI
+					IPNIlsid = match.getGuid(); 
+					correctedScientificName = match.getScientificName();
+					correctedAuthor = match.getAuthorship();
+					if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
+					   comment = "The scientific name and authorship are correct.  " + match.getMatchDescription();
+					   curationStatus = CurationComment.CORRECT;
+					} else if (match.getMatchDescription().equals(NameComparison.MATCH_ERROR) || match.getMatchDescription().equals(NameComparison.MATCH_DISSIMILAR)) {
+						// no match to report
+						id = null;
+					} else { 
+						comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
+						curationStatus = CurationComment.CURATED;
+					}
+				} else if (searchResults.size()>1) {  
+					// found more than one match on scientific name, return the case with the best match on the author.
+				    Iterator<NameUsage> i = searchResults.iterator();
+				    boolean done = false;
+				    double bestMatch = -1d;
+				    while (i.hasNext() && !done) { 
+				    	NameUsage match = i.next();
+				    	// pick the best match out of the search results.
+				    	if (match.getAuthorshipStringEditDistance()>bestMatch) { 
+				    		bestMatch = match.getAuthorshipStringEditDistance();
+				    	} else { 
+				    		if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
+				    			source = "IPNI";
+				    			int iid = match.getKey();
+				    			id = Integer.toString(iid);
+				    			IPNIlsid = match.getGuid(); 
+				    			correctedScientificName = match.getScientificName();
+				    			correctedAuthor = match.getAuthorship();
+				    			comment = "The scientific name and authorship are correct.";
+				    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
+				    				comment = "The scientific name and authorship are correct.  " + match.getMatchDescription();
+				    				curationStatus = CurationComment.CORRECT;
+				    			} else { 
+				    				comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
+				    				curationStatus = CurationComment.CURATED;
+				    			}
+				    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT)) {
+				    				done = true;
+				    			}
+				    		}
+				    	}
+				    }
+				}
+				// found no plausible matches
 				if(id == null){ 
 					//access the GNI and try to get the name that is in the lexical group and from IPNI
 					Vector<String> resolvedNameInfo = resolveIPNINameInLexicalGroupFromGNI(scientificName);
@@ -98,14 +157,6 @@ public class IPNIService implements IScientificNameValidationService {
 							source = "IPNI/GNI";
 						}
 					}					
-				}else{
-					//get a match by searching in IPNI
-					IPNIlsid = constructIPNILSID(id); 
-					correctedScientificName = scientificName;
-					correctedAuthor = author;
-					comment = "The scientific name and authorship are correct.";
-					curationStatus = CurationComment.CORRECT;
-					source = "IPNI";				
 				}				
 				
 				//write newly found information into hashmap and later write into the cached file if it exists
@@ -172,13 +223,13 @@ public class IPNIService implements IScientificNameValidationService {
 		return comment;
 	}	
 
-	public void setCacheFile(String file) throws CurrationException {
+	public void setCacheFile(String file) throws CurationException {
         useCache = true;
 		initializeCacheFile(file);
 		importFromCache();
 	}
 
-	public void flushCacheFile() throws CurrationException {
+	public void flushCacheFile() throws CurationException {
 		if(cacheFile == null){
 			return;
 		}
@@ -204,7 +255,7 @@ public class IPNIService implements IScientificNameValidationService {
                 }
             }
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
 		}
 	}
 
@@ -223,7 +274,7 @@ public class IPNIService implements IScientificNameValidationService {
 		return serviceName;
 	}
 
-	private void initializeCacheFile(String fileStr) throws CurrationException{
+	private void initializeCacheFile(String fileStr) throws CurationException{
 		cacheFile = new File(fileStr);
 
 		if(!cacheFile.exists()){
@@ -232,16 +283,16 @@ public class IPNIService implements IScientificNameValidationService {
 				FileWriter writer = new FileWriter(fileStr);
 				writer.close();
 			} catch (IOException e) {
-				throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
 			}
 		}
 
 		if(!cacheFile.isFile()){
-			throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
 		}
 	}
 
-	private void importFromCache() throws CurrationException{
+	private void importFromCache() throws CurationException{
 		cachedScientificName = new HashMap<String,HashMap<String,String>>();
 		newFoundScientificName = new Vector<String>();
 
@@ -252,7 +303,7 @@ public class IPNIService implements IScientificNameValidationService {
 			while(strLine!=null){
 				String[] info = strLine.split(ColumnDelimiterInCacheFile,-1);
 				if(info.length != 5){
-					throw new CurrationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
+					throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
 				}
 
 				String taxon = info[0];
@@ -273,9 +324,9 @@ public class IPNIService implements IScientificNameValidationService {
 			cachedFileReader.close();
 		} catch (FileNotFoundException e) {
 			//Since whether the file exist or not has been tested before, this exception should never be reached.
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
 		}
 	}
 
@@ -286,8 +337,20 @@ public class IPNIService implements IScientificNameValidationService {
 	private String constructIPNILSID(String id){
 		return ipniLSIDPrefix+id;
 	}
+	
+	/**
+	 * Query IPNI's simple plant name search with a scientificName, obtain a list of zero to 
+	 * many matches where the authorship is an exact match (ignoring spaces), or is a matching
+	 * abbreviation of the provided authorship.
+	 * 
+	 * @param taxon the scientific name to check
+	 * @param author the author to find amongst the results
+	 * @return a list of NameUsage instances on for each case of a matching name and authorship
+	 * @throws CurationException
+	 */
+	public List<NameUsage> plantNameSearch(String taxon, String author) throws CurationException { 
+		List<NameUsage> result = new ArrayList<NameUsage>();
 		
-	private String simplePlantNameSearch(String taxon, String author) throws CurrationException {
 		String outputFormat = "delimited-minimal";
         long starttime = System.currentTimeMillis();
 		
@@ -305,7 +368,100 @@ public class IPNIService implements IScientificNameValidationService {
             httpPost.setEntity(new UrlEncodedFormEntity(parameters));
             resp = httpclient.execute(httpPost);
             if (resp.getStatusLine().getStatusCode() != 200) {
-				throw new CurrationException("IPNIService failed to send request to IPNI for "+resp.getStatusLine().getStatusCode());
+				throw new CurationException("IPNIService failed to send request to IPNI for "+resp.getStatusLine().getStatusCode());
+			}				
+            InputStream response = resp.getEntity().getContent();
+			
+			//parse the response
+			String id  = null;
+			String version = "";
+			BufferedReader responseReader = new BufferedReader(new InputStreamReader(response));
+			//skip the head
+			String strLine = responseReader.readLine();
+			while( (strLine = responseReader.readLine())!=null ){
+				String [] info = strLine.split("%");
+				if(info.length!=5){
+					throw new CurationException("IPNIService failed in simplePlantNameSearch for " + taxon + "since the returned value doesn't contain valid information.");
+				}
+				String foundId = info[0].trim();
+				String foundVersion = info[1].trim();
+				String foundTaxon = info[3].trim();
+				String foundAuthor = info[4].trim();
+				NameUsage usage = new NameUsage();
+				usage.setKey(Integer.parseInt(foundId.replaceAll("[^0-9]", "")));
+				usage.setScientificName(foundTaxon);
+                usage.setAuthorship(foundAuthor);
+                usage.setGuid(constructIPNILSID(foundId));
+                usage.setAuthorComparator(new ICNafpAuthorNameComparator(.75d,.5d));
+                usage.setOriginalAuthorship(author);
+                usage.setOriginalScientificName(taxon);
+                NameComparison comparison = usage.getAuthorComparator().compare(author, foundAuthor);
+                usage.setAuthorshipStringEditDistance(comparison.getSimilarity());
+                usage.setMatchDescription(comparison.getMatchType());
+				if(     foundTaxon.toLowerCase().equals(taxon.toLowerCase().trim()) 
+						&&
+						(
+						  comparison.getMatchType().equals(NameComparison.MATCH_EXACT)
+						  ||
+						  comparison.getSimilarity()==1d
+						  ||
+						  comparison.getMatchType().equals(NameComparison.MATCH_SAMEBUTABBREVIATED)
+			            )
+					)
+				{
+					//found one
+		            result.add(usage);
+					if(version.equals("") || version.compareTo(foundVersion)<=0){
+						//the newly found one is more recent
+						version = foundVersion;
+						id = foundId;
+					}
+				}
+				
+				strLine = responseReader.readLine();
+			}
+			responseReader.close();
+            httpPost.releaseConnection();
+            List l = new LinkedList();
+            l.add(this.getClass().getSimpleName());
+            l.add(starttime);
+            l.add(System.currentTimeMillis());
+            l.add(httpPost.toString());
+            log.add(l);
+		} catch (IOException e) {
+			throw new CurationException("IPNIService failed to access IPNI service for "+e.getMessage());
+		}			
+		
+		return result;
+	}	
+	
+	/** 
+	 * Search IPNI on taxon, return id for a result with an exact match on author.
+	 * 
+	 * @param taxon
+	 * @param author
+	 * @return
+	 * @throws CurationException
+	 */
+	public String simplePlantNameSearch(String taxon, String author) throws CurationException {
+		String outputFormat = "delimited-minimal";
+        long starttime = System.currentTimeMillis();
+		
+        HttpClient httpclient = new DefaultHttpClient();
+        httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
+        httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
+
+        List<org.apache.http.NameValuePair> parameters = new ArrayList<org.apache.http.NameValuePair>();
+        parameters.add(new BasicNameValuePair("find_wholeName", taxon));
+        parameters.add(new BasicNameValuePair("output_format", outputFormat));
+		
+		try {
+            HttpResponse resp;
+            HttpPost httpPost = new HttpPost(IPNIurl);
+            httpPost.setEntity(new UrlEncodedFormEntity(parameters));
+            resp = httpclient.execute(httpPost);
+            if (resp.getStatusLine().getStatusCode() != 200) {
+				throw new CurationException("IPNIService failed to send request to IPNI for "+resp.getStatusLine().getStatusCode());
 			}				
             InputStream response = resp.getEntity().getContent();
 			
@@ -319,7 +475,7 @@ public class IPNIService implements IScientificNameValidationService {
 			while(strLine != null){
 				String [] info = strLine.split("%");
 				if(info.length!=5){
-					throw new CurrationException("IPNIService failed in simplePlantNameSearch for " + taxon + "since the returned value doesn't contain valid information.");
+					throw new CurationException("IPNIService failed in simplePlantNameSearch for " + taxon + "since the returned value doesn't contain valid information.");
 				}
 				String foundId = info[0].trim();
 				String foundVersion = info[1].trim();
@@ -348,7 +504,7 @@ public class IPNIService implements IScientificNameValidationService {
             log.add(l);
 			return id;
 		} catch (IOException e) {
-			throw new CurrationException("IPNIService failed to access IPNI service for "+e.getMessage());
+			throw new CurationException("IPNIService failed to access IPNI service for "+e.getMessage());
 		}				
 	}
 	
@@ -358,9 +514,9 @@ public class IPNIService implements IScientificNameValidationService {
 	 * 
 	 * @param scientificName
 	 * @return
-	 * @throws CurrationException
+	 * @throws CurationException
 	 */
-	private Vector<String> resolveIPNINameInLexicalGroupFromGNI(String scientificName) throws CurrationException {
+	private Vector<String> resolveIPNINameInLexicalGroupFromGNI(String scientificName) throws CurationException {
 		//get IPNI service Id at the first time 
 		if(IPNISourceId == null){
 			IPNISourceId = GNISupportingService.getIPNISourceId();

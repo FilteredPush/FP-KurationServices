@@ -116,7 +116,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
             Vector<String> resolvedNameInfo = null;
             try {
                 resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNI(taxon);
-            } catch (CurrationException e) {
+            } catch (CurationException e) {
                 comment = comment + " | Fail to access GNI service";
                 failedAtGNI = true;
                 //return false;

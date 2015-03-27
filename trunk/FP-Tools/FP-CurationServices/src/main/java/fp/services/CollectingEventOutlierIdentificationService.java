@@ -2,7 +2,7 @@ package fp.services;
 
 import fp.util.*;
 import fp.util.CurationComment;
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import fp.util.GEOUtil;
 import fp.util.SpecimenRecordTypeConf;
 
@@ -61,7 +61,7 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 				comment = "There's no collecting event outlier.";
 			}
 			
-		}catch(CurrationException ex){
+		}catch(CurationException ex){
 			comment = ex.getMessage();
 			curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 			return;
@@ -80,7 +80,7 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		return outlierRemoteComparatorMap;
 	}	
 	
-	public void setCacheFile(String file) throws CurrationException {
+	public void setCacheFile(String file) throws CurationException {
 	}	
 	
 	public String getComment(){
@@ -92,7 +92,7 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		return curationStatus;
 	}
 
-	public void flushCacheFile() throws CurrationException {
+	public void flushCacheFile() throws CurationException {
 	}
 
     @Override
@@ -107,37 +107,37 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		return serviceName;
 	}
 	
-	private void initializeLabel() throws CurrationException {
+	private void initializeLabel() throws CurationException {
 		SpecimenRecordTypeConf speicmenRecordTypeConf = SpecimenRecordTypeConf.getInstance();
 				
 		CollectorLabel = speicmenRecordTypeConf.getLabel("RecordedBy");
 		if(CollectorLabel == null){
-			throw new CurrationException(getClass().getName()+" failed since the RecordedBy label of the SpecimenRecordType is not set.");
+			throw new CurationException(getClass().getName()+" failed since the RecordedBy label of the SpecimenRecordType is not set.");
 		}		
 		
 		yearCollectedLabel = speicmenRecordTypeConf.getLabel("YearCollected");
 		if(yearCollectedLabel == null){
-			throw new CurrationException(getClass().getName()+" failed since the YearCollected label of the SpecimenRecordType is not set.");
+			throw new CurationException(getClass().getName()+" failed since the YearCollected label of the SpecimenRecordType is not set.");
 		}
 		
 		monthCollectedLabel = speicmenRecordTypeConf.getLabel("MonthCollected");
 		if(monthCollectedLabel == null){
-			throw new CurrationException(getClass().getName()+" failed since the MonthCollected label of the SpecimenRecordType is not set.");
+			throw new CurationException(getClass().getName()+" failed since the MonthCollected label of the SpecimenRecordType is not set.");
 		}
 		
 		dayCollectedLabel = speicmenRecordTypeConf.getLabel("DayCollected");
 		if(dayCollectedLabel == null){
-			throw new CurrationException(getClass().getName()+" failed since the DayCollected label of the SpecimenRecordType is not set.");
+			throw new CurationException(getClass().getName()+" failed since the DayCollected label of the SpecimenRecordType is not set.");
 		}	
 		
 		latitudeLabel = speicmenRecordTypeConf.getLabel("DecimalLatitude");
 		if(latitudeLabel == null){
-			throw new CurrationException(getClass().getName()+" failed since the DecimalLatitude label of the SpecimenRecordType is not set.");
+			throw new CurationException(getClass().getName()+" failed since the DecimalLatitude label of the SpecimenRecordType is not set.");
 		}
 		
 		longitudeLabel = speicmenRecordTypeConf.getLabel("DecimalLongitude");
 		if(longitudeLabel == null){
-			throw new CurrationException(getClass().getName()+" failed since the DecimalLongitude label of the SpecimenRecordType is not set.");
+			throw new CurationException(getClass().getName()+" failed since the DecimalLongitude label of the SpecimenRecordType is not set.");
 		}		
 	}
 	
@@ -188,7 +188,7 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		}
 	}	
 	
-	private void findOutlier(LinkedList<SpecimenRecord> timeBasedCluster, boolean doRemoteComparison) throws CurrationException {
+	private void findOutlier(LinkedList<SpecimenRecord> timeBasedCluster, boolean doRemoteComparison) throws CurationException {
 		HashMap<SpecimenRecord, LinkedList<SpecimenRecord>> outlierMap = new HashMap<SpecimenRecord, LinkedList<SpecimenRecord>>();
 		LinkedList<SpecimenRecord> localComparator = new LinkedList<SpecimenRecord>();
 		for(int i=0;i<timeBasedCluster.size();i++){
@@ -268,7 +268,7 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		}
 	}	
 	
-	private LinkedList<SpecimenRecord> getAdjacentRecordsFromFP(SpecimenRecord specimenRecord) throws CurrationException {
+	private LinkedList<SpecimenRecord> getAdjacentRecordsFromFP(SpecimenRecord specimenRecord) throws CurationException {
 		//add search conditions
 		String collector = specimenRecord.get(CollectorLabel);
 		int year = Integer.parseInt(specimenRecord.get(yearCollectedLabel));

@@ -2,7 +2,7 @@ package fp.services;
 
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.language.Soundex;
 import org.apache.http.HttpResponse;
@@ -229,7 +229,7 @@ public class GBIFService implements IScientificNameValidationService{
                newFoundScientificName.add(id);
                newFoundScientificName.add(source);                 
            }
-       } catch (CurrationException ex) {
+       } catch (CurationException ex) {
            comment = ex.getMessage();
            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
            return;
@@ -302,13 +302,13 @@ public class GBIFService implements IScientificNameValidationService{
 	   this.foundFamily = foundFamily;
    }
 
-   public void setCacheFile(String file) throws CurrationException {
+   public void setCacheFile(String file) throws CurationException {
 	   initializeCacheFile(file);
 	   importFromCache();
        this.useCache = true;
    }
 
-   public void flushCacheFile() throws CurrationException {
+   public void flushCacheFile() throws CurationException {
        if(cacheFile == null){
            return;
        }
@@ -328,7 +328,7 @@ public class GBIFService implements IScientificNameValidationService{
                writer.close();
            }
        } catch (IOException e) {
-           throw new CurrationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
+           throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
        }
    }
 
@@ -347,7 +347,7 @@ public class GBIFService implements IScientificNameValidationService{
        return serviceName;
    }
 
-   private void initializeCacheFile(String fileStr) throws CurrationException {
+   private void initializeCacheFile(String fileStr) throws CurationException {
        cacheFile = new File(fileStr);
 
        if(!cacheFile.exists()){
@@ -356,16 +356,16 @@ public class GBIFService implements IScientificNameValidationService{
                FileWriter writer = new FileWriter(fileStr);
                writer.close();
            } catch (IOException e) {
-               throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+               throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
            }
        }
 
        if(!cacheFile.isFile()){
-           throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+           throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
        }
    }
 
-   private void importFromCache() throws CurrationException {
+   private void importFromCache() throws CurationException {
        cachedScientificName = new HashMap<String,HashMap<String,String>>();
        newFoundScientificName = new Vector<String>();
 
@@ -376,7 +376,7 @@ public class GBIFService implements IScientificNameValidationService{
            while(strLine!=null){
                String[] info = strLine.split(ColumnDelimiterInCacheFile);
                if(info.length != 5){
-                   throw new CurrationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
+                   throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
                }
 
                String taxon = info[0];
@@ -397,9 +397,9 @@ public class GBIFService implements IScientificNameValidationService{
            cachedFileReader.close();
        } catch (FileNotFoundException e) {
            //Since whether the file exist or not has been tested before, this exception should never be reached.
-           throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+           throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
        } catch (IOException e) {
-           throw new CurrationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
+           throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
        }
    }
 
@@ -418,9 +418,9 @@ public class GBIFService implements IScientificNameValidationService{
     * @param author
     * @param rank one letter rank code for the gbif service rank constraint. 
     * @return the GBIF ChecklistBank ID for the name if found, otherwise null.
-    * @throws CurrationException
+    * @throws CurationException
     */
-   private String checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, boolean useCanonical) throws CurrationException {
+   private String checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, boolean useCanonical) throws CurationException {
        String outputFormat = "delimited-minimal";
        
        //org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
@@ -479,7 +479,7 @@ public class GBIFService implements IScientificNameValidationService{
 
            resp = httpclient.execute(httpPost);
            if (resp.getStatusLine().getStatusCode() != 200) {
-                   throw new CurrationException("GBIFService failed to connect to GBIF with status: "+resp.getStatusLine().getStatusCode());
+                   throw new CurationException("GBIFService failed to connect to GBIF with status: "+resp.getStatusLine().getStatusCode());
            }
 
            InputStream response = resp.getEntity().getContent();
@@ -639,15 +639,15 @@ public class GBIFService implements IScientificNameValidationService{
         			   }
         		   } 
         	   } catch (ClassCastException e) { 
-        		   throw new CurrationException("GBIFService had unexpected return type. "+ e.getMessage());
+        		   throw new CurationException("GBIFService had unexpected return type. "+ e.getMessage());
         	   } catch (ParseException e) {
-        		   throw new CurrationException("GBIFService failed to parse result from GBIF ChecklistBank service "+e.getMessage());
+        		   throw new CurationException("GBIFService failed to parse result from GBIF ChecklistBank service "+e.getMessage());
         	   }
                strLine = responseReader.readLine();
            }
            responseReader.close();
        } catch (IOException e) {
-           throw new CurrationException("GBIFService failed to access GBIF ChecklistBank service with "+e.getMessage());
+           throw new CurationException("GBIFService failed to access GBIF ChecklistBank service with "+e.getMessage());
 	   } 
        
        return id;

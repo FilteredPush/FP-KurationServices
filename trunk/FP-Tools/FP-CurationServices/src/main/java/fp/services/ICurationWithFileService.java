@@ -1,8 +1,8 @@
 package fp.services;
 
-import fp.util.CurrationException;
+import fp.util.CurationException;
 
 public interface ICurationWithFileService  extends ICurationService {
-    public void setCacheFile(String file) throws CurrationException;
-  	public void flushCacheFile() throws CurrationException;
+    public void setCacheFile(String file) throws CurationException;
+  	public void flushCacheFile() throws CurationException;
 }

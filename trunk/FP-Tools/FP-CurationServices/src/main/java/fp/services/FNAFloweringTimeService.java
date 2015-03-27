@@ -2,7 +2,7 @@ package fp.services;
 
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
-import fp.util.CurrationException;
+import fp.util.CurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -22,7 +22,7 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
     private boolean useCache;
     private String FNAFilePath = "/home/tianhong/Downloads/phenology.xml";
 
-    public void setCacheFile(String file) throws CurrationException {
+    public void setCacheFile(String file) throws CurationException {
         useCache = true;
 		initializeCacheFile(file);
 		//importFromCache();
@@ -65,7 +65,7 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 		return curationStatus;
 	}
 
-	public void flushCacheFile() throws CurrationException {
+	public void flushCacheFile() throws CurationException {
 	}
 
     @Override
@@ -82,7 +82,7 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 		return serviceName;
 	}
 
-	private void initializeCacheFile(String fileStr) throws CurrationException {
+	private void initializeCacheFile(String fileStr) throws CurationException {
 		cacheFile = new File(fileStr);
 
 		if(!cacheFile.exists()){
@@ -91,16 +91,16 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 				FileWriter writer = new FileWriter(fileStr);
 				writer.close();
 			} catch (IOException e) {
-				throw new CurrationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
+				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
 			}
 		}
 
 		if(!cacheFile.isFile()){
-			throw new CurrationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
+			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
 		}
 	}
 
-	private void importFromCache() throws CurrationException {
+	private void importFromCache() throws CurationException {
 		authoritativeFloweringTimeMap = new HashMap<String,Vector<String>>();
 
 		try {
@@ -109,7 +109,7 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 			while(strLine!=null){
 				String[] info = strLine.split(ColumnDelimiterInCacheFile,-1);
 				if(info.length!=3){
-					throw new CurrationException(getClass().getName()+" failed since the authoritative file "+cacheFile.toString()+" is invalid at "+strLine);
+					throw new CurationException(getClass().getName()+" failed since the authoritative file "+cacheFile.toString()+" is invalid at "+strLine);
 				}
 				String taxon = info[0].trim().toLowerCase();
 				String floweringTime = info[1].trim();
@@ -118,9 +118,9 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 				strLine = phenologyFileReader.readLine();
 			}
 		} catch (FileNotFoundException e) {
-			throw new CurrationException(getClass().getName()+" failed to find the phenology authoritative file "+cacheFile.toString()+" for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to find the phenology authoritative file "+cacheFile.toString()+" for "+e.getMessage());
 		} catch (IOException e) {
-			throw new CurrationException(getClass().getName()+" failed to read the phenology authoritative file "+cacheFile.toString()+" for "+e.getMessage());
+			throw new CurationException(getClass().getName()+" failed to read the phenology authoritative file "+cacheFile.toString()+" for "+e.getMessage());
 		}
 	}
 
