@@ -23,11 +23,12 @@ import java.util.*;
  * Provides support for scientific name validation against IPNI, the International Plant Names Index.
  * 
  * @author Lei Dou
+ * @author mole
  *
  */
 public class IPNIService implements IScientificNameValidationService {
     private boolean useCache;
-
+    
     public IPNIService(){
 	}
 			
@@ -93,8 +94,13 @@ public class IPNIService implements IScientificNameValidationService {
 						// no match to report
 						id = null;
 					} else { 
-						comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
-						curationStatus = CurationComment.CURATED;
+				        if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
+						   comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
+						   curationStatus = CurationComment.CURATED;
+				        } else { 
+						   // too weak a match to report
+						   id = null;
+				        }
 					}
 				} else if (searchResults.size()>1) {  
 					// found more than one match on scientific name, return the case with the best match on the author.
@@ -583,5 +589,12 @@ public class IPNIService implements IScientificNameValidationService {
     //private final static String IPNIurl = "http://localhost/cache/ipni.php";
 	private final static String ipniLSIDPrefix = "urn:lsid:ipni.org:names:";
 	private final String serviceName = "IPNI";
+
+	/**
+	 * @param correctedScientificName the correctedScientificName to set
+	 */
+	public void setCorrectedScientificName(String correctedScientificName) {
+		this.correctedScientificName = correctedScientificName;
+	}
 
 }
