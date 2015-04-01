@@ -2,6 +2,9 @@ package edu.harvard.mcz.nametools.test;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,6 +58,8 @@ public class TestICNafpAuthorNameComparator {
 		assertEquals(NameComparison.MATCH_SAMEBUTABBREVIATED, comparator.compare("(J. C. Schmidt) Coker & Beers ex Pouzar: Fries","(Schmidt) Coker & Beers ex Pouzar: Fr.").getMatchType());
 		assertEquals(NameComparison.MATCH_SAMEBUTABBREVIATED, comparator.compare( "(Schmidt) Coker & Beers ex Pouzar: Fr." , "(J. C. Schmidt) Coker & Beers ex Pouzar: Fries").getMatchType());
 		assertEquals(NameComparison.MATCH_SAMEBUTABBREVIATED, comparator.compare( "Fries" , "Fr.").getMatchType());
+		assertEquals(NameComparison.MATCH_SAMEBUTABBREVIATED, comparator.compare("(DC.) A.T.Richardson","(de Candolle) A.T.Richardson").getMatchType());
+		assertEquals(NameComparison.MATCH_SAMEBUTABBREVIATED, comparator.compare("(DC.) A.T.Richardson","(de Candolle) A. T. Richardson").getMatchType());
 		assertEquals(NameComparison.MATCH_STRONGDISSIMILAR, comparator.compare( "Fries" , "Fr").getMatchType());
         assertEquals(NameComparison.MATCH_SAMEBUTABBREVIATED, comparator.compare("Pouzar","P.").getMatchType());
 		assertEquals(NameComparison.MATCH_STRONGDISSIMILAR, comparator.compare( "Pouzar" , "P").getMatchType());
@@ -94,6 +99,18 @@ public class TestICNafpAuthorNameComparator {
 		assertEquals(3,ICNafpAuthorNameComparator.tokenizeAuthorship("(Tode: Fries) De Notaris").size());
 		assertEquals(2,ICNafpAuthorNameComparator.tokenizeAuthorship("Fries: Fries").size());
 		assertEquals(2,ICNafpAuthorNameComparator.tokenizeAuthorship("(G. Don) Exell").size());
+		
+		List<String> tokens = new ArrayList<String>();
+		tokens.add("DC.");
+		tokens.add("A.T.Richardson");
+		assertEquals(2,ICNafpAuthorNameComparator.tokenizeAuthorship("(DC.) A.T.Richardson").size());
+		assertEquals(tokens.get(0),ICNafpAuthorNameComparator.tokenizeAuthorship("(DC.) A.T.Richardson").get(0));
+		assertEquals(tokens.get(1),ICNafpAuthorNameComparator.tokenizeAuthorship("(DC.) A.T.Richardson").get(1));
+		assertEquals(tokens,ICNafpAuthorNameComparator.tokenizeAuthorship("(DC.) A.T.Richardson"));
+		
+		tokens.remove(0);
+		tokens.add(0, "de Candolle");
+		assertEquals(tokens,ICNafpAuthorNameComparator.tokenizeAuthorship("(de Candolle) A.T.Richardson"));
 	}
 
 	@Test
@@ -112,6 +129,9 @@ public class TestICNafpAuthorNameComparator {
 		assertEquals("",ICNafpAuthorNameComparator.extractInitials("Fr."));
 		assertEquals("",ICNafpAuthorNameComparator.extractInitials(".F"));
 		assertEquals("",ICNafpAuthorNameComparator.extractInitials("Fries"));
+		
+		assertEquals("",ICNafpAuthorNameComparator.extractInitials("DC."));
+		assertEquals("",ICNafpAuthorNameComparator.extractInitials("de Candolle"));
 	}
 	
 	@Test
@@ -130,20 +150,61 @@ public class TestICNafpAuthorNameComparator {
 		assertFalse(ICNafpAuthorNameComparator.matchedOnWordsInTokens("(J. C. Schmidt) Coker & Beers ex Pouzar: Fries","(J. R. Schmidt) Coker & Beers ex Pouzar: Fries"));
 		assertFalse(ICNafpAuthorNameComparator.matchedOnWordsInTokens("(J. C. Schmidt) Coker & Beers ex Pouzar: Fries","(J. R. Schmidt) Coker & Beers ex Pouzar: Fr."));
 		
-		
 		assertTrue(ICNafpAuthorNameComparator.matchedOnWordsInTokens("L.","Linnaeus"));
 		assertFalse(ICNafpAuthorNameComparator.matchedOnWordsInTokens("L.","Lamarck"));
+		
+		assertTrue(ICNafpAuthorNameComparator.matchedOnWordsInTokens("de Candolle","DC."));
+		assertTrue(ICNafpAuthorNameComparator.matchedOnWordsInTokens("(de Candolle) A. T. Richardson","(DC.) A.T.Richardson"));
 	}
 	
 	@Test 
 	public void testCompareStart() { 
 		assertTrue(ICNafpAuthorNameComparator.compareSameOrStartsWith("L", "Linnaeus"));
+		assertTrue(ICNafpAuthorNameComparator.compareSameOrStartsWith("L.", "Linnaeus"));
 		assertTrue(ICNafpAuthorNameComparator.compareSameOrStartsWith("Sm", "Smith"));
 		assertTrue(ICNafpAuthorNameComparator.compareSameOrStartsWith("Smith", "Sm"));
 		
+		assertTrue(ICNafpAuthorNameComparator.compareSameOrStartsWith("de Candolle", "DC."));
+		assertTrue(ICNafpAuthorNameComparator.compareSameOrStartsWith("de Candolle", "DC"));
+		
 		assertFalse(ICNafpAuthorNameComparator.compareSameOrStartsWith("L", "Lamarck"));
+		assertFalse(ICNafpAuthorNameComparator.compareSameOrStartsWith("L.", "Lamarck"));
 		assertFalse(ICNafpAuthorNameComparator.compareSameOrStartsWith("Joe", "Smith"));
 		
+	}
+	
+	@Test
+	public void testShorterIsAbbreviation() { 
+		// return true if the shorter does not look like an abbreviation
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Smith", "Smith"));
+		
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Sm.", "Smith"));
+		assertTrue(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Sm", "Smith"));
+		
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Fr.", "Fries"));
+		assertTrue(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Fr", "Fries"));
+		
+		// check is not against string match on shorter vs longer
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Fr.", "False"));
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("DC.", "de Candolle"));
+		
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Fr.", "Fr"));
+		assertFalse(ICNafpAuthorNameComparator.shorterButNotAbbreviation("Fr.", "A.Fries"));
+	}
+	
+	@Test
+	public void testInitialsDifferent() { 
+		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("Smith", "Smith"));
+		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("A. Smith", "A.Smith"));
+	    assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("A. Smith", "Smith"));
+		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("Smith", ""));
+		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("A. Smith", ""));
+		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("Smith", "A."));
+	    
+		assertTrue(ICNafpAuthorNameComparator.initalsAreDifferent("A. Smith", "B. Smith"));
+		assertTrue(ICNafpAuthorNameComparator.initalsAreDifferent("A. Smith", "B.Smith"));
+		
+		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("DC.", "de Candolle"));
 	}
 	
 }
