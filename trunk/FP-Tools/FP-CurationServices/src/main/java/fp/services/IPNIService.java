@@ -76,67 +76,10 @@ public class IPNIService implements IScientificNameValidationService {
 			try{
 				String source = "";
 				List<NameUsage> searchResults = plantNameSearch(scientificName, author);
-				String id = null;
-				if (searchResults.size()==1) { 
-					// found exactly one match on scientific name, check if the author is a plausible match.
+				String id = handleSearchResults(searchResults);
+				if(id != null){
 					source = "IPNI";
-					NameUsage match = searchResults.get(0);
-					int iid = match.getKey();
-					id = Integer.toString(iid);
-					//got one  match by searching in IPNI
-					IPNIlsid = match.getGuid(); 
-					correctedScientificName = match.getScientificName();
-					correctedAuthor = match.getAuthorship();
-					if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
-					   comment = "The scientific name and authorship are correct.  " + match.getMatchDescription();
-					   curationStatus = CurationComment.CORRECT;
-					} else if (match.getMatchDescription().equals(NameComparison.MATCH_ERROR) || match.getMatchDescription().equals(NameComparison.MATCH_DISSIMILAR)) {
-						// no match to report
-						id = null;
-					} else { 
-				        if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
-						   comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
-						   curationStatus = CurationComment.CURATED;
-				        } else { 
-						   // too weak a match to report
-						   id = null;
-				        }
-					}
-				} else if (searchResults.size()>1) {  
-					// found more than one match on scientific name, return the case with the best match on the author.
-				    Iterator<NameUsage> i = searchResults.iterator();
-				    boolean done = false;
-				    double bestMatch = -1d;
-				    while (i.hasNext() && !done) { 
-				    	NameUsage match = i.next();
-				    	// pick the best match out of the search results.
-				    	if (match.getAuthorshipStringEditDistance()>bestMatch) { 
-				    		bestMatch = match.getAuthorshipStringEditDistance();
-				    	} else { 
-				    		if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
-				    			source = "IPNI";
-				    			int iid = match.getKey();
-				    			id = Integer.toString(iid);
-				    			IPNIlsid = match.getGuid(); 
-				    			correctedScientificName = match.getScientificName();
-				    			correctedAuthor = match.getAuthorship();
-				    			comment = "The scientific name and authorship are correct.";
-				    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
-				    				comment = "The scientific name and authorship are correct.  " + match.getMatchDescription();
-				    				curationStatus = CurationComment.CORRECT;
-				    			} else { 
-				    				comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
-				    				curationStatus = CurationComment.CURATED;
-				    			}
-				    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT)) {
-				    				done = true;
-				    			}
-				    		}
-				    	}
-				    }
-				}
-				// found no plausible matches
-				if(id == null){ 
+				} else {
 					//access the GNI and try to get the name that is in the lexical group and from IPNI
 					Vector<String> resolvedNameInfo = resolveIPNINameInLexicalGroupFromGNI(scientificName);
 					
@@ -149,7 +92,8 @@ public class IPNIService implements IScientificNameValidationService {
 						String resolvedScientificNameAuthorship = resolvedNameInfo.get(1);
 
 						//searching for this name in IPNI again to get the IPNI LSID
-						id = simplePlantNameSearch(resolvedScientificName, resolvedScientificNameAuthorship);
+						searchResults = plantNameSearch(resolvedScientificName, resolvedScientificNameAuthorship);
+						id = handleSearchResults(searchResults);
 						if(id == null){
 							//failed to find the name got from GNI in the IPNI
 							comment = "Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.";
@@ -412,6 +356,10 @@ public class IPNIService implements IScientificNameValidationService {
 						  comparison.getSimilarity()==1d
 						  ||
 						  comparison.getMatchType().equals(NameComparison.MATCH_SAMEBUTABBREVIATED)
+						  ||
+						  comparison.getMatchType().equals(NameComparison.MATCH_AUTHSIMILAR)
+						  ||
+						  comparison.getMatchType().equals(NameComparison.MATCH_ADDSAUTHOR)
 			            )
 					)
 				{
@@ -440,6 +388,74 @@ public class IPNIService implements IScientificNameValidationService {
 		
 		return result;
 	}	
+	
+    protected String handleSearchResults(List<NameUsage> searchResults) { 
+		String id = null;
+		if (searchResults.size()==1) { 
+			NameUsage match = searchResults.get(0);
+			int iid = match.getKey();
+			id = Integer.toString(iid);
+			//got one  match by searching in IPNI
+			IPNIlsid = match.getGuid(); 
+			correctedScientificName = match.getScientificName();
+			correctedAuthor = match.getAuthorship();
+			if ( match.getMatchDescription().equals(NameComparison.MATCH_EXACT)
+					|| match.getAuthorshipStringEditDistance()==1d) { 
+			   comment = "The scientific name and authorship are correct.  " + match.getMatchDescription();
+			   curationStatus = CurationComment.CORRECT;
+			} else if (match.getMatchDescription().equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
+			   comment = "The scientific name and authorship are probably correct, but with a different abbreviation for the author.  " + match.getMatchDescription();
+			   curationStatus = CurationComment.CORRECT;
+			} else if (match.getMatchDescription().equals(NameComparison.MATCH_ADDSAUTHOR)) { 
+			   comment = "An authorship is suggested where none was provided.  " + match.getMatchDescription();
+			   curationStatus = CurationComment.CURATED;
+			} else if (match.getMatchDescription().equals(NameComparison.MATCH_ERROR) 
+					|| match.getMatchDescription().equals(NameComparison.MATCH_DISSIMILAR)) {
+				// no match to report
+				id = null;
+			} else { 
+		        if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
+				   comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
+				   curationStatus = CurationComment.CURATED;
+		        } else { 
+				   // too weak a match to report
+				   id = null;
+		        }
+			}
+		} else if (searchResults.size()>1) {  
+		    Iterator<NameUsage> i = searchResults.iterator();
+		    boolean done = false;
+		    double bestMatch = -1d;
+		    while (i.hasNext() && !done) { 
+		    	NameUsage match = i.next();
+		    	// pick the best match out of the search results.
+		    	if (match.getAuthorshipStringEditDistance()>bestMatch) { 
+		    		bestMatch = match.getAuthorshipStringEditDistance();
+		    	} else { 
+		    		if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
+		    			int iid = match.getKey();
+		    			id = Integer.toString(iid);
+		    			IPNIlsid = match.getGuid(); 
+		    			correctedScientificName = match.getScientificName();
+		    			correctedAuthor = match.getAuthorship();
+		    			comment = "The scientific name and authorship are correct.";
+		    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
+		    				comment = "The scientific name and authorship are correct.  " + match.getMatchDescription();
+		    				curationStatus = CurationComment.CORRECT;
+		    			} else { 
+		    				comment = "Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance();
+		    				curationStatus = CurationComment.CURATED;
+		    			}
+		    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT)) {
+		    				done = true;
+		    			}
+		    		}
+		    	}
+		    }
+		}
+		return id;
+    }
+  	
 	
 	/** 
 	 * Search IPNI on taxon, return id for a result with an exact match on author.
