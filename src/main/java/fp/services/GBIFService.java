@@ -152,10 +152,11 @@ public class GBIFService implements IScientificNameValidationService{
                Vector<String> resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNI(scientificNameToValidate);
                
                // TODO: Fix double pass stuff copied from IPNI/GNI service check
+               // TODO: GNI won't point to a GBIF data set as a source
                
                if(resolvedNameInfo == null || resolvedNameInfo.size()==0){
                    //failed to find it in GNI                      
-                   comment = "Can't find the scientific name and authorship by searching in IPNI and the lexical group from IPNI in GNI.";
+                   comment = "Can't find the scientific name and authorship by searching in GBIF or in in GNI.";
                }else{
                    //find it in GNI
                    String resolvedScientificName = resolvedNameInfo.get(0);
@@ -165,13 +166,13 @@ public class GBIFService implements IScientificNameValidationService{
                    id = checklistBankNameSearch(resolvedScientificName, resolvedScientificNameAuthorship, rank, kingdom, phylum, tclass, false);
                    if(id == null){
                        //failed to find the name got from GNI in the IPNI
-                       comment = "Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.";
+                       comment = "Found name in GNI which is in the same lexical group as the searched scientific name with GBIF as source but failed to find this name in GBIF.";
                    }else{
-                       //correct the wrong scientific name or author by searching in both IPNI and GNI
+                       //correct the wrong scientific name or author by searching in both GBIF and GNI
                        correctedScientificName = resolvedScientificName;
                        correctedAuthor = resolvedScientificNameAuthorship;
                        GBIF_name_GUID = constructGBIFGUID(id); 
-                       comment = "Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.";
+                       comment = "Updated the scientific name (including authorship) with term found in GNI which is from GBIF and in the same lexicalgroup as the original term.";
                        curationStatus = CurationComment.CURATED;
                        source = "IPNI/GNI";
                    }
@@ -571,10 +572,12 @@ public class GBIFService implements IScientificNameValidationService{
         					   if (statusObject !=null) { 
         						   String status = statusObject.toString().trim();
         						   System.out.println(status);
+        						   // TODO: In taxonomic mode, we want to validate all nomenclatural acts, not just accepted names.
         						   if (status.equals("Accepted")) { 
 
         							   String foundId = dataRow.get("nameID").toString().trim();
         							   String foundTaxon = dataRow.get("scientificName").toString().trim();
+        							   String foundAuthorship = dataRow.get("authorship").toString().trim();
         							   System.out.println("Found on Service: " + foundTaxon);
 
         								   id = constructGBIFGUID(foundId);
@@ -586,11 +589,19 @@ public class GBIFService implements IScientificNameValidationService{
         							       Vector<String> nameBits = GNISupportingService.parseName(foundTaxon);
         							       if (nameBits.size()==2) { 
         								       correctedScientificName = nameBits.get(0);
-        								       correctedAuthor = nameBits.get(1);
+        								       if (foundAuthorship == null || foundAuthorship.length()==0) { 
+        								           correctedAuthor = nameBits.get(1);
+        								       } else { 
+        								    	   correctedAuthor = foundAuthorship;
+        								       }
         							       } else { 
-        							    	   // guess that authorship is whatever follows taxon name proviede
+        							    	   // guess that authorship is whatever follows taxon name
         								       correctedScientificName = foundTaxon;
-        								       correctedAuthor = foundTaxon.substring(taxon.length()+1);
+        								       if (foundAuthorship == null || foundAuthorship.length()==0) { 
+        								           correctedAuthor = foundTaxon.substring(taxon.length()+1);
+        								       } else { 
+        								    	   correctedAuthor = foundAuthorship;
+        								       }
         							       } 
         								   comment = "Updated the scientific name (including authorship) and blank higher taxa with values found in GBIF Checklist Bank .";
         								   curationStatus = CurationComment.CURATED;
@@ -624,8 +635,8 @@ public class GBIFService implements IScientificNameValidationService{
         								   
         								   System.out.println(foundKingdom + " " + foundPhylum + " "  + foundClass + " " + foundOrder + " " + foundFamily );
         								   
-        								   // TODO: Handle dataset name containing match
         								   System.out.println(dataRow.get("datasetName").toString());
+        								   comment = comment + "Using GBIF dataset: " + dataRow.get("datasetName").toString();
         								   
         								   // TODO: Evaluate all matches, check for homonyms, check for ambiregnal homonyms. 
         								   matched = true;
