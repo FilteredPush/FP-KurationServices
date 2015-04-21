@@ -157,6 +157,16 @@ public class ICZNAuthorNameComparator extends AuthorNameComparator {
 	    return (au.length()==4);
     }	
 	
+	/**
+	 * Return true if an author contains ( and )
+	 * 
+	 * @param anAuthor to check
+	 * @return true if author contains parenthesizes.
+	 */
+	public static boolean containsParenthesies(String anAuthor) { 
+		return ( anAuthor.contains("(") && anAuthor.contains(")") );
+	}	
+	
 	public static boolean knownAbbreviation(String anAuthor, String toOtherAuthor) { 
 		boolean result = false;
 	    String a = anAuthor.replaceAll("[^A-Za-z'é]", "");
@@ -170,6 +180,8 @@ public class ICZNAuthorNameComparator extends AuthorNameComparator {
 		
 		if (shorter.equals("Linne") && longer.equals("Linnaeus")) { result = true; } 
 		if (shorter.equals("Linné") && longer.equals("Linnaeus")) { result = true; } 
+		if (shorter.equals("Linnæus") && longer.equals("Linnaeus")) { result = true; } 
+		if (shorter.equals("Linné") && longer.equals("Linnæus")) { result = true; } 
 		if (shorter.equals("d'Orb.") && longer.equals("d'Orbigny")) { result = true; } 
 		return result;
 	}

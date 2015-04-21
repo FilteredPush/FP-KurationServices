@@ -1,5 +1,8 @@
 package edu.harvard.mcz.nametools;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.json.simple.JSONObject;
 
 public class NameUsage {
@@ -94,6 +97,7 @@ public class NameUsage {
 			sourceID = getValFromKey(json,"sourceId");
 			link = getValFromKey(json,"link");
             synonyms = Boolean.parseBoolean(getValFromKey(json,"synonym"));
+            fixAuthorship();
 		}
 	}
 	
@@ -552,6 +556,40 @@ public class NameUsage {
 	 */
 	public void setAuthorComparator(AuthorNameComparator authorComparator) {
 		this.authorComparator = authorComparator;
+	}	
+	
+	/**
+	 * Fix certain known cases of errors in the formulation of an 
+	 * authorship string, sensitive to relevant nomenclatural code.
+	 * Remove authorship from scientific name if present.
+	 */
+	public void fixAuthorship() { 
+		if (authorship!=null) { 
+			if (scientificName != null && scientificName.contains(authorship)) { 
+				scientificName.replace(authorship, "");
+			    scientificName = scientificName.trim();
+			}
+			authorship = authorship.trim();
+			if (kingdom.equals("Animalia")) { 
+				if (ICZNAuthorNameComparator.containsParenthesies(authorship)) { 
+					// Fix pathological case sometimes returned by COL: Author (year)
+					// which should be (Author, year).
+					
+					//^([A-Za-z., ]+)[, ]*\(([0-9]{4})\)$
+					Pattern p = Pattern.compile("^([A-Za-z., ]+)[, ]*\\(([0-9]{4})\\)$");
+					Matcher matcher = p.matcher(authorship);
+					if (matcher.matches()) { 
+					   StringBuffer retval = new StringBuffer();
+					   retval.append("(");
+					   retval.append(matcher.group(1).trim());
+					   retval.append(", ");
+					   retval.append(matcher.group(2));
+					   retval.append(")");
+	 				   authorship = retval.toString().trim();
+					}
+				}
+			}
+		}
 	}	
 	
 }
