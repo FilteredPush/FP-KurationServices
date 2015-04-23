@@ -3,6 +3,9 @@ package fp.util;
 
 import edu.harvard.mcz.nametools.NameUsage;
 import fp.services.GNISupportingService;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.nameparser.NameParser;
 import org.gbif.nameparser.UnparsableException;
@@ -21,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 
 /**
@@ -31,6 +35,8 @@ import java.util.Vector;
  *
  */
 public class SciNameServiceUtil {
+	
+	private static final Log log = LogFactory.getLog(SciNameServiceUtil.class);
 
     private boolean useCache = false;
    private File cacheFile = null;
@@ -480,8 +486,7 @@ public class SciNameServiceUtil {
                     System.out.println("no result in json object");
                 }
             } catch (ClassCastException e) {
-                // array = (JSONArray)parser.parse(json);
-                e.printStackTrace();
+            	log.debug(e.getMessage(), e);
             }
 
             Iterator i = array.iterator();
@@ -500,10 +505,10 @@ public class SciNameServiceUtil {
             }
 
         } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.debug(e.getMessage(), e);
         }   catch (Exception e){
-            System.out.println("parsing error url = " + url.toString());
+        	log.error("parsing error url = " + url.toString());
+        	log.error(e.getMessage());
         }
         return nameUsageSet;
     }
