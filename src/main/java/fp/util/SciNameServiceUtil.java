@@ -43,7 +43,7 @@ public class SciNameServiceUtil {
    private HashMap<String, HashMap<String,String>> cachedScientificName;
    private Vector<String> newFoundScientificName;
    private static final String ColumnDelimiterInCacheFile = "\t";
-    private static final String GBIF_SERVICE = "http://api.gbif.org/v0.9";
+    private static final String GBIF_SERVICE = "http://api.gbif.org/v1";
 
    //private CurationStatus curationStatus;
    //private String validatedScientificName = null;
