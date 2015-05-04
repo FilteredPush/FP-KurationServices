@@ -179,7 +179,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             //System.out.println("eventDate = " + eventDate);
             comment = comment + " | eventDate is null?";
         } catch(IllegalArgumentException e){
-            System.out.println("not encoded format for date: " + eventDate);
+            if(eventDate.length() == 0) comment += " | eventDate is empty";
+            else comment += " | not encoded format for date: " + eventDate;
         }
 
         try{
@@ -347,7 +348,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             index = collector.indexOf(".", index+2);
         }
 
-        if(collector.contains("[") || collector.contains("]") || collector.contains("(") || collector.contains(")") || collector.contains("&")){
+        if(collector.contains("[") || collector.contains("]") || collector.contains("(") || collector.contains(")") || collector.contains("&") || collector.contains(":")){
             //System.out.println("wired names:" + collector + "|"+wired);
             return false;
         }else if(!collector.contains(" ")){
@@ -415,10 +416,11 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             }else{
                 //System.out.println("has result: " + collector);
                 boolean liesIn = true;
+                //for handling empty birth or death date, set the default boundary
+                int birth = 1000;
+                int death = 2020;
                 for(HashMap<String, String> birthAndDeath : lifeSpan){
-                    //for handling empty birth or death date, set the default boundary
-                    int birth = 1000;
-                    int death = 2020;
+
                     if(birthAndDeath.containsKey(birthLabel) && !birthAndDeath.get(birthLabel).equals(" ")) {
                         birth = Integer.valueOf(birthAndDeath.get(birthLabel));
                     }else{
@@ -435,7 +437,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 }
 
                 if(liesIn){
-                    comment += " | eventDate lies within the life span data of collector:" + collector;
+                    comment += " | eventDate lies within the life span data of collector: " + collector + " (" + birth + " - " + death + ").";
 
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return true;
