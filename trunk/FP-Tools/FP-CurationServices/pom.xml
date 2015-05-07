@@ -130,6 +130,20 @@
 
 
     <repositories>
+
+
+        <repository>
+            <id>ncsa.oss-sonatype</id>
+            <name>NCSA OSS-Sonatype Repository</name>
+            <url>https://opensource.ncsa.illinois.edu/nexus/content/repositories/oss-sonatype/</url>
+        </repository>
+
+        <repository>
+            <id>ncsa.thirdparty</id>
+            <name>NCSA 3rd party jar maven repository</name>
+            <url>https://opensource.ncsa.illinois.edu/nexus/content/repositories/thirdparty/</url>
+        </repository>
+
         <repository>
             <id>gbif-all</id>
             <name>GBIF repository</name>
