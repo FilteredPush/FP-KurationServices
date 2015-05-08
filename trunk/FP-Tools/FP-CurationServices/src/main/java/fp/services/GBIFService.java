@@ -50,6 +50,8 @@ public class GBIFService implements IScientificNameValidationService{
    
    // private String IPNISourceId = null; 
    
+   // TODO: Refactor to current GBIF API: http://api.gbif.org/v1
+   
    /**
     * Checklist bank name resolver url, currently does not appear to be working.
     */
@@ -335,7 +337,8 @@ public class GBIFService implements IScientificNameValidationService{
 
     @Override
     public List<List> getLog() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    	//TODO: Implement.
+        return new ArrayList<List>();
     }
 
     public void setUseCache(boolean use) {
