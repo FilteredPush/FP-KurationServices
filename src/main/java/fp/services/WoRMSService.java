@@ -3,11 +3,13 @@ package fp.services;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurationException;
+
 import org.marinespecies.aphia.v1_0.AphiaNameServicePortTypeProxy;
 import org.marinespecies.aphia.v1_0.AphiaRecord;
 
 import java.io.*;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -208,7 +210,8 @@ public class WoRMSService implements IScientificNameValidationService{
 
     @Override
     public List<List> getLog() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    	//TODO: Implement
+    	return new ArrayList<List>();
     }
 
     public void setUseCache(boolean use) {

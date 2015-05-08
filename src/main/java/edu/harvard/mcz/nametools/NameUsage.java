@@ -225,6 +225,9 @@ public class NameUsage {
 	 * @return the scientificName
 	 */
 	public String getScientificName() {
+		if (scientificName==null) { 
+			return "";
+		}
 		return scientificName;
 	}
 
