@@ -20,6 +20,51 @@ public abstract class AuthorNameComparator {
 	public abstract NameComparison compare(String anAuthor, String toOtherAuthor);
 	
 	/**
+	 * Given an authorship string and a kingdom, guess at the correct author name comparator to use.
+	 * 
+	 * @param authorship
+	 * @param kingdom
+	 * @return
+	 */
+	public static AuthorNameComparator authorNameComparatorFactory(String authorship, String kingdom) { 
+		AuthorNameComparator result = new ICZNAuthorNameComparator(.75d, .5d);
+		if (kingdom!=null && (kingdom.toLowerCase().equals("plantae") || kingdom.toLowerCase().equals("fungi"))) {
+			// Plants and fungi follow ICNafp.
+			result = new ICNafpAuthorNameComparator(.75d, .5d);
+		} else { 
+			if (authorship!=null) { 
+				boolean plantFlag = false;
+				boolean animalFlag = false;
+				if (authorship.matches("[0-9]{4}")) {
+					// assume an animal form of the authorship string if the authorship contains a year.
+					animalFlag = true;
+				}
+				if (authorship.startsWith("(") && authorship.endsWith(")")) { 
+					// when plant authors contain parenthesies, at least one follows the parenthesies.
+					animalFlag = true;
+				}
+				if (authorship.contains(" ex ") || authorship.contains(":")) { 
+					// only plant names should contain ex authors or sanctioning authors, designated by these characters.
+					plantFlag = true;
+				}
+				if (authorship.startsWith("(") && authorship.contains(")") && authorship.matches("[a-zA-Z.]$") && authorship.matches(") [A-Z]")) {
+					// when plant authors contain parenthesies at least one follows the parenthesis.
+					plantFlag = true;
+				}
+				if (plantFlag==animalFlag) {
+					 // we haven't figured it out yet.
+					// TODO: Try harder.
+				} else { 
+					if (plantFlag) { 
+			            result = new ICNafpAuthorNameComparator(.75d, .5d);
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
+	/**
 	 * Test to see if an authorship string appears to contain a year.
 	 * 
 	 * @param authorship to test for a year.

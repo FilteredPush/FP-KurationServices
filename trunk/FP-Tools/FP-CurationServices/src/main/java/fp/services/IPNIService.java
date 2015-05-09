@@ -1,5 +1,6 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.ICNafpAuthorNameComparator;
 import edu.harvard.mcz.nametools.NameComparison;
 import edu.harvard.mcz.nametools.NameUsage;
@@ -611,6 +612,12 @@ public class IPNIService implements IScientificNameValidationService {
 	 */
 	public void setCorrectedScientificName(String correctedScientificName) {
 		this.correctedScientificName = correctedScientificName;
+	}
+
+	@Override
+	public AuthorNameComparator getAuthorNameComparator(String authorship,
+			String kingdom) {
+		return new ICNafpAuthorNameComparator(.75d, .5d);
 	}
 
 }

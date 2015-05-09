@@ -1,8 +1,20 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import fp.util.CurationStatus;
 
 public interface INewScientificNameValidationService {
+	
+	/**
+	 * If the service is specific to a nomenclatural code, return the appropriate scientific 
+	 * name authorship comparator for that code.  If the service holds names for more than
+	 * one code, try to figure out the correct code from the authorship string and kingdom.
+	 * 
+	 * @param authorship
+	 * @param kingdom
+	 * @return an AuthorNameComparator
+	 */
+	public AuthorNameComparator getAuthorNameComparator(String authorship, String kingdom);
 	
 	public void validateScientificName(String scientificName, String author);
 	

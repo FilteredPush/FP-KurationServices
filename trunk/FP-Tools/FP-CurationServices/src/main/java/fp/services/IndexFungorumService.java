@@ -1,8 +1,11 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
+import edu.harvard.mcz.nametools.ICNafpAuthorNameComparator;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurationException;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -17,6 +20,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -462,6 +466,12 @@ public class IndexFungorumService implements IScientificNameValidationService {
 	private final static String IF_LSIDPrefix = "urn:lsid:indexfungorum.org:names:";
 	
 	private final String serviceName = "IndexFungorum";
+
+	@Override
+	public AuthorNameComparator getAuthorNameComparator(String authorship,
+			String kingdom) {
+		return new ICNafpAuthorNameComparator(.75d,.5d);
+	}
 
 
 }
