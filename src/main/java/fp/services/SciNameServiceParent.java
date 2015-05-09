@@ -1,6 +1,7 @@
 package fp.services;
 
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import fp.util.*;
 
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     protected String comment = "";
     protected String serviceName;
     private String GBIF_name_GUID = "";
+    // TODO: Update to use current GBIF api.
     private final static String GBIF_GUID_Prefix = "http://ecat-dev.gbif.org/ws/usage/?nid=";
     // Documented at http://dev.gbif.org/wiki/display/POR/Webservice+API
 
@@ -218,5 +220,11 @@ public class SciNameServiceParent implements INewScientificNameValidationService
             }
         }
     }
+
+	@Override
+	public AuthorNameComparator getAuthorNameComparator(String authorship,
+			String kingdom) {
+		return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
+	}
 
 }

@@ -1,5 +1,6 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurationException;
@@ -426,5 +427,12 @@ public class WoRMSService implements IScientificNameValidationService{
 	private final static String wormsLSIDPrefix = "urn:lsid:marinespecies.org:taxname:";
 
 	private final String serviceName = "WoRMS";
+
+	@Override
+	public AuthorNameComparator getAuthorNameComparator(String authorship,
+			String kingdom) {
+		// WoRMS contains some algae and some marine plants
+		return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
+	}
 
 }

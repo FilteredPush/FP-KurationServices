@@ -1,8 +1,10 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurationException;
+
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.language.Soundex;
 import org.apache.http.HttpResponse;
@@ -15,7 +17,6 @@ import org.json.simple.JSONArray;   // code.google.com/p/json-simple
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import org.apache.http.client.HttpClient;
 
 import java.io.*;
@@ -675,6 +676,13 @@ public class GBIFService implements IScientificNameValidationService{
 	      }
 	   } 
 	   return result;
+   }
+
+   @Override
+   public AuthorNameComparator getAuthorNameComparator(String authorship,
+		   String kingdom) {
+	   // GBIF checklist bank contains plants and animals.
+	   return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
    }
    
 }

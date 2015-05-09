@@ -1,10 +1,12 @@
 package fp.services;
 
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.NameUsage;
 import fp.util.CurationComment;
 import fp.util.CurationStatus;
 import fp.util.CurationException;
+
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.nameparser.NameParser;
 import org.gbif.nameparser.UnparsableException;
@@ -879,6 +881,12 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
             return originalSet;
         }
     }
+
+	@Override
+	public AuthorNameComparator getAuthorNameComparator(String authorship,
+			String kingdom) {
+		return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
+	}
 
 
 }

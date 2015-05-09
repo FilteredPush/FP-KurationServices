@@ -1,6 +1,10 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
+
 public interface IAdvancedScientificNameValidationService extends ICurationWithFileService {
+	
+	public AuthorNameComparator getAuthorNameComparator(String authorship, String kingdom);
 	
 	public void validateScientificName(String scientificName, String author);
 	
