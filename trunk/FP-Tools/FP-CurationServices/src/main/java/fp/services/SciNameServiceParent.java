@@ -2,6 +2,7 @@ package fp.services;
 
 
 import edu.harvard.mcz.nametools.AuthorNameComparator;
+import edu.harvard.mcz.nametools.NameUsage;
 import fp.util.*;
 
 import java.util.HashMap;
@@ -9,14 +10,17 @@ import java.util.Vector;
 
 
 /**
- * Validate Scientific Names against GBIF's Checklist Bank web services, with 
- * a failover to validation against the GNI.
+ * Parent class for validation of Scientific Names against taxonomic or nomenclatural
+ * services, with a failover to lookup in GNI and check of lexical group against services.  
  * 
  * @author Paul J. Morris
  *
  */
-public class SciNameServiceParent implements INewScientificNameValidationService {
+public abstract class SciNameServiceParent implements INewScientificNameValidationService {
 
+	public abstract NameUsage validate(NameUsage taxonNameUsage);
+    
+    protected abstract boolean nameSearchAgainstServices(NameUsage toCheck); 
 
     protected CurationStatus curationStatus;
     protected String validatedScientificName = null;
@@ -24,9 +28,8 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     protected String comment = "";
     protected String serviceName;
     private String GBIF_name_GUID = "";
-    // TODO: Update to use current GBIF api.
-    private final static String GBIF_GUID_Prefix = "http://ecat-dev.gbif.org/ws/usage/?nid=";
-    // Documented at http://dev.gbif.org/wiki/display/POR/Webservice+API
+    private final static String GBIF_GUID_Prefix = "http://api.gbif.org/v1/species/";
+    // Documented at http://api.gbif.org/
 
     protected static HashMap<String, CacheValue> sciNameCache = new HashMap<String, CacheValue>();
     boolean useCache = true;
@@ -37,8 +40,12 @@ public class SciNameServiceParent implements INewScientificNameValidationService
    }
 
    //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
-   public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
+   public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
 
+	   NameUsage toCheck = new NameUsage();
+	   toCheck.setOriginalScientificName(scientificNameToValidate);
+	   toCheck.setOriginalAuthorship(authorToValidate);
+	   toCheck.setKingdom(kingdom);
        //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
        comment = "";
        GBIF_name_GUID = "";
@@ -52,7 +59,12 @@ public class SciNameServiceParent implements INewScientificNameValidationService
 
        //try to find it in GBIF service failing over to check against GNI
        //validateScientificNameAgainstServices(scientificNameToValidate, authorToValidate, key, rank, kingdom, phylum, tclass);
-
+       NameUsage returned = validate(toCheck);
+       if (returned!=null) { 
+           validatedScientificName = returned.getScientificName();
+           validatedAuthor = returned.getAuthorship();
+       } 
+       
       // validatedAuthor = authorToValidate;
        curationStatus = CurationComment.CORRECT;
        // start with consistency check
@@ -60,8 +72,10 @@ public class SciNameServiceParent implements INewScientificNameValidationService
        comment = result1.get("comment");
        curationStatus = new CurationStatus(result1.get("curationStatus"));
 
-
-
+       if (returned!=null) { 
+           comment = comment + returned.getMatchDescription();
+       }
+           
        //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());
 
        // second check misspelling
@@ -109,7 +123,10 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     private boolean validateScientificNameAgainstServices(String taxon, String author, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
         boolean failedAtGNI = false;
         //System.err.println("remotestart#"+_id + "#" + System.currentTimeMillis());
-        boolean hasResult = nameSearchAgainstServices(taxon, author);
+        NameUsage toCheck = new NameUsage();
+        toCheck.setOriginalScientificName(taxon);
+        toCheck.setOriginalAuthorship(author);
+        boolean hasResult = nameSearchAgainstServices(toCheck);
         //System.err.println("remoteend#"+_id + "#" + System.currentTimeMillis());
         if(!hasResult){
             // no match was found, over to GNI
@@ -150,11 +167,14 @@ public class SciNameServiceParent implements INewScientificNameValidationService
                 String resolvedScientificNameAuthorship = resolvedNameInfo.get(1);
 
                 //searching for this name in service again.
-                boolean hasResult2 = nameSearchAgainstServices(resolvedScientificName, resolvedScientificNameAuthorship);
+
+                toCheck.setOriginalScientificName(resolvedScientificName);
+                toCheck.setOriginalAuthorship(resolvedScientificNameAuthorship);
+                boolean hasResult2 = nameSearchAgainstServices(toCheck);
                 if(!hasResult2){
                     //failed to find the name got from GNI in service
                     curationStatus = CurationComment.UNABLE_CURATED;
-                    comment = comment + " | Found name which is in the same lexical group as the searched scientific name but failed to find this name really in remote service.";
+                    comment = comment + " | Found a name in the same lexical group as the searched scientific name but failed to find this name in remote service.";
                 }else{
                     //correct the wrong scientific name or author by searching in both IPNI and GNI
                     validatedScientificName = resolvedScientificName;
@@ -169,11 +189,6 @@ public class SciNameServiceParent implements INewScientificNameValidationService
             return true;
         }
 
-    }
-
-    protected boolean nameSearchAgainstServices(String name, String author){
-
-        return true;
     }
 
     @Override
@@ -197,7 +212,7 @@ public class SciNameServiceParent implements INewScientificNameValidationService
     }
 
     @Override
-    public String getLSID(){
+    public String getGUID(){
         return GBIF_name_GUID;
     }
 

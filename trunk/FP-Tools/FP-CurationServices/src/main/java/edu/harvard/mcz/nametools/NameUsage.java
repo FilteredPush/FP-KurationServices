@@ -28,6 +28,8 @@ public class NameUsage {
 	private String sourceID;
 	private String link;
     private boolean synonyms;
+	private String sourceAuthority;  // Aphia metadata
+	private String unacceptReason;   // Aphia metadata
     
 	private String guid;             // GUID for the name usage
 	
@@ -44,6 +46,19 @@ public class NameUsage {
 	public NameUsage() { 
 		authorComparator = new ICZNAuthorNameComparator(.75d,.5d);
 	}
+	
+	/**
+	 * Construct a NameUsage instance with a given source authority
+	 * and authorship comparator.
+	 * 
+	 * @param sourceAuthority the source authority for the name usage.
+	 * @param authorNameComparator the comparator to use when making comparisons
+	 * of authors with this name usage.
+	 */
+	public NameUsage(String sourceAuthority, AuthorNameComparator authorNameComparator) {
+		this.authorComparator = authorNameComparator;
+		this.sourceAuthority = sourceAuthority;
+	}	
 	
 	/**
 	 * Return the value associated with a key from a JSON object, or an empty string if 

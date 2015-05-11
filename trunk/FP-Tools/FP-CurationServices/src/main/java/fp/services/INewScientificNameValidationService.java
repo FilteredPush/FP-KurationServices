@@ -26,7 +26,7 @@ public interface INewScientificNameValidationService {
 
     public String getComment();
 
-    public String getLSID();
+    public String getGUID();
 
     public String getServiceName();
 	
