@@ -1,6 +1,8 @@
 package fp.services;
 
-import fp.util.CurationComment;
+import org.filteredpush.kuration.interfaces.INewScientificNameValidationService;
+import org.filteredpush.kuration.services.sciname.COLService;
+import org.filteredpush.kuration.util.CurationComment;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -10,7 +12,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class SciNameServiceTest {
     private INewScientificNameValidationService scientificNameService = new COLService();
-    //String serviceClassQN = "fp.services.COLService";
+    //String serviceClassQN = "org.filteredpush.kuration.services.COLService";
     //scientificNameService = (INewScientificNameValidationService)Class.forName(serviceClassQN).newInstance();
 
     @Test

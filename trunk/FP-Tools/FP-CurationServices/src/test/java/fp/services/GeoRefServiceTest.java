@@ -1,6 +1,8 @@
 package fp.services;
 
-import fp.util.CurationComment;
+import org.filteredpush.kuration.interfaces.IGeoRefValidationService;
+import org.filteredpush.kuration.services.GeoLocate3;
+import org.filteredpush.kuration.util.CurationComment;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -10,7 +12,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class GeoRefServiceTest {
     private IGeoRefValidationService geoRefValidationServiceService = new GeoLocate3();
-    //String serviceClassQN = "fp.services.COLService";
+    //String serviceClassQN = "org.filteredpush.kuration.services.COLService";
     //scientificNameService = (INewScientificNameValidationService)Class.forName(serviceClassQN).newInstance();
 
     @Test
