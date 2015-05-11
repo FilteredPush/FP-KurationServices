@@ -1,6 +1,8 @@
 package fp.services;
 
+import edu.harvard.mcz.nametools.NameUsage;
 import fp.util.SciNameCacheValue;
+
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
@@ -10,11 +12,15 @@ import java.net.URL;
 
 
 public class COLService extends SciNameServiceParent {
+	
+	private final static String Url = "http://www.catalogueoflife.org/col/webservice";
 
     @Override
-    public boolean nameSearchAgainstServices(String name, String author)  {
+    public boolean nameSearchAgainstServices(NameUsage toCheck)  {
 
-
+    	String name = toCheck.getOriginalScientificName();
+    	String author = toCheck.getOriginalAuthorship();
+    	
         String key = getKey(name, author);
         if(useCache && sciNameCache.containsKey(key)){
             SciNameCacheValue hitValue = (SciNameCacheValue) sciNameCache.get(key);
@@ -113,8 +119,11 @@ public class COLService extends SciNameServiceParent {
         //}
 	}
 
+	@Override
+	public NameUsage validate(NameUsage taxonNameUsage) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-
-	private final static String Url = "http://www.catalogueoflife.org/col/webservice";
 
 }
