@@ -1,6 +1,8 @@
 package fp.services;
 
-import fp.util.CurationComment;
+import org.filteredpush.kuration.interfaces.IInternalDateValidationService;
+import org.filteredpush.kuration.services.InternalDateValidationService;
+import org.filteredpush.kuration.util.CurationComment;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
