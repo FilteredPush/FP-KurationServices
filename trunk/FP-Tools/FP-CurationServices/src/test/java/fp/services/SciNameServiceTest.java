@@ -19,11 +19,20 @@ public class SciNameServiceTest {
     public void validNameTest(){
         scientificNameService.validateScientificName("Eucerceris canaliculata", "(Say, 1823)");
         //assertTrue(scientificNameService.getCorrectedScientificName().equals("Eucerceris canaliculata"));
+        System.out.println(scientificNameService.getCurationStatus());
+        System.out.println(scientificNameService.getCorrectedScientificName());
+        System.out.println(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CORRECT));
     }
 
     @Test
     public void unableNameTest() {
+    	// present with something that isn't a scientific name, should be unable to curate.
+        scientificNameService.validateScientificName("John smith", "(not an author, 1897)");
+        assertTrue(scientificNameService.getCorrectedScientificName().equals(""));
+        System.out.println(scientificNameService.getCurationStatus());
+        assertTrue(scientificNameService.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
+        
         scientificNameService.validateScientificName("Speranza trilinearia", "");
         //assertTrue(scientificNameService.getCorrectedScientificName().equals(""));
         assertTrue(scientificNameService.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
@@ -31,9 +40,10 @@ public class SciNameServiceTest {
 
     @Test
     public void noResultTest() {
-        //todo: need to confirm why no result...
+        //TODO: need to confirm why no result...
+    	// there is a COL entry 10647270 for this taxon.
+    	
         scientificNameService.validateScientificName("Norape tenera", "(Druce, 1897)");
-        //assertTrue(scientificNameService.getCorrectedScientificName().equals(""));
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.UNABLE_DETERMINE_VALIDITY));
     }
 
@@ -53,6 +63,9 @@ public class SciNameServiceTest {
         String name2 = "Formicidae";
         String author2 = null;
         scientificNameService.validateScientificName(name2, author2);
+        System.out.println(scientificNameService.getCurationStatus());
+        System.out.println(scientificNameService.getCorrectedScientificName());
+        System.out.println(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCorrectedAuthor().equals("Latreille, 1802"));
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CURATED));
     }

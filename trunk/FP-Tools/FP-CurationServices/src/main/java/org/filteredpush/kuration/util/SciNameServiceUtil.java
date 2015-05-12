@@ -51,6 +51,27 @@ public class SciNameServiceUtil {
    //private String GBIF_name_GUID = null;
    //private String comment = "";
 
+    /**
+     * Check to see if a scientific name is an autonym 
+     * (trinomial where specific and infraspecific epithets are the same).
+     * 
+     * @param scientificName
+     * @return
+     */
+    public static boolean isAutonym(String scientificName) {
+    	boolean result = false;
+    	if (scientificName!=null) { 
+		NameParser parser = new NameParser();
+		ParsedName nameBits = null;
+		try {
+			nameBits = parser.parse(scientificName);
+			result = nameBits.isAutonym();
+		} catch (UnparsableException e) {
+			log.debug(e.getMessage());
+		}
+    	}
+		return result;
+    }
 
    /**
     * Retrieve usages from Checklist Bank by name ID.  See documentation at http://ecat-dev.gbif.org/api/clb
@@ -171,6 +192,12 @@ public class SciNameServiceUtil {
         return resultMap;
     }
 
+    /**
+     * Search for potential scientific name matches on the global names resolver service.
+     * 
+     * @param name scientific name to look for in the global names resolver.
+     * @return a hashmap with keys scientificName curationStatus and comment.
+     */
     public static HashMap checkMisspelling (String name){
 
         CurationStatus curationStatus = null;

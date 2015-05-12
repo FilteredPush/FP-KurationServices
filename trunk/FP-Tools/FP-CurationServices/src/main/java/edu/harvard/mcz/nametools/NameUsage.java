@@ -3,37 +3,44 @@ package edu.harvard.mcz.nametools;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.filteredpush.kuration.services.sciname.GBIFService;
+import org.gbif.api.model.common.LinneanClassification;
+import org.gbif.api.util.ClassificationUtils;
+import org.gbif.api.vocabulary.Rank;
 import org.json.simple.JSONObject;
+import org.marinespecies.aphia.v1_0.AphiaRecord;
 
-public class NameUsage {
+public class NameUsage implements LinneanClassification { 
 	
-	private int key;
-	private int acceptedKey;
-	private String datasetKey;
-	private int parentKey;
+	private int key;  // GBIF key
+	private int acceptedKey;  // GBIF pointer to accepted name record
+	private String datasetKey;  // GBIF dataset
+	private int parentKey;  // GBIF pointer to parent record in taxonomic heirarchy
 	private String parent;
-	private String acceptedName;
+	private String acceptedName;  // name in current use for scientificName
 	private String scientificName;
 	private String canonicalName;
-	private String authorship;
+	private String authorship;  // authorship string to accompany the scientificName 
+	private String acceptedAuthorship; // authorship string toa accompany the acceptedName
 	private String taxonomicStatus;
 	private String rank;
-	private String kingdom;
-	private String phylum;
-	private String tclass;
-	private String order;
-	private String family;
-	private String genus;
+	private String kingdom;  // classification
+	private String phylum;   // classification
+	private String tclass;   // classification
+	private String order;    // classification
+	private String family;   // classification
+	private String genus;    // classification
+	private String subgenus; // classification
+	private String species;  // classification, the binomial
 	private int numDescendants;
 	private String sourceID;
 	private String link;
     private boolean synonyms;
 	private String sourceAuthority;  // Aphia metadata
 	private String unacceptReason;   // Aphia metadata
-    
 	private String guid;             // GUID for the name usage
 	
-	private String matchDescription;  // metadata, description of the match between this name usage annd the original
+	private String matchDescription;  // metadata, description of the match between this name usage and the original
 	private double authorshipStringSimilarity;
 	private double scientificNameStringSimilarity;
 	
@@ -42,6 +49,22 @@ public class NameUsage {
 	private String originalAuthorship;    
 	
 	protected AuthorNameComparator authorComparator;
+	
+	/**
+	 * Utility methods, return the value associated with a key from a JSON object, 
+	 * or an empty string if the key is not matched.
+	 * 
+	 * @param json JSONObject to check for key-value pair
+	 * @param key the key for which to find the value for.
+	 * @return String value or an empty string.
+	 */
+	public static String getValFromKey(JSONObject json, String key) { 
+		if (json==null || json.get(key)==null) { 
+			return "";
+		} else { 
+			return json.get(key).toString();
+		}
+	}	
 	
 	public NameUsage() { 
 		authorComparator = new ICZNAuthorNameComparator(.75d,.5d);
@@ -57,24 +80,27 @@ public class NameUsage {
 	 */
 	public NameUsage(String sourceAuthority, AuthorNameComparator authorNameComparator) {
 		this.authorComparator = authorNameComparator;
-		this.sourceAuthority = sourceAuthority;
+		this.setSourceAuthority(sourceAuthority);
 	}	
 	
 	/**
-	 * Return the value associated with a key from a JSON object, or an empty string if 
-	 * the key is not matched.
+	 * Construct a NameUsage instance with a specified original scientific name and
+	 * authorship, and with sourceAuthority and authorNameComparator.  Expected 
+	 * formulation for a call to validate on SciNameServiceParent.
 	 * 
-	 * @param json JSONObject to check for key-value pair
-	 * @param key the key for which to find the value for.
-	 * @return String value or an empty string.
+	 * @param sourceAuthority
+	 * @param authorNameComparator
+	 * @param originalScientificName
+	 * @param originalAuthorship
 	 */
-	public static String getValFromKey(JSONObject json, String key) { 
-		if (json==null || json.get(key)==null) { 
-			return "";
-		} else { 
-			return json.get(key).toString();
-		}
+	public NameUsage(String sourceAuthority, AuthorNameComparator authorNameComparator, String originalScientificName, String originalAuthorship) { 
+		this.authorComparator = authorNameComparator;
+		this.setSourceAuthority(sourceAuthority);
+		setOriginalAuthorship(originalAuthorship);
+		setOriginalScientificName(originalScientificName);
 	}
+	
+
 	
 	public NameUsage(JSONObject json) { 
 		if (json!=null) { 
@@ -115,6 +141,56 @@ public class NameUsage {
             fixAuthorship();
 		}
 	}
+	
+	/**
+	 * Construct a NameUsage instance from a gbif checklistbank NameUsage instance.
+	 * 
+	 * @param record a gbif Checklist API NameUsage.
+	 * @see org.gbif.api.model.checklistbank.NameUsage
+	 */
+	public NameUsage(org.gbif.api.model.checklistbank.NameUsage record) {
+		if (record.getDatasetKey().equals(GBIFService.KEY_GBIFBACKBONE)) { 
+		    this.setSourceAuthority("GBIF Backbone Taxonomy");
+		} else { 
+			this.setSourceAuthority("GBIF Dataset " + record.getDatasetKey());
+		}
+		this.setScientificName(record.getScientificName());
+		this.setRank(record.getRank().getMarker());
+		this.setAuthorship(record.getAuthorship());
+		this.setAcceptedName(record.getAccepted());
+		this.setKingdom(record.getKingdom());
+		this.setPhylum(record.getPhylum());
+		this.setTclass(record.getClazz());
+		this.setOrder(record.getOrder());
+		this.setFamily(record.getFamily());
+		this.setGenus(record.getGenus());		
+		fixAuthorship();
+	}	
+	
+	/**
+	 * Construct a NameUsage instance from an AphiaRecord instance,
+	 * assumes that the source authority is WoRMS.
+	 * 
+	 * @param record an AphiaRecord from WoRMS.
+	 */
+	public NameUsage(AphiaRecord record) {
+		authorComparator = new ICZNAuthorNameComparator(.75d,.5d);
+		this.setSourceAuthority("WoRMS (World Register of Marine Species)");
+		this.setScientificName(record.getScientificname());
+		this.setRank(record.getRank());
+		this.setAuthorship(record.getAuthority());
+		this.setAcceptedName(record.getValid_name());
+		this.setKingdom(record.getKingdom());
+		this.setPhylum(record.getPhylum());
+		this.setTclass(record.get_class());
+		this.setOrder(record.getOrder());
+		this.setFamily(record.getFamily());
+		this.setGenus(record.getGenus());
+		this.setGuid("urn:lsid:marinespecies.org:taxname:" + Integer.toString(record.getAphiaID()));
+		this.setTaxonomicStatus(record.getStatus());
+		this.setUnacceptReason(record.getUnacceptreason());
+		fixAuthorship();
+	}	
 	
 	public static String csvHeaderLine() { 
 		return "\"scientificName\",\"canonicalName\",\"authorship\"," +
@@ -237,7 +313,7 @@ public class NameUsage {
 	}
 
 	/**
-	 * @return the scientificName
+	 * @return the scientificName or an empty string if scientificName is null
 	 */
 	public String getScientificName() {
 		if (scientificName==null) { 
@@ -352,10 +428,14 @@ public class NameUsage {
 	}
 
 	/**
-	 * @return the authorship
+	 * @return the authorship or an empty string if authorship is null
 	 */
 	public String getAuthorship() {
-		return authorship;
+		if (authorship==null) { 
+			return "";
+		} else { 
+		   return authorship;
+		}
 	}
 
 	/**
@@ -487,9 +567,12 @@ public class NameUsage {
 	}
 
 	/**
-	 * @return the originalScientificName
+	 * @return the originalScientificName or an empty string if originalScientificName is null
 	 */
 	public String getOriginalScientificName() {
+		if (originalScientificName == null) { 
+			return "";
+		}
 		return originalScientificName;
 	}
 
@@ -501,9 +584,12 @@ public class NameUsage {
 	}
 
 	/**
-	 * @return the originalAuthorship
+	 * @return the originalAuthorship or an empty string if originalAuthorship is null
 	 */
 	public String getOriginalAuthorship() {
+		if (originalAuthorship==null) {
+			return "";
+		}
 		return originalAuthorship;
 	}
 
@@ -512,6 +598,20 @@ public class NameUsage {
 	 */
 	public void setOriginalAuthorship(String originalAuthorship) {
 		this.originalAuthorship = originalAuthorship;
+	}
+
+	/**
+	 * @return the acceptedAuthorship
+	 */
+	public String getAcceptedAuthorship() {
+		return acceptedAuthorship;
+	}
+
+	/**
+	 * @param acceptedAuthorship the acceptedAuthorship to set
+	 */
+	public void setAcceptedAuthorship(String acceptedAuthorship) {
+		this.acceptedAuthorship = acceptedAuthorship;
 	}
 
 	/**
@@ -608,6 +708,70 @@ public class NameUsage {
 				}
 			}
 		}
+	}
+
+	@Override
+	public String getClazz() {
+		return this.tclass;
+	}
+
+	@Override
+	public void setClazz(String clazz) {
+		this.tclass = clazz;
+	}
+
+	@Override
+	public String getSpecies() {
+		return this.species;
+	}
+
+	@Override
+	public void setSpecies(String species) {
+		this.species = species;
+		
+	}
+
+	@Override
+	public String getSubgenus() {
+		return this.subgenus;
+	}
+
+	@Override
+	public void setSubgenus(String subgenus) {
+		this.subgenus = subgenus;
+	}
+
+	@Override
+	public String getHigherRank(Rank rank) {
+		return ClassificationUtils.getHigherRank(this, rank);
+	}
+
+	/**
+	 * @return the sourceAuthority
+	 */
+	public String getSourceAuthority() {
+		return sourceAuthority;
+	}
+
+	/**
+	 * @param sourceAuthority the sourceAuthority to set
+	 */
+	public void setSourceAuthority(String sourceAuthority) {
+		this.sourceAuthority = sourceAuthority;
+	}
+
+	/**
+	 * @return the unacceptReason
+	 */
+	public String getUnacceptReason() {
+		return unacceptReason;
+	}
+
+	/**
+	 * @param unacceptReason the unacceptReason to set
+	 */
+	public void setUnacceptReason(String unacceptReason) {
+		this.unacceptReason = unacceptReason;
 	}	
 	
 }
