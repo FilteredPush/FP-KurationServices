@@ -8,19 +8,19 @@
 package org.marinespecies.aphia.v1_0;
 
 public class Vernacular  implements java.io.Serializable {
-    private String vernacular;
+    private java.lang.String vernacular;
 
-    private String language_code;
+    private java.lang.String language_code;
 
-    private String language;
+    private java.lang.String language;
 
     public Vernacular() {
     }
 
     public Vernacular(
-           String vernacular,
-           String language_code,
-           String language) {
+           java.lang.String vernacular,
+           java.lang.String language_code,
+           java.lang.String language) {
            this.vernacular = vernacular;
            this.language_code = language_code;
            this.language = language;
@@ -29,65 +29,65 @@ public class Vernacular  implements java.io.Serializable {
 
     /**
      * Gets the vernacular value for this Vernacular.
-     *
+     * 
      * @return vernacular
      */
-    public String getVernacular() {
+    public java.lang.String getVernacular() {
         return vernacular;
     }
 
 
     /**
      * Sets the vernacular value for this Vernacular.
-     *
+     * 
      * @param vernacular
      */
-    public void setVernacular(String vernacular) {
+    public void setVernacular(java.lang.String vernacular) {
         this.vernacular = vernacular;
     }
 
 
     /**
      * Gets the language_code value for this Vernacular.
-     *
+     * 
      * @return language_code
      */
-    public String getLanguage_code() {
+    public java.lang.String getLanguage_code() {
         return language_code;
     }
 
 
     /**
      * Sets the language_code value for this Vernacular.
-     *
+     * 
      * @param language_code
      */
-    public void setLanguage_code(String language_code) {
+    public void setLanguage_code(java.lang.String language_code) {
         this.language_code = language_code;
     }
 
 
     /**
      * Gets the language value for this Vernacular.
-     *
+     * 
      * @return language
      */
-    public String getLanguage() {
+    public java.lang.String getLanguage() {
         return language;
     }
 
 
     /**
      * Sets the language value for this Vernacular.
-     *
+     * 
      * @param language
      */
-    public void setLanguage(String language) {
+    public void setLanguage(java.lang.String language) {
         this.language = language;
     }
 
-    private Object __equalsCalc = null;
-    public synchronized boolean equals(Object obj) {
+    private java.lang.Object __equalsCalc = null;
+    public synchronized boolean equals(java.lang.Object obj) {
         if (!(obj instanceof Vernacular)) return false;
         Vernacular other = (Vernacular) obj;
         if (obj == null) return false;
@@ -97,14 +97,14 @@ public class Vernacular  implements java.io.Serializable {
         }
         __equalsCalc = obj;
         boolean _equals;
-        _equals = true &&
-            ((this.vernacular==null && other.getVernacular()==null) ||
+        _equals = true && 
+            ((this.vernacular==null && other.getVernacular()==null) || 
              (this.vernacular!=null &&
               this.vernacular.equals(other.getVernacular()))) &&
-            ((this.language_code==null && other.getLanguage_code()==null) ||
+            ((this.language_code==null && other.getLanguage_code()==null) || 
              (this.language_code!=null &&
               this.language_code.equals(other.getLanguage_code()))) &&
-            ((this.language==null && other.getLanguage()==null) ||
+            ((this.language==null && other.getLanguage()==null) || 
              (this.language!=null &&
               this.language.equals(other.getLanguage())));
         __equalsCalc = null;
@@ -168,10 +168,10 @@ public class Vernacular  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
-        return
+        return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
             _javaType, _xmlType, typeDesc);
     }
@@ -180,8 +180,8 @@ public class Vernacular  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(

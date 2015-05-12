@@ -10,29 +10,29 @@ package org.marinespecies.aphia.v1_0;
 public class Source  implements java.io.Serializable {
     private int source_id;
 
-    private String use;
+    private java.lang.String use;
 
-    private String reference;
+    private java.lang.String reference;
 
-    private String page;
+    private java.lang.String page;
 
-    private String url;
+    private java.lang.String url;
 
-    private String link;
+    private java.lang.String link;
 
-    private String fulltext;
+    private java.lang.String fulltext;
 
     public Source() {
     }
 
     public Source(
            int source_id,
-           String use,
-           String reference,
-           String page,
-           String url,
-           String link,
-           String fulltext) {
+           java.lang.String use,
+           java.lang.String reference,
+           java.lang.String page,
+           java.lang.String url,
+           java.lang.String link,
+           java.lang.String fulltext) {
            this.source_id = source_id;
            this.use = use;
            this.reference = reference;
@@ -45,7 +45,7 @@ public class Source  implements java.io.Serializable {
 
     /**
      * Gets the source_id value for this Source.
-     *
+     * 
      * @return source_id
      */
     public int getSource_id() {
@@ -55,7 +55,7 @@ public class Source  implements java.io.Serializable {
 
     /**
      * Sets the source_id value for this Source.
-     *
+     * 
      * @param source_id
      */
     public void setSource_id(int source_id) {
@@ -65,125 +65,125 @@ public class Source  implements java.io.Serializable {
 
     /**
      * Gets the use value for this Source.
-     *
+     * 
      * @return use
      */
-    public String getUse() {
+    public java.lang.String getUse() {
         return use;
     }
 
 
     /**
      * Sets the use value for this Source.
-     *
+     * 
      * @param use
      */
-    public void setUse(String use) {
+    public void setUse(java.lang.String use) {
         this.use = use;
     }
 
 
     /**
      * Gets the reference value for this Source.
-     *
+     * 
      * @return reference
      */
-    public String getReference() {
+    public java.lang.String getReference() {
         return reference;
     }
 
 
     /**
      * Sets the reference value for this Source.
-     *
+     * 
      * @param reference
      */
-    public void setReference(String reference) {
+    public void setReference(java.lang.String reference) {
         this.reference = reference;
     }
 
 
     /**
      * Gets the page value for this Source.
-     *
+     * 
      * @return page
      */
-    public String getPage() {
+    public java.lang.String getPage() {
         return page;
     }
 
 
     /**
      * Sets the page value for this Source.
-     *
+     * 
      * @param page
      */
-    public void setPage(String page) {
+    public void setPage(java.lang.String page) {
         this.page = page;
     }
 
 
     /**
      * Gets the url value for this Source.
-     *
+     * 
      * @return url
      */
-    public String getUrl() {
+    public java.lang.String getUrl() {
         return url;
     }
 
 
     /**
      * Sets the url value for this Source.
-     *
+     * 
      * @param url
      */
-    public void setUrl(String url) {
+    public void setUrl(java.lang.String url) {
         this.url = url;
     }
 
 
     /**
      * Gets the link value for this Source.
-     *
+     * 
      * @return link
      */
-    public String getLink() {
+    public java.lang.String getLink() {
         return link;
     }
 
 
     /**
      * Sets the link value for this Source.
-     *
+     * 
      * @param link
      */
-    public void setLink(String link) {
+    public void setLink(java.lang.String link) {
         this.link = link;
     }
 
 
     /**
      * Gets the fulltext value for this Source.
-     *
+     * 
      * @return fulltext
      */
-    public String getFulltext() {
+    public java.lang.String getFulltext() {
         return fulltext;
     }
 
 
     /**
      * Sets the fulltext value for this Source.
-     *
+     * 
      * @param fulltext
      */
-    public void setFulltext(String fulltext) {
+    public void setFulltext(java.lang.String fulltext) {
         this.fulltext = fulltext;
     }
 
-    private Object __equalsCalc = null;
-    public synchronized boolean equals(Object obj) {
+    private java.lang.Object __equalsCalc = null;
+    public synchronized boolean equals(java.lang.Object obj) {
         if (!(obj instanceof Source)) return false;
         Source other = (Source) obj;
         if (obj == null) return false;
@@ -193,24 +193,24 @@ public class Source  implements java.io.Serializable {
         }
         __equalsCalc = obj;
         boolean _equals;
-        _equals = true &&
+        _equals = true && 
             this.source_id == other.getSource_id() &&
-            ((this.use==null && other.getUse()==null) ||
+            ((this.use==null && other.getUse()==null) || 
              (this.use!=null &&
               this.use.equals(other.getUse()))) &&
-            ((this.reference==null && other.getReference()==null) ||
+            ((this.reference==null && other.getReference()==null) || 
              (this.reference!=null &&
               this.reference.equals(other.getReference()))) &&
-            ((this.page==null && other.getPage()==null) ||
+            ((this.page==null && other.getPage()==null) || 
              (this.page!=null &&
               this.page.equals(other.getPage()))) &&
-            ((this.url==null && other.getUrl()==null) ||
+            ((this.url==null && other.getUrl()==null) || 
              (this.url!=null &&
               this.url.equals(other.getUrl()))) &&
-            ((this.link==null && other.getLink()==null) ||
+            ((this.link==null && other.getLink()==null) || 
              (this.link!=null &&
               this.link.equals(other.getLink()))) &&
-            ((this.fulltext==null && other.getFulltext()==null) ||
+            ((this.fulltext==null && other.getFulltext()==null) || 
              (this.fulltext!=null &&
               this.fulltext.equals(other.getFulltext())));
         __equalsCalc = null;
@@ -308,10 +308,10 @@ public class Source  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
-        return
+        return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
             _javaType, _xmlType, typeDesc);
     }
@@ -320,8 +320,8 @@ public class Source  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(

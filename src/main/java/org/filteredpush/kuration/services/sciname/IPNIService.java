@@ -28,12 +28,17 @@ import java.util.*;
  * @author mole
  *
  */
-public class IPNIService implements IScientificNameValidationService {
+public class IPNIService extends SciNameServiceParent {
     private boolean useCache;
     
     public IPNIService(){
+    	init();
 	}
 			
+    protected void init() { 
+		validatedNameUsage = new NameUsage("IPNI",new ICNafpAuthorNameComparator(.70d, .5d));
+    }
+    
 	public void validateScientificName(String scientificName, String author){
 	    validateScientificName(scientificName, author, "", "","","");
 	}
@@ -210,11 +215,6 @@ public class IPNIService implements IScientificNameValidationService {
 			throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
 		}
 	}
-
-    @Override
-    public List<List> getLog() {
-        return log;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 
     public void setUseCache(boolean use) {
         this.useCache = use;
@@ -619,6 +619,18 @@ public class IPNIService implements IScientificNameValidationService {
 	public AuthorNameComparator getAuthorNameComparator(String authorship,
 			String kingdom) {
 		return new ICNafpAuthorNameComparator(.75d, .5d);
+	}
+
+	@Override
+	public NameUsage validate(NameUsage taxonNameUsage) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

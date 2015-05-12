@@ -2,8 +2,11 @@ package org.filteredpush.kuration.services.sciname;
 
 
 import edu.harvard.mcz.nametools.AuthorNameComparator;
+import edu.harvard.mcz.nametools.ICNafpAuthorNameComparator;
+import edu.harvard.mcz.nametools.NameComparison;
 import edu.harvard.mcz.nametools.NameUsage;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -20,14 +23,32 @@ import org.filteredpush.kuration.util.*;
  */
 public abstract class SciNameServiceParent implements INewScientificNameValidationService {
 
+	/**
+	 * Given a NameUsage, attempt to validate it using the supported service and return
+	 * a NameUsage carrying information about the validation state.  
+	 * 
+	 * @param taxonNameUsage where originalScientificName and originalScientificNameAuthorship are set
+	 * @return a NameUsage containing metadata about the validation state of the original scientific name.
+	 */
+	@Deprecated 
 	public abstract NameUsage validate(NameUsage taxonNameUsage);
     
+	/**
+	 * Search the supported service for a taxon name, and set the metadata of the SciNameService instance
+	 * to reflect the results.  Sets values for curationStatus, comment, and validatedNameUsage.
+	 * 
+	 * @param toCheck NameUsage where originalScientificName and originalScientificNameAuthorship are set
+	 * @return true if a match is found in the service, false otherwise.    
+	 */
     protected abstract boolean nameSearchAgainstServices(NameUsage toCheck); 
+    
+    protected abstract void init();
 
     protected CurationStatus curationStatus;
-    protected String validatedScientificName = null;
-    protected String validatedAuthor = null;
-    protected String comment = "";
+    protected NameUsage validatedNameUsage = null;
+    //protected String validatedScientificName = null;
+    //protected String validatedAuthor = null;
+    protected StringBuffer comment = new StringBuffer();
     protected String serviceName;
     private String GBIF_name_GUID = "";
     private final static String GBIF_GUID_Prefix = "http://api.gbif.org/v1/species/";
@@ -37,77 +58,119 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     boolean useCache = true;
     protected static int count = 0;
 
+    public SciNameServiceParent() { 
+    	init();
+    }
+    
    public void validateScientificName(String scientificName, String author){
 	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
    }
 
-   //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
+   /**
+    * 
+    */
    public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
 
+	   // (1) set up initial conditions 
 	   NameUsage toCheck = new NameUsage();
 	   toCheck.setOriginalScientificName(scientificNameToValidate);
 	   toCheck.setOriginalAuthorship(authorToValidate);
 	   toCheck.setKingdom(kingdom);
+	   validatedNameUsage.setOriginalAuthorship(authorToValidate);
+	   validatedNameUsage.setOriginalScientificName(scientificNameToValidate);
        //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
-       comment = "";
+       comment = new StringBuffer();;
        GBIF_name_GUID = "";
        //to carry over the orignial sciname and author
        serviceName = "scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#";
-       //curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-
-       //try to find information from the cached file
-       //if failed, then access GBIF service, or if that fails, GNI service
-
-
-       //try to find it in GBIF service failing over to check against GNI
-       //validateScientificNameAgainstServices(scientificNameToValidate, authorToValidate, key, rank, kingdom, phylum, tclass);
-       NameUsage returned = validate(toCheck);
-       if (returned!=null) { 
-           validatedScientificName = returned.getScientificName();
-           validatedAuthor = returned.getAuthorship();
-       } 
+       // Default response, unable to determine validity.  
+       curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
        
-      // validatedAuthor = authorToValidate;
-       curationStatus = CurationComment.CORRECT;
-       // start with consistency check
+       // (2) perform internal consistency check
        HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
-       comment = result1.get("comment");
+       addToComment(result1.get("comment"));
        curationStatus = new CurationStatus(result1.get("curationStatus"));
 
-       if (returned!=null) { 
-           comment = comment + returned.getMatchDescription();
+       // (3) try to find the name in the supported service.
+       boolean matched = nameSearchAgainstServices(toCheck);
+       
+       // (3a) try harder for authorship if needed
+       if (matched && validatedNameUsage.getAuthorship().length()==0) {
+    	   // got a match, but didn't find the authorship
+    	   
+    	   if (kingdom!=null && (kingdom.equals("Plantae") || kingdom.equals("Fungi")) && SciNameServiceUtil.isAutonym(validatedNameUsage.getScientificName()) ) { 
+    	       // Skip special case, Botanical autonyms
+    		   addToComment("Authorship is correctly absent, appears to be a botanical autonym.");
+    	   } else { 
+    		   // try GBIF checklist bank.
+    		   HashMap<String, String> result3a = SciNameServiceUtil.checklistBankNameSearch(scientificNameToValidate, "", taxonRank, kingdom, phylum, tclass, order, family, GBIFService.KEY_GBIFBACKBONE);
+               serviceName = serviceName + " | GBIF CheckListBank Backbone";
+               addToComment(result3a.get("comment"));
+               curationStatus = new CurationStatus(result3a.get("curationStatus"));
+               if(result3a.get("scientificName") != null){
+                   validatedNameUsage.setScientificName(result3a.get("scientificName"));
+                   validatedNameUsage.setAuthorship(result3a.get("author"));
+                   addToComment("Got a valid result from GBIF checklistbank Backbone");
+                   GBIF_name_GUID = GBIF_GUID_Prefix + result3a.get("guid");
+               }
+    	   }
+       }
+       
+       // (3b) compare the authors
+       if (matched) {
+    	   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
+    	   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
+    	   double authorSimilarity = comparison.getSimilarity();
+    	   String match = comparison.getMatchType();
+    	   if (authorSimilarity==1d && nameSimilarity==1d) {
+    		   // author similarity is more forgiving than exact string match, don't correct things that aren't substantive errors.
+    		   validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
+    		   curationStatus = CurationComment.CORRECT;
+    	   } else { 
+    		   validatedNameUsage.setMatchDescription(match);
+    		   curationStatus = CurationComment.CURATED;
+    	   }
+    	   validatedNameUsage.setAuthorshipStringEditDistance(authorSimilarity);     
+
+    	   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
+
+    	   addToComment(authorshipSimilarity);
        }
            
        //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());
 
-       // second check misspelling
-       if (result1.get("scientificName") != null){
+       // (4) failover by trying alternative supporting services.
+       if (!matched && result1.get("scientificName") != null){
+    	   // (4a) Try the global names resolver.
            HashMap<String, String> result2 = SciNameServiceUtil.checkMisspelling(result1.get("scientificName"));
            serviceName = serviceName + "Global Name Resolver";
-           comment = comment + result2.get("comment");
+           addToComment(result2.get("comment"));
            curationStatus = new CurationStatus(result2.get("curationStatus"));
 
            //System.err.println("step2#"+_id + "#" + System.currentTimeMillis());
-           // third, go to GBIF checklist bank
+           // (4b) Try GNI and the GBIF backbone taxonomy. 
            if (result2.get("scientificName") != null){
                boolean hasResult = validateScientificNameAgainstServices(result2.get("scientificName"), authorToValidate, taxonRank, kingdom, phylum, tclass, order, family);
                if (hasResult){
-                   if(validatedAuthor.trim().equals("") || validatedScientificName.trim().equals("")){
+                   if(validatedNameUsage.getAuthorship().trim().equals("") || validatedNameUsage.getScientificName().trim().equals("")){
+                	   // TODO: Handle botanical autonyms, which shouldn't have authorship.
                        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-                       if (validatedAuthor.trim().equals("")) comment = comment + " | validated author is empty";
-                       if (validatedScientificName.trim().equals("")) comment = comment + " | validated sciName is empty";
+                       if (validatedNameUsage.getAuthorship().trim().equals("")) {  addToComment("validated author is empty"); } 
+                       if (validatedNameUsage.getScientificName().trim().equals("")) {  addToComment("validated sciName is empty"); } 
                    }else {
+                	   String validatedAuthor = validatedNameUsage.getAuthorship();
+                	   String validatedScientificName = validatedNameUsage.getScientificName();
                        if (validatedAuthor.trim().equals(authorToValidate) && validatedScientificName.trim().equals(scientificNameToValidate)) {
                            curationStatus = CurationComment.CORRECT;
-                           comment = comment + " | The original SciName and Authorship are valid";
+                           addToComment("The original SciName and Authorship are valid");
                        } else {
                            curationStatus = CurationComment.CURATED;
-                           comment = comment + " | The original SciName and Authorship are curated";
+                           addToComment("The original SciName and Authorship are curated");
                        }
                    }
                }else{
                    curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-                   comment = comment + " | The original SciName and Authorship cannot be curated";
+                   addToComment("The original SciName and Authorship cannot be curated");
                }
 
                //todo: next
@@ -122,6 +185,19 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
        //System.err.println("serviceend#"+_id + "#" + System.currentTimeMillis());
    }
 
+   /**
+    * Attempt to validate the provided scientific name against alternative services.
+    * 
+    * @param taxon
+    * @param author
+    * @param taxonRank
+    * @param kingdom
+    * @param phylum
+    * @param tclass
+    * @param order
+    * @param family
+    * @return
+    */
     private boolean validateScientificNameAgainstServices(String taxon, String author, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
         boolean failedAtGNI = false;
         //System.err.println("remotestart#"+_id + "#" + System.currentTimeMillis());
@@ -138,7 +214,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
             try {
                 resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNI(taxon);
             } catch (CurationException e) {
-                comment = comment + " | Fail to access GNI service";
+                addToComment("Fail to access GNI service");
                 failedAtGNI = true;
                 //return false;
             }
@@ -146,17 +222,17 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
             if(failedAtGNI || resolvedNameInfo == null || resolvedNameInfo.size()==0){
                 //failed to find it in GNI
                 if(!failedAtGNI){
-                    comment = comment + " | Can't find the scientific name and authorship by searching the lexical group in GNI.";
+                    addToComment("Can't find the scientific name and authorship by searching the lexical group in GNI.");
                 }//failover to GBIF Checklistbank Backbone
                 HashMap<String, String> result2 = SciNameServiceUtil.checklistBankNameSearch(taxon, author, taxonRank, kingdom, phylum, tclass, order, family, "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
                 serviceName = serviceName + " | GBIF CheckListBank Backbone";
-                comment = comment + result2.get("comment");
+                addToComment(result2.get("comment"));
                 curationStatus = new CurationStatus(result2.get("curationStatus"));
 
                 if(result2.get("scientificName") != null){
-                    validatedScientificName = result2.get("scientificName");
-                    validatedAuthor = result2.get("author");
-                    comment = comment + " | Got a valid result from GBIF checklistbank Backbone";
+                    validatedNameUsage.setScientificName(result2.get("scientificName"));
+                    validatedNameUsage.setAuthorship(result2.get("author"));
+                    addToComment("Got a valid result from GBIF checklistbank Backbone");
                     GBIF_name_GUID = GBIF_GUID_Prefix + result2.get("guid");
                     return true;
                 }else{
@@ -176,13 +252,13 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
                 if(!hasResult2){
                     //failed to find the name got from GNI in service
                     curationStatus = CurationComment.UNABLE_CURATED;
-                    comment = comment + " | Found a name in the same lexical group as the searched scientific name but failed to find this name in remote service.";
+                    addToComment("Found a name in the same lexical group as the searched scientific name but failed to find this name in remote service.");
                 }else{
                     //correct the wrong scientific name or author by searching in both IPNI and GNI
-                    validatedScientificName = resolvedScientificName;
-                    validatedAuthor = resolvedScientificNameAuthorship;
+                    validatedNameUsage.setScientificName(resolvedScientificName);
+                    validatedNameUsage.setAuthorship(resolvedScientificNameAuthorship);
                     //GBIF_name_GUID = constructGBIFGUID(id);
-                    comment = comment + " | Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.";
+                    addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
                     curationStatus = CurationComment.CURATED;
                 }
                 return true;
@@ -200,18 +276,27 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
 
     @Override
     public String getCorrectedScientificName(){
-        return validatedScientificName;
+        return validatedNameUsage.getScientificName();
     }
 
     @Override
     public String getCorrectedAuthor(){
-        return validatedAuthor;
+        return validatedNameUsage.getAuthorship();
     }
 
     @Override
     public String getComment() {
-        return comment;
+        return comment.toString();
     }
+    
+    public void addToComment(String aComment) { 
+    	if (comment.toString().length()==0) { 
+    		comment.append(aComment);
+    	} else { 
+    		comment.append(" | ").append(aComment);
+    	}
+    }
+
 
     @Override
     public String getGUID(){
@@ -228,14 +313,23 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     }
 
     protected void addToCache(boolean hasResult){
-        String key = getKey(validatedScientificName, validatedAuthor);
-        CacheValue newValue = new SciNameCacheValue().setHasResult(hasResult).setAuthor(validatedAuthor).setTaxon(validatedScientificName).setComment(comment).setStatus(curationStatus).setSource(serviceName);
-        if(!sciNameCache.containsKey(key)) sciNameCache.put(key, newValue);
-        else {
-            if (!sciNameCache.get(key).equals(newValue)) {
-                //need to handle the case where the cached value is different than the new value
-            }
-        }
+    	if (hasResult) { 
+    		try { 
+    			String validatedScientificName = this.validatedNameUsage.getScientificName();
+    			String validatedAuthor = this.validatedNameUsage.getAuthorship();
+    			String key = getKey(validatedScientificName, validatedAuthor);
+    			CacheValue newValue = new SciNameCacheValue().setHasResult(hasResult).setAuthor(validatedAuthor).setTaxon(validatedScientificName).setComment(getComment()).setStatus(curationStatus).setSource(serviceName);
+    			if(!sciNameCache.containsKey(key)) {
+    				sciNameCache.put(key, newValue);
+    			} else {
+    				if (!sciNameCache.get(key).equals(newValue)) {
+    					//need to handle the case where the cached value is different than the new value
+    				}
+    			}
+    		} catch (NullPointerException e) { 
+    			// expected if there is nothing to cache.
+    		}
+    	}
     }
 
 	@Override

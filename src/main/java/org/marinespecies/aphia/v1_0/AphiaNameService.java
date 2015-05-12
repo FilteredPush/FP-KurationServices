@@ -8,7 +8,13 @@
 package org.marinespecies.aphia.v1_0;
 
 public interface AphiaNameService extends javax.xml.rpc.Service {
-    public String getAphiaNameServicePortAddress();
+
+/**
+ * The data is licensed under a Creative Commons 'BY' 4.0 License,
+ * see http://creativecommons.org/licenses/by/4.0/deed.en. For more information,
+ * please visit http://marinespecies.org/aphia.php?p=webservice.
+ */
+    public java.lang.String getAphiaNameServicePortAddress();
 
     public org.marinespecies.aphia.v1_0.AphiaNameServicePortType getAphiaNameServicePort() throws javax.xml.rpc.ServiceException;
 

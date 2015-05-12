@@ -9,6 +9,12 @@ package org.marinespecies.aphia.v1_0;
 
 public class AphiaNameServiceLocator extends org.apache.axis.client.Service implements org.marinespecies.aphia.v1_0.AphiaNameService {
 
+/**
+ * The data is licensed under a Creative Commons 'BY' 4.0 License,
+ * see http://creativecommons.org/licenses/by/4.0/deed.en. For more information,
+ * please visit http://marinespecies.org/aphia.php?p=webservice.
+ */
+
     public AphiaNameServiceLocator() {
     }
 
@@ -17,25 +23,25 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
         super(config);
     }
 
-    public AphiaNameServiceLocator(String wsdlLoc, javax.xml.namespace.QName sName) throws javax.xml.rpc.ServiceException {
+    public AphiaNameServiceLocator(java.lang.String wsdlLoc, javax.xml.namespace.QName sName) throws javax.xml.rpc.ServiceException {
         super(wsdlLoc, sName);
     }
 
     // Use to get a proxy class for AphiaNameServicePort
-    private String AphiaNameServicePort_address = "http://www.marinespecies.org/aphia.php?p=soap";
+    private java.lang.String AphiaNameServicePort_address = "http://marinespecies.org/aphia.php?p=soap";
 
-    public String getAphiaNameServicePortAddress() {
+    public java.lang.String getAphiaNameServicePortAddress() {
         return AphiaNameServicePort_address;
     }
 
     // The WSDD service name defaults to the port name.
-    private String AphiaNameServicePortWSDDServiceName = "AphiaNameServicePort";
+    private java.lang.String AphiaNameServicePortWSDDServiceName = "AphiaNameServicePort";
 
-    public String getAphiaNameServicePortWSDDServiceName() {
+    public java.lang.String getAphiaNameServicePortWSDDServiceName() {
         return AphiaNameServicePortWSDDServiceName;
     }
 
-    public void setAphiaNameServicePortWSDDServiceName(String name) {
+    public void setAphiaNameServicePortWSDDServiceName(java.lang.String name) {
         AphiaNameServicePortWSDDServiceName = name;
     }
 
@@ -61,7 +67,7 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
         }
     }
 
-    public void setAphiaNameServicePortEndpointAddress(String address) {
+    public void setAphiaNameServicePortEndpointAddress(java.lang.String address) {
         AphiaNameServicePort_address = address;
     }
 
@@ -78,7 +84,7 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
                 return _stub;
             }
         }
-        catch (Throwable t) {
+        catch (java.lang.Throwable t) {
             throw new javax.xml.rpc.ServiceException(t);
         }
         throw new javax.xml.rpc.ServiceException("There is no stub implementation for the interface:  " + (serviceEndpointInterface == null ? "null" : serviceEndpointInterface.getName()));
@@ -93,7 +99,7 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
         if (portName == null) {
             return getPort(serviceEndpointInterface);
         }
-        String inputPortName = portName.getLocalPart();
+        java.lang.String inputPortName = portName.getLocalPart();
         if ("AphiaNameServicePort".equals(inputPortName)) {
             return getAphiaNameServicePort();
         }
@@ -121,12 +127,12 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
     /**
     * Set the endpoint address for the specified port name.
     */
-    public void setEndpointAddress(String portName, String address) throws javax.xml.rpc.ServiceException {
-
+    public void setEndpointAddress(java.lang.String portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
+        
 if ("AphiaNameServicePort".equals(portName)) {
             setAphiaNameServicePortEndpointAddress(address);
         }
-        else
+        else 
 { // Unknown Port Name
             throw new javax.xml.rpc.ServiceException(" Cannot set Endpoint Address for Unknown Port" + portName);
         }
@@ -135,7 +141,7 @@ if ("AphiaNameServicePort".equals(portName)) {
     /**
     * Set the endpoint address for the specified port name.
     */
-    public void setEndpointAddress(javax.xml.namespace.QName portName, String address) throws javax.xml.rpc.ServiceException {
+    public void setEndpointAddress(javax.xml.namespace.QName portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
         setEndpointAddress(portName.getLocalPart(), address);
     }
 

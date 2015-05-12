@@ -10,9 +10,9 @@ package org.marinespecies.aphia.v1_0;
 public class Classification  implements java.io.Serializable {
     private int aphiaID;
 
-    private String rank;
+    private java.lang.String rank;
 
-    private String scientificname;
+    private java.lang.String scientificname;
 
     private org.marinespecies.aphia.v1_0.Classification child;
 
@@ -21,8 +21,8 @@ public class Classification  implements java.io.Serializable {
 
     public Classification(
            int aphiaID,
-           String rank,
-           String scientificname,
+           java.lang.String rank,
+           java.lang.String scientificname,
            org.marinespecies.aphia.v1_0.Classification child) {
            this.aphiaID = aphiaID;
            this.rank = rank;
@@ -33,7 +33,7 @@ public class Classification  implements java.io.Serializable {
 
     /**
      * Gets the aphiaID value for this Classification.
-     *
+     * 
      * @return aphiaID
      */
     public int getAphiaID() {
@@ -43,7 +43,7 @@ public class Classification  implements java.io.Serializable {
 
     /**
      * Sets the aphiaID value for this Classification.
-     *
+     * 
      * @param aphiaID
      */
     public void setAphiaID(int aphiaID) {
@@ -53,47 +53,47 @@ public class Classification  implements java.io.Serializable {
 
     /**
      * Gets the rank value for this Classification.
-     *
+     * 
      * @return rank
      */
-    public String getRank() {
+    public java.lang.String getRank() {
         return rank;
     }
 
 
     /**
      * Sets the rank value for this Classification.
-     *
+     * 
      * @param rank
      */
-    public void setRank(String rank) {
+    public void setRank(java.lang.String rank) {
         this.rank = rank;
     }
 
 
     /**
      * Gets the scientificname value for this Classification.
-     *
+     * 
      * @return scientificname
      */
-    public String getScientificname() {
+    public java.lang.String getScientificname() {
         return scientificname;
     }
 
 
     /**
      * Sets the scientificname value for this Classification.
-     *
+     * 
      * @param scientificname
      */
-    public void setScientificname(String scientificname) {
+    public void setScientificname(java.lang.String scientificname) {
         this.scientificname = scientificname;
     }
 
 
     /**
      * Gets the child value for this Classification.
-     *
+     * 
      * @return child
      */
     public org.marinespecies.aphia.v1_0.Classification getChild() {
@@ -103,15 +103,15 @@ public class Classification  implements java.io.Serializable {
 
     /**
      * Sets the child value for this Classification.
-     *
+     * 
      * @param child
      */
     public void setChild(org.marinespecies.aphia.v1_0.Classification child) {
         this.child = child;
     }
 
-    private Object __equalsCalc = null;
-    public synchronized boolean equals(Object obj) {
+    private java.lang.Object __equalsCalc = null;
+    public synchronized boolean equals(java.lang.Object obj) {
         if (!(obj instanceof Classification)) return false;
         Classification other = (Classification) obj;
         if (obj == null) return false;
@@ -121,15 +121,15 @@ public class Classification  implements java.io.Serializable {
         }
         __equalsCalc = obj;
         boolean _equals;
-        _equals = true &&
+        _equals = true && 
             this.aphiaID == other.getAphiaID() &&
-            ((this.rank==null && other.getRank()==null) ||
+            ((this.rank==null && other.getRank()==null) || 
              (this.rank!=null &&
               this.rank.equals(other.getRank()))) &&
-            ((this.scientificname==null && other.getScientificname()==null) ||
+            ((this.scientificname==null && other.getScientificname()==null) || 
              (this.scientificname!=null &&
               this.scientificname.equals(other.getScientificname()))) &&
-            ((this.child==null && other.getChild()==null) ||
+            ((this.child==null && other.getChild()==null) || 
              (this.child!=null &&
               this.child.equals(other.getChild())));
         __equalsCalc = null;
@@ -200,10 +200,10 @@ public class Classification  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
-        return
+        return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
             _javaType, _xmlType, typeDesc);
     }
@@ -212,8 +212,8 @@ public class Classification  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(
