@@ -121,6 +121,9 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
        
        // (3b) compare the authors
        if (matched) {
+    	   if (GBIF_name_GUID.length()==0 && validatedNameUsage.getGuid()!=null) { 
+    		   GBIF_name_GUID = validatedNameUsage.getGuid();
+    	   }
     	   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
     	   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
     	   double authorSimilarity = comparison.getSimilarity();
