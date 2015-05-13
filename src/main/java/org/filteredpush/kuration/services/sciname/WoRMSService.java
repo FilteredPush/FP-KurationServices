@@ -2,19 +2,32 @@ package org.filteredpush.kuration.services.sciname;
 
 import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.ICZNAuthorNameComparator;
+import edu.harvard.mcz.nametools.NameComparison;
 import edu.harvard.mcz.nametools.NameUsage;
 
-import org.filteredpush.kuration.interfaces.IScientificNameValidationService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
 import org.marinespecies.aphia.v1_0.AphiaNameServicePortTypeProxy;
 import org.marinespecies.aphia.v1_0.AphiaRecord;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -30,12 +43,53 @@ import java.util.Vector;
 public class WoRMSService extends SciNameServiceParent {
     private boolean useCache = false;
 
-    public WoRMSService(){
-    	init();
+	private static final Log log = LogFactory.getLog(WoRMSService.class);
+	
+	private AphiaNameServicePortTypeProxy wormsService;
+	protected AuthorNameComparator authorNameComparator;
+	
+	protected int depth;
+	
+	private File cacheFile = null;
+	private HashMap<String, HashMap<String,String>> cachedScientificName;
+	private Vector<String> newFoundScientificName;
+	private static final String ColumnDelimiterInCacheFile = "\t";
+
+	private CurationStatus curationStatus;
+	private String correctedScientificName = null;
+	private String correctedAuthor = null;
+	private String WoRMSlsid = null;	
+	private String comment = "";
+
+	private String foundKingdom = null;
+	private String foundPhylum = null;
+	private String foundClass = null;
+	private String foundOrder = null;
+	private String foundFamily = null;	
+
+	private String wormsSourceId = null;	
+
+	private final static String wormsLSIDPrefix = "urn:lsid:marinespecies.org:taxname:";
+
+	private final String serviceName = "WoRMS";	
+	
+	public WoRMSService() throws IOException { 
+			init();
+			test();
+	}
+	
+	protected void test()  throws IOException { 
+		log.debug(wormsService.getEndpoint());
+		URL test = new URL(wormsService.getEndpoint());
+		URLConnection conn = test.openConnection();
+		conn.connect();
 	}
 
     protected void init() { 
-		validatedNameUsage = new NameUsage("WoRMS",new ICZNAuthorNameComparator(.75d, .5d));
+		authorNameComparator = new ICZNAuthorNameComparator(.75d,.5d);
+		validatedNameUsage = new NameUsage("WoRMS",authorNameComparator);
+		depth = 0;
+		wormsService = new AphiaNameServicePortTypeProxy();
     }
     
 	public void validateScientificName(String scientificName, String author){
@@ -407,28 +461,7 @@ public class WoRMSService extends SciNameServiceParent {
 		this.foundFamily = foundFamily;
 	}	
 
-	private File cacheFile = null;
-	private HashMap<String, HashMap<String,String>> cachedScientificName;
-	private Vector<String> newFoundScientificName;
-	private static final String ColumnDelimiterInCacheFile = "\t";
 
-	private CurationStatus curationStatus;
-	private String correctedScientificName = null;
-	private String correctedAuthor = null;
-	private String WoRMSlsid = null;	
-	private String comment = "";
-
-	private String foundKingdom = null;
-	private String foundPhylum = null;
-	private String foundClass = null;
-	private String foundOrder = null;
-	private String foundFamily = null;	
-
-	private String wormsSourceId = null;	
-
-	private final static String wormsLSIDPrefix = "urn:lsid:marinespecies.org:taxname:";
-
-	private final String serviceName = "WoRMS";
 
 	@Override
 	public AuthorNameComparator getAuthorNameComparator(String authorship,
@@ -437,15 +470,169 @@ public class WoRMSService extends SciNameServiceParent {
 		return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
 	}
 
-	@Override
-	public NameUsage validate(NameUsage taxonNameUsage) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
-		// TODO Auto-generated method stub
+		log.debug("Checking: " + toCheck.getScientificName() + " " + toCheck.getAuthorship());
+		depth++;   
+		try {
+			String taxonName = toCheck.getScientificName();
+			String authorship = toCheck.getAuthorship();
+			toCheck.setAuthorComparator(authorNameComparator);
+			AphiaRecord[] resultsArr = wormsService.getAphiaRecords(taxonName, false, false, false, 1);
+			if (resultsArr!=null && resultsArr.length>0) { 
+				// We got at least one result
+				List<AphiaRecord> results = Arrays.asList(resultsArr);
+				Iterator<AphiaRecord> i = results.iterator();
+				//Multiple matches indicate homonyms (or in WoRMS, deleted records).
+				if (results.size()>1) {
+				    log.debug("More than one match: " + resultsArr.length);
+					boolean exactMatch = false;
+					List<AphiaRecord> matches = new ArrayList<AphiaRecord>();
+					while (i.hasNext() && !exactMatch) { 
+					    AphiaRecord ar = i.next();
+					    matches.add(ar);
+					    log.debug(ar.getScientificname());
+					    log.debug(ar.getAphiaID());
+					    log.debug(ar.getAuthority());
+					    log.debug(ar.getUnacceptreason());
+					    log.debug(ar.getStatus());
+					    if (ar !=null && ar.getScientificname()!=null && taxonName!=null && ar.getScientificname().equals(taxonName)) {
+					    	if (ar.getAuthority()!=null && ar.getAuthority().equals(authorship)) {
+					    		// If one of the results is an exact match on scientific name and authorship, pick that one. 
+					    		validatedNameUsage = new NameUsage(ar);
+					    		validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+					    		validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
+					    		validatedNameUsage.setAuthorshipStringEditDistance(1d);
+					    		validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+					    		validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+					    		validatedNameUsage.setScientificNameStringEditDistance(1d);
+					    		exactMatch = true;
+					    	}
+					    }
+					}
+					if (!exactMatch) {
+						// If we didn't find an exact match on scientific name and authorship in the list, pick the 
+						// closest authorship and list all of the potential matches.  
+						Iterator<AphiaRecord> im = matches.iterator();
+						AphiaRecord ar = im.next();
+						NameUsage closest = new NameUsage(ar);
+						StringBuffer names = new StringBuffer();
+						names.append(closest.getScientificName()).append(" ").append(closest.getAuthorship()).append(" ").append(closest.getUnacceptReason()).append(" ").append(closest.getTaxonomicStatus());
+						while (im.hasNext()) { 
+							ar = im.next();
+							NameUsage current = new NameUsage(ar);
+						    names.append("; ").append(current.getScientificName()).append(" ").append(current.getAuthorship()).append(" ").append(current.getUnacceptReason()).append(" ").append(current.getTaxonomicStatus());
+							if (ICZNAuthorNameComparator.calulateSimilarityOfAuthor(closest.getAuthorship(), authorship) < ICZNAuthorNameComparator.calulateSimilarityOfAuthor(current.getAuthorship(), authorship)) { 
+								closest = current;
+							}
+						}
+						validatedNameUsage = closest;
+					    validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+					    validatedNameUsage.setMatchDescription(NameComparison.MATCH_MULTIPLE + " " + names.toString());
+					    validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+					    validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+					    validatedNameUsage.setScientificNameStringEditDistance(1d);
+					    validatedNameUsage.setAuthorshipStringEditDistance(ICZNAuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
+					}
+				} else { 
+				  // we got exactly one result
+				  while (i.hasNext()) { 
+					AphiaRecord ar = i.next();
+					if (ar !=null && ar.getScientificname()!=null && taxonName!=null && ar.getScientificname().equals(taxonName)) {
+						if (ar.getAuthority()!=null && ar.getAuthority().equals(authorship)) { 
+							// scientific name and authorship are an exact match 
+							validatedNameUsage = new NameUsage(ar);
+							validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+							validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
+							validatedNameUsage.setAuthorshipStringEditDistance(1d);
+							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+							validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+							validatedNameUsage.setScientificNameStringEditDistance(1d);
+						} else {
+							// find how 
+							if (authorship!=null && ar!=null && ar.getAuthority()!=null) { 
+								//double similarity = taxonNameToValidate.calulateSimilarityOfAuthor(ar.getAuthority());
+								log.debug(authorship);
+								log.debug(ar.getAuthority());
+								NameComparison comparison = authorNameComparator.compare(authorship, ar.getAuthority());
+								String match = comparison.getMatchType();
+								double similarity = comparison.getSimilarity();
+								log.debug(similarity);
+								//if (match.equals(NameUsage.MATCH_DISSIMILAR) || match.equals(NameUsage.MATCH_ERROR)) {
+									// result.setMatchDescription("Same name, authorship different");
+								//} else { 
+							        validatedNameUsage = new NameUsage(ar);
+							        validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+							        validatedNameUsage.setAuthorshipStringEditDistance(similarity);
+							        validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+							        validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+								    validatedNameUsage.setMatchDescription(match);
+								//}
+							} else { 
+								// no authorship was provided in the results, treat as no match
+								log.error("Result with null authorship.");
+							}
+						}
+					}
+				  }
+				}
+			} else { 
+				log.debug("No match.");
+				// Try WoRMS fuzzy matching query
+				String[] searchNames = { taxonName + " " + authorship };
+				AphiaRecord[][] matchResultsArr = wormsService.matchAphiaRecordsByNames(searchNames, false);
+				if (matchResultsArr!=null && matchResultsArr.length>0) {
+					Iterator<AphiaRecord[]> i0 = (Arrays.asList(matchResultsArr)).iterator();
+					while (i0.hasNext()) {
+						// iterate through the inputs, there should be one and only one
+						AphiaRecord[] matchResArr = i0.next();
+						List<AphiaRecord> matches = Arrays.asList(matchResArr);
+						Iterator<AphiaRecord> im = matches.iterator();
+						List<NameUsage> potentialMatches = new ArrayList<NameUsage>();
+						while (im.hasNext()) { 
+							// iterate through the results, no match will have one result that is null
+							AphiaRecord ar = im.next();
+							if (ar!=null) { 
+								NameUsage match = new NameUsage(ar);
+								double similarity = ICZNAuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), match.getAuthorship());
+								match.setAuthorshipStringEditDistance(similarity);
+								log.debug(match.getScientificName());
+								log.debug(match.getAuthorship());
+								log.debug(similarity);
+								potentialMatches.add(match);
+							} else {
+								log.debug("im.next() was null");
+							}
+						} 
+						log.debug("Fuzzy Matches: " + potentialMatches.size());
+						if (potentialMatches.size()==1) { 
+							validatedNameUsage = potentialMatches.get(0);
+							String authorComparison = authorNameComparator.compare(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()).getMatchType();
+							validatedNameUsage.setMatchDescription(NameComparison.MATCH_FUZZY_SCINAME + "; authorship " + authorComparison);
+							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+							validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+							validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+						}
+					} // iterator over input names, should be just one.
+			    } else {
+			    	log.error("Fuzzy match query returned null instead of a result set.");
+			    }
+			}
+		} catch (RemoteException e) {
+			if (e.getMessage().equals("Connection timed out")) { 
+				log.error(e.getMessage() + " " + toCheck.getScientificName() + " " + toCheck.getInputDbPK());
+			} else if (e.getCause()!=null && e.getCause().getClass().equals(UnknownHostException.class)) { 
+				log.error("Connection Probably Lost.  UnknownHostException: "+ e.getMessage());
+			} else {
+				log.error(e.getMessage(), e);
+			}
+			if (depth<4) {
+				// Try again, up to three times.
+				this.nameSearchAgainstServices(toCheck);
+			}
+		}
+		depth--;
 		return false;
 	}
 

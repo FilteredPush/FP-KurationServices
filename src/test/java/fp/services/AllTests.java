@@ -8,7 +8,8 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({ 
 	DateServiceTest.class, 
 	GeoRefServiceTest.class,
-	SciNameServiceTest.class
+	SciNameServiceTest.class,
+	IPNIServiceTest.class
 	})
 public class AllTests {
 

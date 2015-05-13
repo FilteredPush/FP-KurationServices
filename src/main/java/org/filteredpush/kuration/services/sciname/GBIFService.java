@@ -340,11 +340,6 @@ public class GBIFService extends SciNameServiceParent {
 	}
 
 
-	@Override
-	public NameUsage validate(NameUsage taxonNameToValidate) {
-		return null;
-	}
-
 	@SuppressWarnings("static-access")
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
