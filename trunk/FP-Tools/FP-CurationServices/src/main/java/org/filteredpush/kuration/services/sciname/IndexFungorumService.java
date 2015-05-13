@@ -69,11 +69,6 @@ public class IndexFungorumService extends SciNameServiceParent  {
 		conn.connect();
 	}
 	
-    @Override 
-	public NameUsage validate(NameUsage taxonNameUsage) {
-    	return null;
-    }
-
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
 		boolean result = false;

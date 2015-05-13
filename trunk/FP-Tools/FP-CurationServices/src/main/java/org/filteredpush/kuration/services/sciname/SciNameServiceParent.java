@@ -24,16 +24,6 @@ import org.filteredpush.kuration.util.*;
 public abstract class SciNameServiceParent implements INewScientificNameValidationService {
 
 	/**
-	 * Given a NameUsage, attempt to validate it using the supported service and return
-	 * a NameUsage carrying information about the validation state.  
-	 * 
-	 * @param taxonNameUsage where originalScientificName and originalScientificNameAuthorship are set
-	 * @return a NameUsage containing metadata about the validation state of the original scientific name.
-	 */
-	@Deprecated 
-	public abstract NameUsage validate(NameUsage taxonNameUsage);
-    
-	/**
 	 * Search the supported service for a taxon name, and set the metadata of the SciNameService instance
 	 * to reflect the results.  Sets values for curationStatus, comment, and validatedNameUsage.
 	 * 
@@ -69,7 +59,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
    /**
     * 
     */
-   public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
+   public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family) {
 
 	   // (1) set up initial conditions 
 	   NameUsage toCheck = new NameUsage();

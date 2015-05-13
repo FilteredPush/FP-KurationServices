@@ -149,11 +149,5 @@ public class COLService extends SciNameServiceParent {
         return true;
 	}
 
-	@Override
-	public NameUsage validate(NameUsage taxonNameUsage) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 
 }
