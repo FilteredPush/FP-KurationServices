@@ -41,25 +41,15 @@ import java.util.Vector;
  *
  */
 public class WoRMSService extends SciNameServiceParent {
-    private boolean useCache = false;
 
-	private static final Log log = LogFactory.getLog(WoRMSService.class);
+	private static final Log logger = LogFactory.getLog(WoRMSService.class);
 	
 	private AphiaNameServicePortTypeProxy wormsService;
 	protected AuthorNameComparator authorNameComparator;
 	
 	protected int depth;
 	
-	private File cacheFile = null;
-	private HashMap<String, HashMap<String,String>> cachedScientificName;
-	private Vector<String> newFoundScientificName;
-	private static final String ColumnDelimiterInCacheFile = "\t";
-
-	private CurationStatus curationStatus;
-	private String correctedScientificName = null;
-	private String correctedAuthor = null;
 	private String WoRMSlsid = null;	
-	private String comment = "";
 
 	private String foundKingdom = null;
 	private String foundPhylum = null;
@@ -71,15 +61,13 @@ public class WoRMSService extends SciNameServiceParent {
 
 	private final static String wormsLSIDPrefix = "urn:lsid:marinespecies.org:taxname:";
 
-	private final String serviceName = "WoRMS";	
-	
 	public WoRMSService() throws IOException { 
 			init();
 			test();
 	}
 	
 	protected void test()  throws IOException { 
-		log.debug(wormsService.getEndpoint());
+		logger.debug(wormsService.getEndpoint());
 		URL test = new URL(wormsService.getEndpoint());
 		URLConnection conn = test.openConnection();
 		conn.connect();
@@ -91,254 +79,14 @@ public class WoRMSService extends SciNameServiceParent {
 		depth = 0;
 		wormsService = new AphiaNameServicePortTypeProxy();
     }
-    
-	public void validateScientificName(String scientificName, String author){
-		validateScientificName(scientificName, author, "", "","","");
-	}
-
-	/**
-	 * @param rank is ignored for this service.
-	 */
-	public void validateScientificName(String scientificName, String author, String rank, String kingdom, String phylum, String tclass){
-		correctedScientificName = null;
-		correctedAuthor = null;
-		WoRMSlsid = null;
-		comment = "";
-		curationStatus = CurationComment.UNABLE_CURATED;
-
-		//try to find information from the cached file
-		//if failed, then access WoRMS Aphia service or even GNI service
-
-		String key = constructKey(scientificName, author);		
-		if(useCache && cachedScientificName.containsKey(key)){
-			HashMap<String,String> cachedScientificNameInfo = cachedScientificName.get(key);
-
-			String expAuthor = cachedScientificNameInfo.get("author");
-			if(expAuthor.equals("")){
-				//can't be found in either WoRMS or GNI
-				comment = "Failed to find scientific name in both WoRMS and GNI.";
-			}else if(expAuthor.equalsIgnoreCase(author)){
-				correctedScientificName = scientificName;
-				correctedAuthor = author;
-				WoRMSlsid = constructIPNILSID(cachedScientificNameInfo.get("id")); 
-				comment = "The scientific name and authorship are correct.";
-				curationStatus = CurationComment.CORRECT;
-			}else{
-				correctedScientificName = scientificName;
-				correctedAuthor = expAuthor;
-				WoRMSlsid = constructIPNILSID(cachedScientificNameInfo.get("id")); 
-				comment = "Updated the scientific name (including authorship) with term found in GNI which is from WoRMS and in the same lexicalgroup as the original term.";
-				curationStatus = CurationComment.CURATED;
-			}
-		}else{
-			//try to find it in WoRMS Aphia service			
-			try{
-				String source = "";
-				String id = simpleNameSearch(scientificName, author);
-				if(id == null){ 
-					// Note that WoRMS also has a fuzzy matching service.  Could implement here.
-
-
-					//access the GNI and try to get the name that is in the lexical group and from WoRMS
-					Vector<String> resolvedNameInfo = resolveIPNINameInLexicalGroupFromGNI(scientificName);
-
-					if(resolvedNameInfo == null || resolvedNameInfo.size()==0){
-						//failed to find it in GNI						
-						comment = "Can't find the scientific name and authorship by searching in IPNI and the lexical group from IPNI in GNI.";
-					}else{
-						//find it in GNI
-						String resolvedScientificName = resolvedNameInfo.get(0);
-						String resolvedScientificNameAuthorship = resolvedNameInfo.get(1);
-
-						//searching for this name in IPNI again to get the IPNI LSID
-						id = simpleNameSearch(resolvedScientificName, resolvedScientificNameAuthorship);
-						if(id == null){
-							//failed to find the name got from GNI in the IPNI
-							comment = "Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.";
-						}else{
-							//correct the wrong scientific name or author by searching in both IPNI and GNI
-							correctedScientificName = resolvedScientificName;
-							correctedAuthor = resolvedScientificNameAuthorship;
-							WoRMSlsid = constructIPNILSID(id); 
-							comment = "Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.";
-							curationStatus = CurationComment.CURATED;
-							source = "IPNI/GNI";
-						}
-					}					
-				}else{
-					//get a match by searching in IPNI
-					WoRMSlsid = constructIPNILSID(id); 
-					correctedScientificName = scientificName;
-					correctedAuthor = author;
-					comment = "The scientific name and authorship are correct.";
-					curationStatus = CurationComment.CORRECT;
-					source = "IPNI";				
-				}				
-
-				//write newly found information into hashmap and later write into the cached file if it exists
-				if(useCache){
-					HashMap<String,String> cachedScientificNameInfo = new HashMap<String,String>();
-
-					//					if(correctedAuthor == null){
-					//						cachedScientificNameInfo.put("author", "");
-					//					}else{
-					//						cachedScientificNameInfo.put("author", correctedAuthor);
-					//					}
-
-					if(correctedAuthor == null){
-						correctedAuthor = "";
-					}
-					cachedScientificNameInfo.put("author", correctedAuthor);
-
-					//					if(id == null){
-					//						cachedScientificNameInfo.put("id", "");
-					//					}else{
-					//						cachedScientificNameInfo.put("id", id);
-					//					}
-
-					if(id == null){
-						id = "";						
-					}	
-					cachedScientificNameInfo.put("id", id);
-
-					cachedScientificNameInfo.put("source", source);
-
-					cachedScientificName.put(key,cachedScientificNameInfo);
-
-					newFoundScientificName.add(scientificName);				
-					newFoundScientificName.add(author);
-					newFoundScientificName.add(correctedAuthor);
-					newFoundScientificName.add(id);
-					newFoundScientificName.add(source);					
-				}
-			}catch(CurationException ex){
-				comment = ex.getMessage();
-				curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-				return;
-			}
-		}		
-	}
-
-	public CurationStatus getCurationStatus(){
-		return curationStatus;
-	}
-
-	public String getCorrectedScientificName(){
-		return correctedScientificName;
-	}
-
-	public String getCorrectedAuthor(){
-		return correctedAuthor;
+ 
+	@Override
+	protected String getServiceImplementationName() {
+		return "IPNI";
 	}
 
 	public String getLSID(){
 		return WoRMSlsid;
-	}
-
-	public String getComment() {
-		return comment;
-	}	
-
-	public void setCacheFile(String file) throws CurationException{
-		initializeCacheFile(file);		
-		importFromCache();
-        this.useCache = true;
-	}
-
-	public void flushCacheFile() throws CurationException{
-		if(cacheFile == null){
-			return;
-		}
-
-		try {
-			//output the newly found information into the cached file
-			if(newFoundScientificName.size()>0){
-				BufferedWriter writer  = new BufferedWriter(new FileWriter(cacheFile,true));
-				for(int i=0;i<newFoundScientificName.size();i=i+5){
-					String strLine = "";
-					for(int j=i;j<i+5;j++){
-						if(j>i){
-							strLine = strLine + "\t" ;
-						}
-						strLine = strLine + newFoundScientificName.get(j);
-					}
-					writer.write(strLine+"\n");
-				}	
-				writer.close();
-			}
-		} catch (IOException e) {
-			throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
-		}		
-	}
-
-    public void setUseCache(boolean use) {
-        this.useCache = use;
-        cachedScientificName = new HashMap<String,HashMap<String,String>>();
-        newFoundScientificName = new Vector<String>();
-    }
-
-    public String getServiceName() {
-		return serviceName;
-	}
-
-	private void initializeCacheFile(String fileStr) throws CurationException{
-		cacheFile = new File(fileStr);
-
-		if(!cacheFile.exists()){
-			try {
-				//If it's the first time to use the cached file and the file doesn't exist now, then create one 
-				FileWriter writer = new FileWriter(fileStr);
-				writer.close();
-			} catch (IOException e) {
-				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
-			}			
-		}
-
-		if(!cacheFile.isFile()){
-			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
-		}
-	}
-
-	private void importFromCache() throws CurationException{
-		cachedScientificName = new HashMap<String,HashMap<String,String>>();
-		newFoundScientificName = new Vector<String>();
-
-		//read
-		try {
-			BufferedReader cachedFileReader = new BufferedReader(new FileReader(cacheFile));
-			String strLine = cachedFileReader.readLine();
-			while(strLine!=null){
-				String[] info = strLine.split(ColumnDelimiterInCacheFile,-1);
-				if(info.length != 5){
-					throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
-				}
-
-				String taxon = info[0];
-				String author = info[1];				
-				String expAuthor = info[2];
-				String id = info[3];
-				String source = info[4];				
-
-				HashMap<String,String> valueMap = new HashMap<String,String>();
-				valueMap.put("author", expAuthor);
-				valueMap.put("id", id);
-				valueMap.put("source", source);
-
-				cachedScientificName.put(constructKey(taxon,author), valueMap);
-
-				strLine = cachedFileReader.readLine();
-			}
-			cachedFileReader.close();
-		} catch (FileNotFoundException e) {
-			//Since whether the file exist or not has been tested before, this exception should never be reached.
-			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
-		} catch (IOException e) {
-			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
-		}
-	}
-
-	private String constructKey(String taxon, String author){
-		return taxon+" "+author;
 	}
 
 	private String constructIPNILSID(String id){
@@ -473,7 +221,8 @@ public class WoRMSService extends SciNameServiceParent {
 
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
-		log.debug("Checking: " + toCheck.getScientificName() + " " + toCheck.getAuthorship());
+		addToServiceName("WoRMS");
+		logger.debug("Checking: " + toCheck.getScientificName() + " " + toCheck.getAuthorship());
 		depth++;   
 		try {
 			String taxonName = toCheck.getScientificName();
@@ -486,17 +235,17 @@ public class WoRMSService extends SciNameServiceParent {
 				Iterator<AphiaRecord> i = results.iterator();
 				//Multiple matches indicate homonyms (or in WoRMS, deleted records).
 				if (results.size()>1) {
-				    log.debug("More than one match: " + resultsArr.length);
+				    logger.debug("More than one match: " + resultsArr.length);
 					boolean exactMatch = false;
 					List<AphiaRecord> matches = new ArrayList<AphiaRecord>();
 					while (i.hasNext() && !exactMatch) { 
 					    AphiaRecord ar = i.next();
 					    matches.add(ar);
-					    log.debug(ar.getScientificname());
-					    log.debug(ar.getAphiaID());
-					    log.debug(ar.getAuthority());
-					    log.debug(ar.getUnacceptreason());
-					    log.debug(ar.getStatus());
+					    logger.debug(ar.getScientificname());
+					    logger.debug(ar.getAphiaID());
+					    logger.debug(ar.getAuthority());
+					    logger.debug(ar.getUnacceptreason());
+					    logger.debug(ar.getStatus());
 					    if (ar !=null && ar.getScientificname()!=null && taxonName!=null && ar.getScientificname().equals(taxonName)) {
 					    	if (ar.getAuthority()!=null && ar.getAuthority().equals(authorship)) {
 					    		// If one of the results is an exact match on scientific name and authorship, pick that one. 
@@ -508,6 +257,8 @@ public class WoRMSService extends SciNameServiceParent {
 					    		validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
 					    		validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    		exactMatch = true;
+					    		addToComment("Found exact match in WoRMS.");
+					    		curationStatus = CurationComment.CORRECT;
 					    	}
 					    }
 					}
@@ -549,16 +300,18 @@ public class WoRMSService extends SciNameServiceParent {
 							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
 							validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
 							validatedNameUsage.setScientificNameStringEditDistance(1d);
+					    	addToComment("Found exact match in WoRMS.");
+					    	curationStatus = CurationComment.CORRECT;
 						} else {
 							// find how 
 							if (authorship!=null && ar!=null && ar.getAuthority()!=null) { 
 								//double similarity = taxonNameToValidate.calulateSimilarityOfAuthor(ar.getAuthority());
-								log.debug(authorship);
-								log.debug(ar.getAuthority());
+								logger.debug(authorship);
+								logger.debug(ar.getAuthority());
 								NameComparison comparison = authorNameComparator.compare(authorship, ar.getAuthority());
 								String match = comparison.getMatchType();
 								double similarity = comparison.getSimilarity();
-								log.debug(similarity);
+								logger.debug(similarity);
 								//if (match.equals(NameUsage.MATCH_DISSIMILAR) || match.equals(NameUsage.MATCH_ERROR)) {
 									// result.setMatchDescription("Same name, authorship different");
 								//} else { 
@@ -567,18 +320,21 @@ public class WoRMSService extends SciNameServiceParent {
 							        validatedNameUsage.setAuthorshipStringEditDistance(similarity);
 							        validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
 							        validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
-								    validatedNameUsage.setMatchDescription(match);
+								    validatedNameUsage.setMatchDescription(match);		
+					    	        addToComment("Found plausible match in WoRMS.");
+					    	        curationStatus = CurationComment.CURATED;
 								//}
 							} else { 
+					    	    addToComment("Possible match in WoRMS, but it lacks an authorship.");
 								// no authorship was provided in the results, treat as no match
-								log.error("Result with null authorship.");
+								logger.error("Result with null authorship.");
 							}
 						}
 					}
 				  }
 				}
 			} else { 
-				log.debug("No match.");
+				logger.debug("No match.");
 				// Try WoRMS fuzzy matching query
 				String[] searchNames = { taxonName + " " + authorship };
 				AphiaRecord[][] matchResultsArr = wormsService.matchAphiaRecordsByNames(searchNames, false);
@@ -597,15 +353,15 @@ public class WoRMSService extends SciNameServiceParent {
 								NameUsage match = new NameUsage(ar);
 								double similarity = ICZNAuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), match.getAuthorship());
 								match.setAuthorshipStringEditDistance(similarity);
-								log.debug(match.getScientificName());
-								log.debug(match.getAuthorship());
-								log.debug(similarity);
+								logger.debug(match.getScientificName());
+								logger.debug(match.getAuthorship());
+								logger.debug(similarity);
 								potentialMatches.add(match);
 							} else {
-								log.debug("im.next() was null");
+								logger.debug("im.next() was null");
 							}
 						} 
-						log.debug("Fuzzy Matches: " + potentialMatches.size());
+						logger.debug("Fuzzy Matches: " + potentialMatches.size());
 						if (potentialMatches.size()==1) { 
 							validatedNameUsage = potentialMatches.get(0);
 							String authorComparison = authorNameComparator.compare(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()).getMatchType();
@@ -616,16 +372,16 @@ public class WoRMSService extends SciNameServiceParent {
 						}
 					} // iterator over input names, should be just one.
 			    } else {
-			    	log.error("Fuzzy match query returned null instead of a result set.");
+			    	logger.error("Fuzzy match query returned null instead of a result set.");
 			    }
 			}
 		} catch (RemoteException e) {
 			if (e.getMessage().equals("Connection timed out")) { 
-				log.error(e.getMessage() + " " + toCheck.getScientificName() + " " + toCheck.getInputDbPK());
+				logger.error(e.getMessage() + " " + toCheck.getScientificName() + " " + toCheck.getInputDbPK());
 			} else if (e.getCause()!=null && e.getCause().getClass().equals(UnknownHostException.class)) { 
-				log.error("Connection Probably Lost.  UnknownHostException: "+ e.getMessage());
+				logger.error("Connection Probably Lost.  UnknownHostException: "+ e.getMessage());
 			} else {
-				log.error(e.getMessage(), e);
+				logger.error(e.getMessage(), e);
 			}
 			if (depth<4) {
 				// Try again, up to three times.

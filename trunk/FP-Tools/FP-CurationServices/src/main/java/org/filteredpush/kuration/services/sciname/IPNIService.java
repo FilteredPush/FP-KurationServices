@@ -17,6 +17,7 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
+import org.filteredpush.kuration.util.SciNameCacheValue;
 
 import java.io.*;
 import java.util.*;
@@ -37,16 +38,7 @@ public class IPNIService extends SciNameServiceParent {
     //private final static String IPNIurl = "http://lore.genomecenter.ucdavis.edu/cache/ipni.php";
     //private final static String IPNIurl = "http://localhost/cache/ipni.php";
 	private final static String ipniLSIDPrefix = "urn:lsid:ipni.org:names:";
-	private final String serviceName = "IPNI";
 	
-    private boolean useCache = false;
-    
-	private File cacheFile = null;
-	private HashMap<String, HashMap<String,String>> cachedScientificName;
-	private Vector<String> newFoundScientificName;
-	private static final String ColumnDelimiterInCacheFile = "\t";
-    private List<List> log = new LinkedList<List>();
-
 	private String IPNIlsid = null;	
 	
 	private String IPNISourceId = null;	
@@ -65,114 +57,6 @@ public class IPNIService extends SciNameServiceParent {
 	}
 		
 
-	public void setCacheFile(String file) throws CurationException {
-        useCache = true;
-		initializeCacheFile(file);
-		importFromCache();
-	}
-
-	public void flushCacheFile() throws CurationException {
-		if(cacheFile == null){
-			return;
-		}
-
-		try {
-            if (newFoundScientificName == null) {
-            	String message = "Error: newFoundScientificName = null for cache file: "+cacheFile.getAbsolutePath();
-                System.out.println(message);
-            	logger.error(message);
-            } else {
-                //output the newly found information into the cached file
-                if(newFoundScientificName.size()>0){
-                    BufferedWriter writer  = new BufferedWriter(new FileWriter(cacheFile,true));
-                    for(int i=0;i<newFoundScientificName.size();i=i+5){
-                        String strLine = "";
-                        for(int j=i;j<i+5;j++){
-                            if(j>i){
-                                strLine = strLine + "\t" ;
-                            }
-                            strLine = strLine + newFoundScientificName.get(j);
-                        }
-                        writer.write(strLine+"\n");
-                    }
-                    writer.close();
-                }
-            }
-		} catch (IOException e) {
-			throw new CurationException(getClass().getName()+" failed to write newly found scientific name information into cached file "+cacheFile.toString()+" since "+e.getMessage());
-		}
-	}
-
-    public void setUseCache(boolean use) {
-        this.useCache = use;
-        cachedScientificName = new HashMap<String,HashMap<String,String>>();
-        newFoundScientificName = new Vector<String>();
-    }
-
-    public String getServiceName() {
-		return serviceName;
-	}
-
-	private void initializeCacheFile(String fileStr) throws CurationException{
-		cacheFile = new File(fileStr);
-
-		if(!cacheFile.exists()){
-			try {
-				//If it's the first time to use the cached file and the file doesn't exist now, then create one
-				FileWriter writer = new FileWriter(fileStr);
-				writer.close();
-			} catch (IOException e) {
-				throw new CurationException(getClass().getName()+" failed since the specified data cache file of "+fileStr+" can't be opened successfully for "+e.getMessage());
-			}
-		}
-
-		if(!cacheFile.isFile()){
-			throw new CurationException(getClass().getName()+" failed since the specified data cache file "+fileStr+" is not a valid file.");
-		}
-	}
-
-	private void importFromCache() throws CurationException{
-		cachedScientificName = new HashMap<String,HashMap<String,String>>();
-		newFoundScientificName = new Vector<String>();
-
-		//read
-		try {
-			BufferedReader cachedFileReader = new BufferedReader(new FileReader(cacheFile));
-			String strLine = cachedFileReader.readLine();
-			while(strLine!=null){
-				String[] info = strLine.split(ColumnDelimiterInCacheFile,-1);
-				if(info.length != 5){
-					throw new CurationException(getClass().getName()+" failed to import data from cached file since some information is missing at: "+strLine);
-				}
-
-				String taxon = info[0];
-				String author = info[1];
-				String expAuthor = info[2];
-				String id = info[3];
-				String source = info[4];
-
-				HashMap<String,String> valueMap = new HashMap<String,String>();
-				valueMap.put("author", expAuthor);
-				valueMap.put("id", id);
-				valueMap.put("source", source);
-
-				cachedScientificName.put(constructKey(taxon,author), valueMap);
-
-				strLine = cachedFileReader.readLine();
-			}
-			cachedFileReader.close();
-		} catch (FileNotFoundException e) {
-			//Since whether the file exist or not has been tested before, this exception should never be reached.
-			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
-		} catch (IOException e) {
-			throw new CurationException(getClass().getName()+" failed to import data from cached file for "+e.getMessage());
-		}
-	}
-
-	private String constructKey(String taxon, String author){
-		return taxon+" "+author;
-	}
-	
 	private String constructIPNILSID(String id){
 		return ipniLSIDPrefix+id;
 	}
@@ -242,6 +126,8 @@ public class IPNIService extends SciNameServiceParent {
                 usage.setAuthorComparator(new ICNafpAuthorNameComparator(.70d,.5d));
                 usage.setOriginalAuthorship(author);
                 usage.setOriginalScientificName(taxon);
+                logger.debug(author);
+                logger.debug(foundAuthor);
                 NameComparison comparison = usage.getAuthorComparator().compare(author, foundAuthor);
                 logger.debug(comparison.getSimilarity());
                 usage.setAuthorshipStringEditDistance(comparison.getSimilarity());
@@ -277,12 +163,6 @@ public class IPNIService extends SciNameServiceParent {
 			}
 			responseReader.close();
             httpPost.releaseConnection();
-            List l = new LinkedList();
-            l.add(this.getClass().getSimpleName());
-            l.add(starttime);
-            l.add(System.currentTimeMillis());
-            l.add(httpPost.toString());
-            log.add(l);
             logger.debug(id);						
 		} catch (IOException e) {
 			throw new CurationException("IPNIService failed to access IPNI service for "+e.getMessage());
@@ -304,19 +184,22 @@ public class IPNIService extends SciNameServiceParent {
 			validatedNameUsage.setScientificName(correctedScientificName);
 			validatedNameUsage.setAuthorship(correctedAuthor);
 			validatedNameUsage.setGuid(IPNIlsid);
+			logger.debug(match.getGuid());
+			logger.debug(match.getMatchDescription());
 			if ( match.getMatchDescription().equals(NameComparison.MATCH_EXACT)
 					|| match.getAuthorshipStringEditDistance()==1d) { 
 				addToComment("The scientific name and authorship are correct.  " + match.getMatchDescription());
 			   curationStatus = CurationComment.CORRECT;
 			} else if (match.getMatchDescription().equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
-				addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author.  " + match.getMatchDescription());
+				addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author (" + match.getOriginalAuthorship() + " vs. " + correctedAuthor + ").  " + match.getMatchDescription());
 			   curationStatus = CurationComment.CORRECT;
 			} else if (match.getMatchDescription().equals(NameComparison.MATCH_ADDSAUTHOR)) { 
-				addToComment("An authorship is suggested where none was provided.  " + match.getMatchDescription());
+				addToComment("An authorship (" + correctedAuthor + ") is suggested where none was provided.  " + match.getMatchDescription());
 			   curationStatus = CurationComment.CURATED;
 			} else if (match.getMatchDescription().equals(NameComparison.MATCH_ERROR) 
 					|| match.getMatchDescription().equals(NameComparison.MATCH_DISSIMILAR)) {
 				// no match to report
+				addToComment("No match was found in IPNI.  " + match.getMatchDescription());
 				id = null;
 			} else { 
 		        if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
@@ -419,12 +302,6 @@ public class IPNIService extends SciNameServiceParent {
 			}
 			responseReader.close();
             httpPost.releaseConnection();
-            List l = new LinkedList();
-            l.add(this.getClass().getSimpleName());
-            l.add(starttime);
-            l.add(System.currentTimeMillis());
-            l.add(httpPost.toString());
-            log.add(l);
             logger.debug(id);						
 			return id;
 		} catch (IOException e) {
@@ -501,42 +378,25 @@ public class IPNIService extends SciNameServiceParent {
 		validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 		comment = new StringBuffer();
 		curationStatus = CurationComment.UNABLE_CURATED;
-        log = new LinkedList<List>();
         
 		String scientificName = toCheck.getOriginalScientificName();
 		String author = toCheck.getOriginalAuthorship();
+		
+        String key = getKey(scientificName, author);
+        if(useCache && sciNameCache.containsKey(key)){
+            SciNameCacheValue hitValue = (SciNameCacheValue) sciNameCache.get(key);
+            addToComment(hitValue.getComment());
+            curationStatus = hitValue.getStatus();
+            addToServiceName(hitValue.getSource());
+            this.validatedNameUsage.setAuthorship(hitValue.getAuthor());
+            this.validatedNameUsage.setScientificName(hitValue.getTaxon());
+            //System.out.println("count  = " + count++);
+            //System.out.println(key);
+            return hitValue.getHasResult();
+        }		
 
-		//try to find information from the cached file
-		//if failed, then access IPNI service or even GNI service
+		//Try to find name in access IPNI failing over to GNI service
         
-		String key = constructKey(scientificName, author);		
-		if(useCache && cachedScientificName.containsKey(key)){
-			HashMap<String,String> cachedScientificNameInfo = cachedScientificName.get(key);
-			
-			String expAuthor = cachedScientificNameInfo.get("author");
-			if(expAuthor.equals("")){
-				//can't be found in either IPNI or GNI
-				addToComment("Failed to find scientific name in either IPNI or GNI.");
-			} else { 
-				String correctedAuthor = "";
-				if(expAuthor.equalsIgnoreCase(author)){
-					correctedAuthor = author;
-					IPNIlsid = constructIPNILSID(cachedScientificNameInfo.get("id")); 
-					addToComment("The scientific name and authorship are correct.");
-					curationStatus = CurationComment.CORRECT;
-					result = true;
-				} else{
-					correctedAuthor = expAuthor;
-					IPNIlsid = constructIPNILSID(cachedScientificNameInfo.get("id")); 
-					addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
-					curationStatus = CurationComment.CURATED;
-					result = true;
-				}
-				validatedNameUsage.setScientificName(scientificName);
-				validatedNameUsage.setAuthorship(correctedAuthor);
-				validatedNameUsage.setGuid(IPNIlsid);
-			}
-		} else {
 			//try to find it in IPNI service			
 			try{
 				String source = "";
@@ -545,7 +405,13 @@ public class IPNIService extends SciNameServiceParent {
 				if(id != null){
 				    source = "IPNI";
 				    result = true;
+				    logger.debug(id);
+				    logger.debug(curationStatus.toString());
+					addToComment("Found name in IPNI.");
 				} else {
+					addToComment("Didn't find name in IPNI.");
+				    logger.debug(id);
+				    logger.debug(curationStatus.toString());
 					//access the GNI and try to get the name that is in the lexical group and from IPNI
 					Vector<String> resolvedNameInfo = resolveIPNINameInLexicalGroupFromGNI(scientificName);
 					
@@ -580,45 +446,16 @@ public class IPNIService extends SciNameServiceParent {
 					}					
 				}				
 				
-				//write newly found information into hashmap and later write into the cached file if it exists
-				if(useCache){
-					HashMap<String,String> cachedScientificNameInfo = new HashMap<String,String>();
-					
-//					if(correctedAuthor == null){
-//						cachedScientificNameInfo.put("author", "");
-//					}else{
-//						cachedScientificNameInfo.put("author", correctedAuthor);
-//					}
-					
-					cachedScientificNameInfo.put("author", validatedNameUsage.getScientificName());
-					
-//					if(id == null){
-//						cachedScientificNameInfo.put("id", "");
-//					}else{
-//						cachedScientificNameInfo.put("id", id);
-//					}
-					
-					if(id == null){
-						id = "";						
-					}	
-					cachedScientificNameInfo.put("id", id);
-													
-					cachedScientificNameInfo.put("source", source);
-					
-					cachedScientificName.put(key,cachedScientificNameInfo);
-					
-					newFoundScientificName.add(scientificName);				
-					newFoundScientificName.add(author);
-					newFoundScientificName.add(validatedNameUsage.getAuthorship());
-					newFoundScientificName.add(id);
-					newFoundScientificName.add(source);					
-				}
 			} catch (Exception ex){
 				addToComment(ex.getMessage());
 				curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 			}
-		}		
 		return result;
+	}
+
+	@Override
+	protected String getServiceImplementationName() {
+		return "IPNI";
 	}
 
 }

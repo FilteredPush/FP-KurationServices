@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 	
-	private static final Log log = LogFactory.getLog(ICNafpAuthorNameComparator.class);
+	private static final Log logger = LogFactory.getLog(ICNafpAuthorNameComparator.class);
 	
 	/**
 	 *  Threshold of similarity (0-1) over which strong similarity is asserted.
@@ -144,7 +144,7 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 	 * otherwise return false. 
 	 */
 	public static boolean matchedOnWordsInTokens(String anAuthor, String toOtherAuthor) {
-		log.debug("in matchedOnWordsInTokens(" + anAuthor + "," + toOtherAuthor + ")");
+		logger.debug("in matchedOnWordsInTokens(" + anAuthor + "," + toOtherAuthor + ")");
 		// TODO: Break this into several methods, called from this method, each 
 		// method with its own unit tests, this assembly is large enough to be difficult to 
 		// debug when tests fail.
@@ -161,13 +161,13 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 	    		if (shorterButNotAbbreviation(anAuthorBit, toOtherAuthorBit)) { 
 	    			// declare a missmatch.
 	    			foundMissmatch = true;
-	    			log.debug("Missmatch shorter but not abbreviation: " + anAuthorBit + ":" + toOtherAuthorBit);
+	    			logger.debug("Missmatch shorter but not abbreviation: " + anAuthorBit + ":" + toOtherAuthorBit);
 	    		}
 				if (!anAuthorBit.equals(toOtherAuthorBit)) {
 					// Check if initials are the same
 					if (initalsAreDifferent(anAuthorBit, toOtherAuthorBit)) { 
 						foundMissmatch = true;
-	    				 log.debug("Missmatch: " + anAuthorBit + ":" + toOtherAuthorBit);
+	    				 logger.debug("Missmatch: " + anAuthorBit + ":" + toOtherAuthorBit);
 					}
 
 					// remove punctuation.
@@ -176,31 +176,37 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 					if (anAuthorBit.trim().equals("L") && toOtherAuthorBit.equals("Lamarck")) { 
 						// Special case, botany, fail
 						foundMissmatch = true;
-	    				log.debug("Missmatch: " + anAuthorBit + ": " + toOtherAuthorBit);
+	    				logger.debug("Missmatch: " + anAuthorBit + ": " + toOtherAuthorBit);
 					}
 					if (anAuthorBit.trim().equals("Lamarck") && toOtherAuthorBit.equals("L")) { 
 						// Special case, botany, fail
 						foundMissmatch = true;
-	    				log.debug("Missmatch: " + anAuthorBit + ": " + toOtherAuthorBit);
+	    				logger.debug("Missmatch: " + anAuthorBit + ": " + toOtherAuthorBit);
 					}
-					// remove single letters
-					anAuthorBit = anAuthorBit.replaceAll("^[A-Z] ", " ");
-					anAuthorBit = anAuthorBit.replaceAll(" [A-Z] ", " ");
-					anAuthorBit = anAuthorBit.replaceAll(" [A-Z]$", " ");
-					toOtherAuthorBit = toOtherAuthorBit.replaceAll("^[A-Z] ", " ");
-					toOtherAuthorBit = toOtherAuthorBit.replaceAll(" [A-Z] ", " ");
-					toOtherAuthorBit = toOtherAuthorBit.replaceAll(" [A-Z]$", " ");
+					// remove single letters (except if authorbit is only a single letter) 
+					if (!anAuthorBit.trim().matches("^[A-Z]$")) { 
+					   anAuthorBit = anAuthorBit.replaceAll("^[A-Z] ", " ");
+					   anAuthorBit = anAuthorBit.replaceAll(" [A-Z] ", " ");
+					   anAuthorBit = anAuthorBit.replaceAll(" [A-Z]$", " ");
+					}
+					if (!toOtherAuthorBit.trim().matches("^[A-Z]$")) { 
+					   toOtherAuthorBit = toOtherAuthorBit.replaceAll("^[A-Z] ", " ");
+					   toOtherAuthorBit = toOtherAuthorBit.replaceAll(" [A-Z] ", " ");
+					   toOtherAuthorBit = toOtherAuthorBit.replaceAll(" [A-Z]$", " ");
+					}
 					anAuthorBit = anAuthorBit.trim();
 					toOtherAuthorBit = toOtherAuthorBit.trim();
 					// remove double spaces
 					anAuthorBit = anAuthorBit.replaceAll("  ", " ").trim();
 					toOtherAuthorBit = toOtherAuthorBit.replaceAll("  ", " ").trim();
+					logger.debug(anAuthorBit);
+					logger.debug(toOtherAuthorBit);
 					List<String> anAuthorSubBits = Arrays.asList(anAuthorBit.trim().split(" "));
 					List<String> toOtherAuthorSubBits = Arrays.asList(toOtherAuthorBit.trim().split(" "));
 					if (!knownMatch(anAuthorBit, toOtherAuthorBit)) { 
 						if (anAuthorSubBits.size()!=toOtherAuthorSubBits.size()) {
 							foundMissmatch = true;
-							log.debug("Missmatch: " + anAuthorBit.trim() + " " + anAuthorSubBits.size() + ": " + toOtherAuthorBit.trim() + " " + toOtherAuthorSubBits.size());
+							logger.debug("Missmatch: " + anAuthorBit.trim() + " " + anAuthorSubBits.size() + ": " + toOtherAuthorBit.trim() + " " + toOtherAuthorSubBits.size());
 						} else { 
 							Iterator<String> iAsb = anAuthorSubBits.iterator();
 							Iterator<String> iOsb = toOtherAuthorSubBits.iterator();
@@ -209,7 +215,7 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 								String otherSubBit = iOsb.next();
 								if (!compareSameOrStartsWith(subBit,otherSubBit)) { 
 									foundMissmatch = true;
-									log.debug("Missmatch: " + subBit + ": " + otherSubBit);
+									logger.debug("Missmatch: " + subBit + ": " + otherSubBit);
 								}
 							}
 						}
@@ -218,7 +224,7 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 			}
 			result = !foundMissmatch;
 		}
-		log.debug("matchedOnWordsInTokens(): " + result);
+		logger.debug("matchedOnWordsInTokens(): " + result);
 		return result;
 	}
 	
@@ -290,11 +296,11 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 		}
 		
 		// separate out parenthetical author
-		log.debug(authorship);
+		logger.debug(authorship);
 		if (authorship.matches("^\\(.*\\).+$")) { 
 			String[] parBits = authorship.split("\\)");
-			log.debug(parBits.length);
-			log.debug(parBits[0]);
+			logger.debug(parBits.length);
+			logger.debug(parBits[0]);
 			bits.add(parBits[0].replaceFirst("^\\(", ""));
 			bits.add(parBits[1]);
 		} else { 
@@ -307,13 +313,13 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 			String bit = i.next();
 			if (bit.contains(" ex ")) { 
 				String[] exBits = bit.split(" ex ");
-				log.debug(exBits.length);
-				log.debug(exBits[0]);
-				log.debug(exBits[1]);
+				logger.debug(exBits.length);
+				logger.debug(exBits[0]);
+				logger.debug(exBits[1]);
 				subbits.add(exBits[0]);
 				subbits.add(exBits[1]);
 			} else { 
-				log.debug(bit);
+				logger.debug(bit);
 				subbits.add(bit);
 			}
 
@@ -403,7 +409,7 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 		if (!initA.equals(initO)) { 
 			if (initA.length()==initO.length() && initA.length()>0) { 
 				result = true;
-			    log.debug("Different Initials: " + initA + ":" + initO);
+			    logger.debug("Different Initials: " + initA + ":" + initO);
 			}
 		}
 		return result;
@@ -434,7 +440,7 @@ public class ICNafpAuthorNameComparator extends AuthorNameComparator {
 				// and the longer of the two bits doesn't contain a period 
 			    // then assume that the shorter isn't an abbreviation. 
 				result = true;
-				log.debug("Missmatch: " + shorter + ":" + longer);
+				logger.debug("Missmatch: " + shorter + ":" + longer);
 			}
 		}
 		if (shorter.length()==longer.length()) { 

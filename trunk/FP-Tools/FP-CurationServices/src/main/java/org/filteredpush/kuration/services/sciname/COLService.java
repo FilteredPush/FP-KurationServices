@@ -16,9 +16,18 @@ public class COLService extends SciNameServiceParent {
 	
 	private final static String Url = "http://www.catalogueoflife.org/col/webservice";
 
+	public COLService() { 
+		init();
+	}
+	
 	protected void init() {
 		validatedNameUsage = new NameUsage("Catalog Of Life",new ICZNAuthorNameComparator(.75d, .5d));
 	}
+	
+	@Override
+	protected String getServiceImplementationName() {
+		return "Catalog Of Life";
+	}	
 	
     @Override
     public boolean nameSearchAgainstServices(NameUsage toCheck)  {
@@ -30,7 +39,7 @@ public class COLService extends SciNameServiceParent {
             SciNameCacheValue hitValue = (SciNameCacheValue) sciNameCache.get(key);
             addToComment(hitValue.getComment());
             curationStatus = hitValue.getStatus();
-            serviceName = hitValue.getSource();
+            addToServiceName(hitValue.getSource());
             this.validatedNameUsage.setAuthorship(hitValue.getAuthor());
             this.validatedNameUsage.setScientificName(hitValue.getTaxon());
             //System.out.println("count  = " + count++);
@@ -38,28 +47,9 @@ public class COLService extends SciNameServiceParent {
             return hitValue.getHasResult();
         }
 
-        serviceName = serviceName + " | Catalog of Life";
+        addToServiceName("Catalog of Life");
         Document document = null;
         URL url;
-
-        /*
-        Reader stream = null;
-        try {
-            url = new URL(Url + "?name=" + name.replace(" ", "%20") + "&format=xml&response=full");
-            //System.out.println("url.toString() = " + url.toString());
-            URLConnection connection = url.openConnection();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder sb = new StringBuilder();
-            while (br.ready()) {
-                sb.append(br.readLine());
-            }
-            stream = new StringReader(sb.toString());
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            comment = comment + " | Fail to access Catalog of Life service, trying failover to Checklistbank Back bone";
-        }
-        */
 
         /*
          * Some illustrative example calls: 

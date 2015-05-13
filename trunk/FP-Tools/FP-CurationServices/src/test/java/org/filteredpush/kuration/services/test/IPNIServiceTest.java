@@ -29,7 +29,6 @@ public class IPNIServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		service = new IPNIService();
-		service.setUseCache(false);
 	}
 
 	/**
@@ -53,6 +52,17 @@ public class IPNIServiceTest {
 		assertEquals(author,service.getCorrectedAuthor());
 		assertEquals(scientificName,service.getCorrectedScientificName());
 		
+		scientificName = "Quercus alba";
+		author = "Linnaeus";
+		service.validateScientificName(scientificName, author);
+		logger.debug(service.getCurationStatus().toString());
+		logger.debug(service.getCorrectedScientificName());
+		logger.debug(service.getCorrectedAuthor());
+		assertEquals(CurationComment.CORRECT,service.getCurationStatus());
+		assertEquals("L.",service.getCorrectedAuthor());
+		assertEquals(scientificName,service.getCorrectedScientificName());		
+		
+		author = "L.";
 		service.validateScientificName(scientificName, "Smith");
 		assertEquals(CurationComment.CURATED,service.getCurationStatus());
 		assertEquals(author,service.getCorrectedAuthor());
