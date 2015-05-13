@@ -48,8 +48,6 @@ public class IPNIService extends SciNameServiceParent {
 	private static final String ColumnDelimiterInCacheFile = "\t";
     private List<List> log = new LinkedList<List>();
 
-	private String correctedScientificName = null;
-	private String correctedAuthor = null;
 	private String IPNIlsid = null;	
 	
 	private String IPNISourceId = null;	
@@ -62,18 +60,6 @@ public class IPNIService extends SciNameServiceParent {
 		validatedNameUsage = new NameUsage("IPNI",new ICNafpAuthorNameComparator(.70d, .5d));
     }
     
-	
-	public CurationStatus getCurationStatus(){
-		return curationStatus;
-	}
-
-	public String getCorrectedScientificName(){
-		return correctedScientificName;
-	}
-	
-	public String getCorrectedAuthor(){
-		return correctedAuthor;
-	}
 
 	public String getLSID(){
 		return IPNIlsid;
@@ -312,8 +298,8 @@ public class IPNIService extends SciNameServiceParent {
 			id = Integer.toString(iid);
 			//got one  match by searching in IPNI
 			IPNIlsid = match.getGuid(); 
-			correctedScientificName = match.getScientificName();
-			correctedAuthor = match.getAuthorship();
+			String correctedScientificName = match.getScientificName();
+			String correctedAuthor = match.getAuthorship();
 			validatedNameUsage.setScientificName(correctedScientificName);
 			validatedNameUsage.setAuthorship(correctedAuthor);
 			validatedNameUsage.setGuid(IPNIlsid);
@@ -353,10 +339,8 @@ public class IPNIService extends SciNameServiceParent {
 		    			int iid = match.getKey();
 		    			id = Integer.toString(iid);
 		    			IPNIlsid = match.getGuid(); 
-		    			correctedScientificName = match.getScientificName();
-		    			correctedAuthor = match.getAuthorship();
-		    			validatedNameUsage.setScientificName(correctedScientificName);
-		    			validatedNameUsage.setAuthorship(correctedAuthor);
+		    			validatedNameUsage.setScientificName(match.getScientificName());
+		    			validatedNameUsage.setAuthorship(match.getAuthorship());
 		    			validatedNameUsage.setGuid(IPNIlsid);
 		    			addToComment("The scientific name and authorship are correct.");
 		    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
@@ -503,13 +487,6 @@ public class IPNIService extends SciNameServiceParent {
 	}	
 	
 
-	/**
-	 * @param correctedScientificName the correctedScientificName to set
-	 */
-	public void setCorrectedScientificName(String correctedScientificName) {
-		this.correctedScientificName = correctedScientificName;
-	}
-
 	@Override
 	public AuthorNameComparator getAuthorNameComparator(String authorship,
 			String kingdom) {
@@ -540,22 +517,21 @@ public class IPNIService extends SciNameServiceParent {
 				//can't be found in either IPNI or GNI
 				addToComment("Failed to find scientific name in either IPNI or GNI.");
 			} else { 
+				String correctedAuthor = "";
 				if(expAuthor.equalsIgnoreCase(author)){
-					correctedScientificName = scientificName;
 					correctedAuthor = author;
 					IPNIlsid = constructIPNILSID(cachedScientificNameInfo.get("id")); 
 					addToComment("The scientific name and authorship are correct.");
 					curationStatus = CurationComment.CORRECT;
 					result = true;
 				} else{
-					correctedScientificName = scientificName;
 					correctedAuthor = expAuthor;
 					IPNIlsid = constructIPNILSID(cachedScientificNameInfo.get("id")); 
 					addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
 					curationStatus = CurationComment.CURATED;
 					result = true;
 				}
-				validatedNameUsage.setScientificName(correctedScientificName);
+				validatedNameUsage.setScientificName(scientificName);
 				validatedNameUsage.setAuthorship(correctedAuthor);
 				validatedNameUsage.setGuid(IPNIlsid);
 			}
@@ -585,11 +561,9 @@ public class IPNIService extends SciNameServiceParent {
 						id = handleSearchResults(searchResults);
 						if(id == null){
 							//failed to find the name got from GNI in the IPNI
-							addToComment("Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.");
+							addToComment("Found a name which is in the same lexical group as the searched scientific name and claimed by GNI to be in IPNI but failed to find this name in IPNI.");
 						}else{
 							//correct the wrong scientific name or author by searching in both IPNI and GNI
-							correctedScientificName = resolvedScientificName;
-							correctedAuthor = resolvedScientificNameAuthorship;
 							IPNIlsid = constructIPNILSID(id); 
 							addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
 							curationStatus = CurationComment.CURATED;
@@ -615,10 +589,7 @@ public class IPNIService extends SciNameServiceParent {
 //						cachedScientificNameInfo.put("author", correctedAuthor);
 //					}
 					
-					if(correctedAuthor == null){
-						correctedAuthor = "";
-					}
-					cachedScientificNameInfo.put("author", correctedAuthor);
+					cachedScientificNameInfo.put("author", validatedNameUsage.getScientificName());
 					
 //					if(id == null){
 //						cachedScientificNameInfo.put("id", "");
@@ -637,7 +608,7 @@ public class IPNIService extends SciNameServiceParent {
 					
 					newFoundScientificName.add(scientificName);				
 					newFoundScientificName.add(author);
-					newFoundScientificName.add(correctedAuthor);
+					newFoundScientificName.add(validatedNameUsage.getAuthorship());
 					newFoundScientificName.add(id);
 					newFoundScientificName.add(source);					
 				}

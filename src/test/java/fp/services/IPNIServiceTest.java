@@ -49,7 +49,15 @@ public class IPNIServiceTest {
 		service.validateScientificName(scientificName, "Smith");
 		assertEquals(CurationComment.CURATED,service.getCurationStatus());
 		assertEquals(author,service.getCorrectedAuthor());
-		assertEquals(scientificName,service.getCorrectedScientificName());		
+		assertEquals(scientificName,service.getCorrectedScientificName());	
+		
+		// A non-plant name
+		service.validateScientificName("Sclerobunus", "");
+		System.out.println(service.getCurationStatus().toString());
+		System.out.println(service.getCorrectedScientificName());
+		assertEquals(CurationComment.CURATED,service.getCurationStatus());
+		assertEquals("Banks, 1893",service.getCorrectedAuthor());
+		assertEquals("Sclerobunus",service.getCorrectedScientificName());	
 			
 	}
 

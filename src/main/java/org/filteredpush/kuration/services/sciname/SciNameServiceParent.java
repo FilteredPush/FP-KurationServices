@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Vector;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.interfaces.INewScientificNameValidationService;
 import org.filteredpush.kuration.util.*;
 
@@ -23,6 +25,8 @@ import org.filteredpush.kuration.util.*;
  */
 public abstract class SciNameServiceParent implements INewScientificNameValidationService {
 
+	private static final Log logger = LogFactory.getLog(SciNameServiceParent.class);
+	
 	/**
 	 * Search the supported service for a taxon name, and set the metadata of the SciNameService instance
 	 * to reflect the results.  Sets values for curationStatus, comment, and validatedNameUsage.
@@ -66,6 +70,8 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
 	   toCheck.setOriginalScientificName(scientificNameToValidate);
 	   toCheck.setOriginalAuthorship(authorToValidate);
 	   toCheck.setKingdom(kingdom);
+	   logger.debug(toCheck.getOriginalScientificName());
+	   logger.debug(toCheck.getOriginalAuthorship());
 	   validatedNameUsage.setOriginalAuthorship(authorToValidate);
 	   validatedNameUsage.setOriginalScientificName(scientificNameToValidate);
        //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
