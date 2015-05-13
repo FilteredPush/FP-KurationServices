@@ -1,5 +1,7 @@
-package fp.services;
+package org.filteredpush.kuration.services.test;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.interfaces.INewScientificNameValidationService;
 import org.filteredpush.kuration.services.sciname.COLService;
 import org.filteredpush.kuration.util.CurationComment;
@@ -11,7 +13,10 @@ import static org.junit.Assert.assertTrue;
  * Created by tianhong on 10/22/14.
  */
 public class SciNameServiceTest {
-    private INewScientificNameValidationService scientificNameService = new COLService();
+	
+	private static final Log logger = LogFactory.getLog(SciNameServiceTest.class);
+    
+	private INewScientificNameValidationService scientificNameService = new COLService();
     //String serviceClassQN = "org.filteredpush.kuration.services.COLService";
     //scientificNameService = (INewScientificNameValidationService)Class.forName(serviceClassQN).newInstance();
 
@@ -19,9 +24,9 @@ public class SciNameServiceTest {
     public void validNameTest(){
         scientificNameService.validateScientificName("Eucerceris canaliculata", "(Say, 1823)");
         //assertTrue(scientificNameService.getCorrectedScientificName().equals("Eucerceris canaliculata"));
-        System.out.println(scientificNameService.getCurationStatus());
-        System.out.println(scientificNameService.getCorrectedScientificName());
-        System.out.println(scientificNameService.getCorrectedAuthor());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CORRECT));
     }
 
@@ -30,7 +35,9 @@ public class SciNameServiceTest {
     	// present with something that isn't a scientific name, should be unable to curate.
         scientificNameService.validateScientificName("John smith", "(not an author, 1897)");
         assertTrue(scientificNameService.getCorrectedScientificName().equals(""));
-        System.out.println(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
         
         scientificNameService.validateScientificName("Speranza trilinearia", "");
@@ -63,9 +70,9 @@ public class SciNameServiceTest {
         String name2 = "Formicidae";
         String author2 = null;
         scientificNameService.validateScientificName(name2, author2);
-        System.out.println(scientificNameService.getCurationStatus());
-        System.out.println(scientificNameService.getCorrectedScientificName());
-        System.out.println(scientificNameService.getCorrectedAuthor());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCorrectedAuthor().equals("Latreille, 1802"));
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CURATED));
     }

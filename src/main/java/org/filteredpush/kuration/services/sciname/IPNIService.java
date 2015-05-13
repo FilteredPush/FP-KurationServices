@@ -17,7 +17,6 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
-import org.filteredpush.kuration.util.CurationStatus;
 
 import java.io.*;
 import java.util.*;
@@ -79,7 +78,9 @@ public class IPNIService extends SciNameServiceParent {
 
 		try {
             if (newFoundScientificName == null) {
-                System.out.println("Error: newFoundScientificName = null for cache file: "+cacheFile.getAbsolutePath());
+            	String message = "Error: newFoundScientificName = null for cache file: "+cacheFile.getAbsolutePath();
+                System.out.println(message);
+            	logger.error(message);
             } else {
                 //output the newly found information into the cached file
                 if(newFoundScientificName.size()>0){

@@ -1,10 +1,12 @@
 /**
  * 
  */
-package fp.services;
+package org.filteredpush.kuration.services.test;
 
 import static org.junit.Assert.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.services.sciname.IPNIService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
@@ -16,6 +18,8 @@ import org.junit.Test;
  *
  */
 public class IPNIServiceTest {
+	
+	private static final Log logger = LogFactory.getLog(IPNIServiceTest.class);
 
 	private IPNIService service;
 	
@@ -42,6 +46,9 @@ public class IPNIServiceTest {
 		}
 		
 		service.validateScientificName(scientificName, author);
+		logger.debug(service.getCurationStatus().toString());
+		logger.debug(service.getCorrectedScientificName());
+		logger.debug(service.getCorrectedAuthor());
 		assertEquals(CurationComment.CORRECT,service.getCurationStatus());
 		assertEquals(author,service.getCorrectedAuthor());
 		assertEquals(scientificName,service.getCorrectedScientificName());
@@ -53,8 +60,8 @@ public class IPNIServiceTest {
 		
 		// A non-plant name
 		service.validateScientificName("Sclerobunus", "");
-		System.out.println(service.getCurationStatus().toString());
-		System.out.println(service.getCorrectedScientificName());
+		logger.debug(service.getCurationStatus().toString());
+		logger.debug(service.getCorrectedScientificName());
 		assertEquals(CurationComment.CURATED,service.getCurationStatus());
 		assertEquals("Banks, 1893",service.getCorrectedAuthor());
 		assertEquals("Sclerobunus",service.getCorrectedScientificName());	

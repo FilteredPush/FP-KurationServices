@@ -1,4 +1,4 @@
-package fp.services;
+package org.filteredpush.kuration.services.test;
 
 import org.filteredpush.kuration.interfaces.IInternalDateValidationService;
 import org.filteredpush.kuration.services.InternalDateValidationService;

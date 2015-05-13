@@ -1,4 +1,4 @@
-package fp.services;
+package org.filteredpush.kuration.services.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
