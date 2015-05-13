@@ -51,7 +51,7 @@ import edu.harvard.mcz.nametools.NameUsage;
  */
 public class GBIFService extends SciNameServiceParent {
 	
-	private static final Log log = LogFactory.getLog(GBIFService.class);
+	private static final Log logger = LogFactory.getLog(GBIFService.class);
 	
 	public static final String GBIF_SERVICE = "http://api.gbif.org/v1";
 	
@@ -77,12 +77,23 @@ public class GBIFService extends SciNameServiceParent {
 		fetchSynonymsAboveSpecies = true;
 		//TODO: Lookup title for dataset from targetKey (and check that datset exists).
 		targetDataSetName = "GBIF Dataset" + targetKey; 
+		if (targetKey.equals(KEY_IPNI)) { 
+		    targetDataSetName = "GBIF IPNI Dataset"; 
+		}
+		if (targetKey.equals(KEY_COL)) { 
+		    targetDataSetName = "GBIF COL Dataset"; 
+		}
+		if (targetKey.equals(KEY_INDEXFUNGORUM)) { 
+		    targetDataSetName = "GBIF IndexFungorum Dataset"; 
+		}
 		init();
 		test();
 	}
 	
+	
 	protected void init() { 
 		validatedNameUsage = new NameUsage("GBIF",new ICZNAuthorNameComparator(.75d, .5d));
+		addToServiceName("GBIF");
 	}
 	
 	protected void test() throws IOException  { 
@@ -90,6 +101,11 @@ public class GBIFService extends SciNameServiceParent {
 		GBIFService.searchForGenus("Murex", GBIFService.KEY_GBIFBACKBONE,1);
 	}	
 
+	@Override
+	protected String getServiceImplementationName() {
+		return targetDataSetName;
+	}
+	
 	public static String fetchTaxon(String taxon, String targetChecklist) { 
 		StringBuilder result = new StringBuilder();
 		String datasetKey = "";
@@ -107,7 +123,7 @@ public class GBIFService extends SciNameServiceParent {
 				result.append(line);
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 
 
@@ -125,14 +141,14 @@ public class GBIFService extends SciNameServiceParent {
 			//url = new URL(GBIF_SERVICE + "/name_usage/search?q=" + name + "&limit=100&" + datasetKey);
 			url = new URL(GBIF_SERVICE + "/species/?name=" + URLEncoder.encode(name,"UTF-8") + "&limit=100&" + datasetKey);
 			URLConnection connection = url.openConnection();
-			log.debug(url.toString());
+			logger.debug(url.toString());
 			String line;
 			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			while((line = reader.readLine()) != null) {
 				result.append(line);
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 
 		return result.toString();
@@ -147,13 +163,13 @@ public class GBIFService extends SciNameServiceParent {
 		URL url;
 			//url = new URL(GBIF_SERVICE + "/name_usage/search?q=" + URLEncoder.encode(name,"UTF-8") + "&rank=SPECIES&limit=100&" + datasetKey);
 			url = new URL(GBIF_SERVICE + "/species/search?q=" + URLEncoder.encode(name,"UTF-8") + "&rank=SPECIES&limit=100&" + datasetKey);
-			log.debug(url.toString());
+			logger.debug(url.toString());
 			URLConnection connection = url.openConnection();
 			String line;
 			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			while((line = reader.readLine()) != null) {
 				result.append(line);
-				log.debug(line);
+				logger.debug(line);
 			}
 		return result.toString();
 	}	
@@ -166,42 +182,14 @@ public class GBIFService extends SciNameServiceParent {
 		}
 		URL url;
 			url = new URL(GBIF_SERVICE + "/species/search?q=" + URLEncoder.encode(name,"UTF-8") + "&rank=GENUS&limit=" + Integer.toString(limit) + "&" + datasetKey);
-			log.debug(url.toString());
+			logger.debug(url.toString());
 			URLConnection connection = url.openConnection();
 			String line;
 			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			while((line = reader.readLine()) != null) {
 				result.append(line);
-				log.debug(line);
+				logger.debug(line);
 			}
-		return result.toString();
-	}	
-	
-	public static String fetchChildren(int taxonId, String targetChecklist, String taxonName) throws IOException { 
-		StringBuilder result = new StringBuilder();
-		String datasetKey = "";
-		if (targetChecklist!=null) { 
-			datasetKey = "datasetKey=" + targetChecklist;
-		}
-		URL url;
-		try {
-			//url = new URL(GBIF_SERVICE + "/name_usage/" + taxonId + "/children?limit=1000&" + datasetKey);
-			url = new URL(GBIF_SERVICE + "/species/" + taxonId + "/children?limit=1000&" + datasetKey);
-			URLConnection connection = url.openConnection();
-			String line;
-			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-			while((line = reader.readLine()) != null) {
-				result.append(line);
-			}
-		} catch (IOException e) {
-			log.error(e.getMessage());
-		}
-		if (result.toString().equals("{\"offset\":0,\"limit\":1000,\"endOfRecords\":true,\"results\":[]}") &&
-				targetChecklist.equals("bf3db7c9-5e5d-4fd0-bd5b-94539eaf9598"))
-		{ 
-			return searchForSpecies(taxonName, targetChecklist);
-		}
-
 		return result.toString();
 	}	
 	
@@ -222,7 +210,7 @@ public class GBIFService extends SciNameServiceParent {
 				result.append(line);
 			}
 		} catch (IOException e) {
-			log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 
 
@@ -258,53 +246,16 @@ public class GBIFService extends SciNameServiceParent {
 			}
  
 		} catch (ParseException e) {
-			log.error(e.getMessage());
+			logger.error(e.getMessage());
 		}
 		// TODO: Report not getting all records.
 		if (!gotAll) { 
-			log.error("Incomplete Harvest");
+			logger.error("Incomplete Harvest");
 			System.out.println("Incomplete Harvest");
 		}
 		
 		return result;
 	}	
-	
-	public static void  fetchAllChildren(NameUsage match, String targetChecklist, boolean fetchSynonymsAboveSpecies) throws IOException {  
-		if (match!=null) { 
-			String json = GBIFService.fetchChildren(match.getKey(), targetChecklist, match.getCanonicalName());
-
-			Iterator<NameUsage> i = parseAllNameUsagesFromJSON(json).iterator();
-			while (i.hasNext()) { 
-				NameUsage usage = i.next();
-				// Prevent infinite loop if search is invoked
-				if (!usage.getCanonicalName().equals(match.getCanonicalName())) { 
-				   System.out.print(usage.toCSVLine());
-				   fetchAllChildren(usage,targetChecklist,fetchSynonymsAboveSpecies);
-				}
-			}
-
-			if (fetchSynonymsAboveSpecies || 
-					match.getRank().equals("SPECIES") ||
-					match.getRank().equals("SUBSPECIES") ||
-					match.getRank().equals("INFRASPECIFIC_NAME") ||
-					match.getRank().equals("VARIETY") ||
-					match.getRank().equals("FORM") ||
-					match.getRank().equals("INFRASUBSPECIFIC_NAME") 
-			) 
-			{ 
-				// look up synonyms.
-				json = GBIFService.fetchSynonyms(match.getKey(), targetChecklist);
-
-				i = parseAllNameUsagesFromJSON(json).iterator();
-				while (i.hasNext()) { 
-					NameUsage usage = i.next();
-					System.out.print(usage.toCSVLine());
-					// don't retrieve children of synonyms.
-					// fetchAllChildren(usage,targetChecklist);
-				}
-			}
-		}
-	}
 	
 	public static NameUsage parseNameUsageFromJSON(String targetName, String json) { 
         JSONParser parser=new JSONParser();
@@ -319,7 +270,7 @@ public class GBIFService extends SciNameServiceParent {
         	    	// array = (JSONArray)parser.parse(json);
         	    }
         	} catch (ClassCastException e) { 
-        		log.debug(e.getMessage(),e);
+        		logger.debug(e.getMessage(),e);
     			array = (JSONArray)parser.parse(json);
         	}
     			 
@@ -334,7 +285,7 @@ public class GBIFService extends SciNameServiceParent {
 			}
  
 		} catch (ParseException e) {
-        	log.debug(e.getMessage(),e);
+        	logger.debug(e.getMessage(),e);
 		}
 		return null;
 	}
@@ -343,7 +294,8 @@ public class GBIFService extends SciNameServiceParent {
 	@SuppressWarnings("static-access")
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
-        serviceName = targetDataSetName;
+		boolean result = false;
+		addToServiceName(targetDataSetName);
 		if (toCheck!=null) {
 			// TODO: Handle autonyms of botanical names (should not have an authorship).
 			String taxonName = toCheck.getCanonicalName();
@@ -355,83 +307,87 @@ public class GBIFService extends SciNameServiceParent {
 			List<NameUsage> hits = GBIFService.parseAllNameUsagesFromJSON(GBIFService.searchForTaxon(taxonName, targetKey));
 			if (hits==null || hits.size()==0) { 
 				// no matches
+				result = false;
 			} else if (hits.size()==1) { 
-			    Iterator<NameUsage> i = hits.iterator();
+				Iterator<NameUsage> i = hits.iterator();
 				// One possible match
 				NameUsage potentialMatch = i.next();
 				AuthorNameComparator authorNameComparator = new ICNafpAuthorNameComparator(.70d,.5d);
 				if (potentialMatch.getKingdom().equals("Animalia")) { 
-				    authorNameComparator = new ICZNAuthorNameComparator(.75d,.5d);
+					authorNameComparator = new ICZNAuthorNameComparator(.75d,.5d);
 				}
 				if (potentialMatch.getCanonicalName().equals(taxonName) && potentialMatch.getAuthorship().equals(authorship)) { 
 					potentialMatch.setMatchDescription(NameComparison.MATCH_EXACT);
 					validatedNameUsage = potentialMatch;
-				    validatedNameUsage.setAuthorshipStringEditDistance(1d);
+					validatedNameUsage.setAuthorshipStringEditDistance(1d);
 				} else { 
 					NameComparison authorComparison = authorNameComparator.compare(authorship, potentialMatch.getAuthorship());
 					double similarity = authorComparison.getSimilarity();
 					String match = authorComparison.getMatchType();
-					log.debug(authorship);
-					log.debug(potentialMatch.getAuthorship());
-					log.debug(similarity);
+					logger.debug(authorship);
+					logger.debug(potentialMatch.getAuthorship());
+					logger.debug(similarity);
 					potentialMatch.setMatchDescription(match);
 					validatedNameUsage = potentialMatch;
-				    validatedNameUsage.setAuthorshipStringEditDistance(similarity);
+					validatedNameUsage.setAuthorshipStringEditDistance(similarity);
 				}
 				validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 				validatedNameUsage.setScientificNameStringEditDistance(1d);
 				validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
 				validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
+				result = true;
 			} else { 
 				// multiple possible matches
-			    Iterator<NameUsage> i = hits.iterator();
-			    log.debug("More than one match: " + hits.size());
+				Iterator<NameUsage> i = hits.iterator();
+				logger.debug("More than one match: " + hits.size());
 				boolean exactMatch = false;
 				List<NameUsage> matches = new ArrayList<NameUsage>();
-			    while (i.hasNext() && !exactMatch) { 
-			        NameUsage potentialMatch = i.next();
-				    matches.add(potentialMatch);
-				    log.debug(potentialMatch.getScientificName());
-				    log.debug(potentialMatch.getCanonicalName());
-				    log.debug(potentialMatch.getKey());
-				    log.debug(potentialMatch.getAuthorship());
-				    log.debug(potentialMatch.getTaxonomicStatus());
-				    if (potentialMatch.getScientificName().equals(taxonName)) {
-				    	if (potentialMatch.getAuthorship().equals(authorship)) {
-				    		// If one of the results is an exact match on scientific name and authorship, pick that one. 
-				    		validatedNameUsage = potentialMatch;
-				    		validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
-				    		validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
-				    		validatedNameUsage.setAuthorshipStringEditDistance(1d);
-				    		validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-				    		validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
-				    		validatedNameUsage.setScientificNameStringEditDistance(1d);
-				    		exactMatch = true;
-				    	}
-				    }
+				while (i.hasNext() && !exactMatch) { 
+					NameUsage potentialMatch = i.next();
+					matches.add(potentialMatch);
+					logger.debug(potentialMatch.getScientificName());
+					logger.debug(potentialMatch.getCanonicalName());
+					logger.debug(potentialMatch.getKey());
+					logger.debug(potentialMatch.getAuthorship());
+					logger.debug(potentialMatch.getTaxonomicStatus());
+					if (potentialMatch.getScientificName().equals(taxonName)) {
+						if (potentialMatch.getAuthorship().equals(authorship)) {
+							// If one of the results is an exact match on scientific name and authorship, pick that one. 
+							validatedNameUsage = potentialMatch;
+							validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+							validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
+							validatedNameUsage.setAuthorshipStringEditDistance(1d);
+							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+							validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
+							validatedNameUsage.setScientificNameStringEditDistance(1d);
+							exactMatch = true;
+							result = true;
+						}
+					}
 				}
 				if (!exactMatch) {
 					// If we didn't find an exact match on scientific name and authorship in the list, pick the 
 					// closest authorship and list all of the potential matches.  
 					Iterator<NameUsage> im = matches.iterator();
 					if (im.hasNext()) { 
-					NameUsage closest = im.next();
-					StringBuffer names = new StringBuffer();
-					names.append(closest.getScientificName()).append(" ").append(closest.getAuthorship()).append(" ").append(closest.getUnacceptReason()).append(" ").append(closest.getTaxonomicStatus());
-					while (im.hasNext()) { 
-						NameUsage current = im.next();
-					    names.append("; ").append(current.getScientificName()).append(" ").append(current.getAuthorship()).append(" ").append(current.getUnacceptReason()).append(" ").append(current.getTaxonomicStatus());
-						if (toCheck.getAuthorComparator().calulateSimilarityOfAuthor(closest.getAuthorship(), authorship) < toCheck.getAuthorComparator().calulateSimilarityOfAuthor(current.getAuthorship(), authorship)) { 
-							closest = current;
+						NameUsage closest = im.next();
+						StringBuffer names = new StringBuffer();
+						names.append(closest.getScientificName()).append(" ").append(closest.getAuthorship()).append(" ").append(closest.getUnacceptReason()).append(" ").append(closest.getTaxonomicStatus());
+						while (im.hasNext()) { 
+							NameUsage current = im.next();
+							names.append("; ").append(current.getScientificName()).append(" ").append(current.getAuthorship()).append(" ").append(current.getUnacceptReason()).append(" ").append(current.getTaxonomicStatus());
+							if (toCheck.getAuthorComparator().calulateSimilarityOfAuthor(closest.getAuthorship(), authorship) < toCheck.getAuthorComparator().calulateSimilarityOfAuthor(current.getAuthorship(), authorship)) { 
+								closest = current;
+							}
 						}
-					}
-					validatedNameUsage = closest;
-				    validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
-				    validatedNameUsage.setMatchDescription(NameComparison.MATCH_MULTIPLE + " " + names.toString());
-				    validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-				    validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
-				    validatedNameUsage.setScientificNameStringEditDistance(1d);
-				    validatedNameUsage.setAuthorshipStringEditDistance(toCheck.getAuthorComparator().calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
+						validatedNameUsage = closest;
+						validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+						validatedNameUsage.setMatchDescription(NameComparison.MATCH_MULTIPLE + " " + names.toString());
+						validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+						validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
+						validatedNameUsage.setScientificNameStringEditDistance(1d);
+						validatedNameUsage.setAuthorshipStringEditDistance(toCheck.getAuthorComparator().calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
+						result = true;
 					}
 				}
 			}
@@ -443,7 +399,7 @@ public class GBIFService extends SciNameServiceParent {
 			// set a guid for the gbif records
 			validatedNameUsage.setGuid("http://api.gbif.org/v1/species/" + Integer.toString(validatedNameUsage.getKey()));
 		}
-		return false;
+		return result;
 	}
 	
 }

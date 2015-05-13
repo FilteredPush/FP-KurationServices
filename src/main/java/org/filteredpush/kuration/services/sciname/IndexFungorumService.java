@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.xml.namespace.QName;
 
+import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationStatus;
 import org.indexfungorum.cabi.fungusserver.FungusSoapProxy;
 import org.indexfungorum.cabi.fungusserver.NameSearchResponseNameSearchResult;
@@ -46,7 +47,7 @@ import edu.harvard.mcz.nametools.NameUsage;
  */
 public class IndexFungorumService extends SciNameServiceParent  {
 	
-	private static final Log log = LogFactory.getLog(IndexFungorumService.class);
+	private static final Log logger = LogFactory.getLog(IndexFungorumService.class);
 
 	private FungusSoapProxy ifService;
 	protected AuthorNameComparator authorNameComparator;
@@ -63,15 +64,21 @@ public class IndexFungorumService extends SciNameServiceParent  {
 
 	protected void test() throws IOException { 
 		ifService = new FungusSoapProxy();
-		log.debug(ifService.getEndpoint());
+		logger.debug(ifService.getEndpoint());
 		URL test = new URL(ifService.getEndpoint());
 		URLConnection conn = test.openConnection();
 		conn.connect();
 	}
 	
 	@Override
+	protected String getServiceImplementationName() {
+		return "IndexFungorum";
+	}	
+	
+	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
 		boolean result = false;
+		addToServiceName("IndexFungorum");
 		String taxonName = toCheck.getOriginalScientificName();
 		try {
 			//TODO: Autonyms should not have authors.  Parse name, check if specific and lowest epithet are the same.
@@ -79,15 +86,15 @@ public class IndexFungorumService extends SciNameServiceParent  {
 			NameSearchResponseNameSearchResult searchResult = ifService.nameSearch(taxonName, false, 2);
 			if (searchResult!=null) { 
 				List<MessageElement> mes = Arrays.asList(searchResult.get_any());
-				log.debug(mes.size());
+				logger.debug(mes.size());
 				Iterator<MessageElement> i = mes.iterator();
 				while (i.hasNext()) { 
 					MessageElement me = i.next();
-					log.debug(me);
+					logger.debug(me);
 					Iterator<MessageElement> it = me.getChildElements();
 					while (it.hasNext()) { 
 						MessageElement mei = it.next();
-						log.debug(mei.getChildElement(new QName("NAME_x0020_OF_x0020_FUNGUS")).getValue());
+						logger.debug(mei.getChildElement(new QName("NAME_x0020_OF_x0020_FUNGUS")).getValue());
 						String name = mei.getChildElement(new QName("NAME_x0020_OF_x0020_FUNGUS")).getValue();
 						if (name.equals(taxonName)) {
 							String authorship = mei.getChildElement(new QName("AUTHORS")).getValue();
@@ -95,7 +102,7 @@ public class IndexFungorumService extends SciNameServiceParent  {
 								String uuid = mei.getChildElement(new QName("UUID")).getValue();
 								String recnum = mei.getChildElement(new QName("RECORD_x0020_NUMBER")).getValue();
 								String lsid = "urn:lsid:indexfungorum.org:names:" + recnum;
-								log.debug("\"" + taxonName + "\", \"urn:uuid:" + uuid + "\",\"" + lsid +  "\"");
+								logger.debug("\"" + taxonName + "\", \"urn:uuid:" + uuid + "\",\"" + lsid +  "\"");
 								validatedNameUsage = new NameUsage("IndexFungorum",authorNameComparator, toCheck.getOriginalScientificName(), toCheck.getOriginalAuthorship());
 								validatedNameUsage.setScientificName(taxonName);
 								validatedNameUsage.setKey(Integer.parseInt(recnum));
@@ -106,14 +113,16 @@ public class IndexFungorumService extends SciNameServiceParent  {
 								validatedNameUsage.setAuthorshipStringEditDistance(1d);
 								validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 								result = true;
+								addToComment("Found exact match in IndexFungorum.");
+								curationStatus = CurationComment.CORRECT;
 							} else { 
 								double similarity = AuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), authorship);
-								log.debug(similarity);
+								logger.debug(similarity);
 								if (similarity>.75d) { 
 									String uuid = mei.getChildElement(new QName("UUID")).getValue();
 									String recnum = mei.getChildElement(new QName("RECORD_x0020_NUMBER")).getValue();
 								    String lsid = "urn:lsid:indexfungorum.org:names:" + recnum;
-									log.debug("\"" + taxonName + "\", \"urn:uuid:" + uuid + "\",\"" + lsid +  "\"");
+									logger.debug("\"" + taxonName + "\", \"urn:uuid:" + uuid + "\",\"" + lsid +  "\"");
 									validatedNameUsage = new NameUsage("IndexFungorum",authorNameComparator, toCheck.getOriginalScientificName(), toCheck.getOriginalAuthorship());
 									validatedNameUsage.setScientificName(taxonName);
 									validatedNameUsage.setKey(Integer.parseInt(recnum));
@@ -126,6 +135,7 @@ public class IndexFungorumService extends SciNameServiceParent  {
 								    validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
 								    validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
 								    result = true;
+								    addToComment("Found plausible match in IndexFungorum.");
 								} 
 							}
 						}
@@ -134,9 +144,9 @@ public class IndexFungorumService extends SciNameServiceParent  {
 				}
 			}
 		} catch (RemoteException e) {
-			log.error(e.getMessage(),e);
+			logger.error(e.getMessage(),e);
 		} catch (Exception e) {
-			log.error(e.getMessage(),e);
+			logger.error(e.getMessage(),e);
 		}
 		return result;
 	}
