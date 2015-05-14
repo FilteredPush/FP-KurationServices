@@ -428,11 +428,11 @@ public class IPNIService extends SciNameServiceParent {
 						id = handleSearchResults(searchResults);
 						if(id == null){
 							//failed to find the name got from GNI in the IPNI
-							addToComment("Found a name which is in the same lexical group as the searched scientific name and claimed by GNI to be in IPNI but failed to find this name in IPNI.");
+							addToComment("Found a name " + resolvedScientificName + " " + resolvedScientificNameAuthorship +" which is in the same lexical group as the searched scientific name and claimed by GNI to be in IPNI but failed to find this name in IPNI.");
 						}else{
 							//correct the wrong scientific name or author by searching in both IPNI and GNI
 							IPNIlsid = constructIPNILSID(id); 
-							addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
+							addToComment("Updated the scientific name (including authorship) with value found in GNI which is from IPNI and in the same lexicalgroup as the original term.  This is likely to represent an alternative form of the authorship than the authorship provided.");
 							curationStatus = CurationComment.CURATED;
 							source = "IPNI/GNI";
 							result = true;
@@ -450,6 +450,9 @@ public class IPNIService extends SciNameServiceParent {
 				addToComment(ex.getMessage());
 				curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
 			}
+			if (!result) { 
+				addToComment("No match found in IPNI with failover to GNI.");
+			}			
 		return result;
 	}
 

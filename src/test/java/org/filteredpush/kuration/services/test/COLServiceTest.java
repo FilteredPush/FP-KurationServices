@@ -7,7 +7,7 @@ import org.filteredpush.kuration.services.sciname.COLService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by tianhong on 10/22/14.
@@ -48,7 +48,7 @@ public class COLServiceTest {
         logger.debug(scientificNameService.getCurationStatus());
         logger.debug(scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getCorrectedAuthor());
-        assertTrue(scientificNameService.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
+        assertEquals(CurationComment.UNABLE_CURATED.toString(), scientificNameService.getCurationStatus().toString());
         
         scientificNameService.validateScientificName("Speranza trilinearia", "");
         //assertTrue(scientificNameService.getCorrectedScientificName().equals(""));

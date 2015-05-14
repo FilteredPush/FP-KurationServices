@@ -31,6 +31,7 @@ public class COLService extends SciNameServiceParent {
 	
     @Override
     public boolean nameSearchAgainstServices(NameUsage toCheck)  {
+    	boolean result = false;
     	String name = toCheck.getOriginalScientificName();
     	String author = toCheck.getOriginalAuthorship();
     	
@@ -40,8 +41,8 @@ public class COLService extends SciNameServiceParent {
             addToComment(hitValue.getComment());
             curationStatus = hitValue.getStatus();
             addToServiceName(hitValue.getSource());
-            this.validatedNameUsage.setAuthorship(hitValue.getAuthor());
-            this.validatedNameUsage.setScientificName(hitValue.getTaxon());
+            validatedNameUsage.setAuthorship(hitValue.getAuthor());
+            validatedNameUsage.setScientificName(hitValue.getTaxon());
             //System.out.println("count  = " + count++);
             //System.out.println(key);
             return hitValue.getHasResult();
@@ -68,21 +69,17 @@ public class COLService extends SciNameServiceParent {
         } catch (DocumentException e) {
         	addToComment("Failed to get information by parsing the response from Catalog of Life service for: "+e.getMessage());
             addToCache(false);
-            return false;
         } catch (MalformedURLException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 
+        if (document!=null) { 
         //no homonyms.synomyns handling for now
         int matches = Integer.valueOf(document.getRootElement().attribute(3).getText());
         if (matches < 1) {
         	addToComment("Cannot find matches in Catalog of Life service");
-            addToCache(false);
-            return false;
         } else if (matches > 1) {
         	addToComment("More than one match in Catalog of Life service, may be homonym or hemihomonym.");
-            addToCache(false);
-            return false;
         } else {
         	String rank = document.selectSingleNode("/results/result/rank").getText();
         	if (rank.equals("Species") || rank.equals("Infraspecies")) { 
@@ -97,20 +94,24 @@ public class COLService extends SciNameServiceParent {
         				validatedNameUsage.setScientificName(document.selectSingleNode("/results/result/name").getText());
         				validatedNameUsage.setAcceptedName(document.selectSingleNode("/results/result/name").getText());
         				validatedNameUsage.setAcceptedAuthorship(document.selectSingleNode("/results/result/author").getText());
+        				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+        				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
         				authorQuery = "/results/result/author";
+        				result = true;
         			} else if(document.selectSingleNode("/results/result/name_status").getText().equals("synonym")){
         				// synonym
         				validatedNameUsage.setScientificName(document.selectSingleNode("/results/result/name").getText());
         				validatedNameUsage.setAcceptedName(document.selectSingleNode("/results/result/accepted_name/name").getText());
         				validatedNameUsage.setAcceptedAuthorship(document.selectSingleNode("/results/accepted_name/author").getText());
+        				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+        				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
         				authorQuery = "/results/result/author";
+        				result = true;
         				addToComment("Found and resolved synonym");
         			} else if(document.selectSingleNode("/results/result/name_status").getText().equals("ambiguous synonym")){
         				// TODO: Authorship may be able to provide guidance on name to return for scientificName, won't be able
         				// to return acceptedName.
         				addToComment("Found but could not resolve synonym ");
-        				addToCache(false);
-        				return false;
         			} else {
         				System.out.println("others document = " + document.toString());
         			}
@@ -125,18 +126,22 @@ public class COLService extends SciNameServiceParent {
         			validatedNameUsage.setAuthorship(document.selectSingleNode(authorQuery).getText());
         			//TODO: if kingdom is plantae or fungi and rank is infraspecies and species=infraspecies, then 
         			//the authorship should be blank, as this is a botanical autonym.
+        			result = true;
         		}catch(Exception e){
         			addToComment("No author found in Catalog of Life service");
-        			addToCache(false);
-        			return false;
+        			result = false;
         		}
         	} else {
         		addToComment("The original scientificName is a " + rank +", not at species level");
         	}
         }
 
-        addToCache(true);
-        return true;
+        }
+        addToCache(result);
+		if (!result) { 
+			addToComment("No match found in Catalog of Life.");
+		}
+        return result;
 	}
 
 
