@@ -61,9 +61,15 @@ public class WoRMSService extends SciNameServiceParent {
 
 	private final static String wormsLSIDPrefix = "urn:lsid:marinespecies.org:taxname:";
 
-	public WoRMSService() throws IOException { 
+	public WoRMSService() { 
+		init();
+	}
+	
+	public WoRMSService(boolean test) throws IOException { 
 			init();
-			test();
+			if (test) { 
+			   test();
+			}
 	}
 	
 	protected void test()  throws IOException { 
@@ -221,12 +227,13 @@ public class WoRMSService extends SciNameServiceParent {
 
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
+		boolean result = false;
 		addToServiceName("WoRMS");
-		logger.debug("Checking: " + toCheck.getScientificName() + " " + toCheck.getAuthorship());
+		logger.debug("Checking: " + toCheck.getOriginalScientificName() + " " + toCheck.getOriginalAuthorship());
 		depth++;   
 		try {
-			String taxonName = toCheck.getScientificName();
-			String authorship = toCheck.getAuthorship();
+			String taxonName = toCheck.getOriginalScientificName();
+			String authorship = toCheck.getOriginalAuthorship();
 			toCheck.setAuthorComparator(authorNameComparator);
 			AphiaRecord[] resultsArr = wormsService.getAphiaRecords(taxonName, false, false, false, 1);
 			if (resultsArr!=null && resultsArr.length>0) { 
@@ -253,12 +260,13 @@ public class WoRMSService extends SciNameServiceParent {
 					    		validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 					    		validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
 					    		validatedNameUsage.setAuthorshipStringEditDistance(1d);
-					    		validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-					    		validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+					    		validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+					    		validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 					    		validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    		exactMatch = true;
 					    		addToComment("Found exact match in WoRMS.");
 					    		curationStatus = CurationComment.CORRECT;
+					    		result = true;
 					    	}
 					    }
 					}
@@ -281,27 +289,33 @@ public class WoRMSService extends SciNameServiceParent {
 						validatedNameUsage = closest;
 					    validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 					    validatedNameUsage.setMatchDescription(NameComparison.MATCH_MULTIPLE + " " + names.toString());
-					    validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-					    validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+					    validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+					    validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 					    validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    validatedNameUsage.setAuthorshipStringEditDistance(ICZNAuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
+					    result = true;
 					}
 				} else { 
 				  // we got exactly one result
+				  logger.debug(resultsArr.length);
 				  while (i.hasNext()) { 
 					AphiaRecord ar = i.next();
 					if (ar !=null && ar.getScientificname()!=null && taxonName!=null && ar.getScientificname().equals(taxonName)) {
+						logger.debug(ar.getScientificname());
+						logger.debug(ar.getAuthority());
 						if (ar.getAuthority()!=null && ar.getAuthority().equals(authorship)) { 
 							// scientific name and authorship are an exact match 
 							validatedNameUsage = new NameUsage(ar);
 							validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 							validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
 							validatedNameUsage.setAuthorshipStringEditDistance(1d);
-							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-							validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+							validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+							validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 							validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    	addToComment("Found exact match in WoRMS.");
 					    	curationStatus = CurationComment.CORRECT;
+					    	logger.debug(curationStatus);
+					        result = true;
 						} else {
 							// find how 
 							if (authorship!=null && ar!=null && ar.getAuthority()!=null) { 
@@ -312,18 +326,19 @@ public class WoRMSService extends SciNameServiceParent {
 								String match = comparison.getMatchType();
 								double similarity = comparison.getSimilarity();
 								logger.debug(similarity);
-								//if (match.equals(NameUsage.MATCH_DISSIMILAR) || match.equals(NameUsage.MATCH_ERROR)) {
-									// result.setMatchDescription("Same name, authorship different");
-								//} else { 
+								if (match.equals(NameComparison.MATCH_DISSIMILAR) || match.equals(NameComparison.MATCH_ERROR)) {
+									addToComment("Found a possible match " + ar.getScientificname() + " " + ar.getAuthority() + "in WoRMS, but authorship is different (" + match + "), so not asserting a match.");
+								} else { 
 							        validatedNameUsage = new NameUsage(ar);
 							        validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 							        validatedNameUsage.setAuthorshipStringEditDistance(similarity);
-							        validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-							        validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+							        validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+							        validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 								    validatedNameUsage.setMatchDescription(match);		
-					    	        addToComment("Found plausible match in WoRMS.");
+					    	        addToComment("Found plausible match in WoRMS: " + match);
 					    	        curationStatus = CurationComment.CURATED;
-								//}
+					                result = true;
+								}
 							} else { 
 					    	    addToComment("Possible match in WoRMS, but it lacks an authorship.");
 								// no authorship was provided in the results, treat as no match
@@ -335,6 +350,7 @@ public class WoRMSService extends SciNameServiceParent {
 				}
 			} else { 
 				logger.debug("No match.");
+				addToComment("Trying for fuzzy match in WoRMS.");
 				// Try WoRMS fuzzy matching query
 				String[] searchNames = { taxonName + " " + authorship };
 				AphiaRecord[][] matchResultsArr = wormsService.matchAphiaRecordsByNames(searchNames, false);
@@ -366,9 +382,11 @@ public class WoRMSService extends SciNameServiceParent {
 							validatedNameUsage = potentialMatches.get(0);
 							String authorComparison = authorNameComparator.compare(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()).getMatchType();
 							validatedNameUsage.setMatchDescription(NameComparison.MATCH_FUZZY_SCINAME + "; authorship " + authorComparison);
-							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
-							validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
+							validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+							validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 							validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
+				            addToComment("Found Fuzzy Match in WoRMS: " + validatedNameUsage.getMatchDescription());
+							result = true;
 						}
 					} // iterator over input names, should be just one.
 			    } else {
@@ -385,11 +403,11 @@ public class WoRMSService extends SciNameServiceParent {
 			}
 			if (depth<4) {
 				// Try again, up to three times.
-				this.nameSearchAgainstServices(toCheck);
+				result = this.nameSearchAgainstServices(toCheck);
 			}
 		}
 		depth--;
-		return false;
+		return result;
 	}
 
 }

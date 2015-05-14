@@ -12,9 +12,9 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by tianhong on 10/22/14.
  */
-public class SciNameServiceTest {
+public class COLServiceTest {
 	
-	private static final Log logger = LogFactory.getLog(SciNameServiceTest.class);
+	private static final Log logger = LogFactory.getLog(COLServiceTest.class);
     
 	private INewScientificNameValidationService scientificNameService = new COLService();
     //String serviceClassQN = "org.filteredpush.kuration.services.COLService";
@@ -29,6 +29,16 @@ public class SciNameServiceTest {
         logger.debug(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CORRECT));
     }
+    
+    @Test
+    public void validNameWithAuthTest(){
+        scientificNameService.validateScientificName("Eucerceris canaliculata (Say, 1823)", "(Say, 1823)");
+        assertTrue(scientificNameService.getCorrectedScientificName().equals("Eucerceris canaliculata"));
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
+        assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CORRECT));
+    }    
 
     @Test
     public void unableNameTest() {
