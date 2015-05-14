@@ -319,6 +319,7 @@ public class GBIFService extends SciNameServiceParent {
 					potentialMatch.setMatchDescription(NameComparison.MATCH_EXACT);
 					validatedNameUsage = potentialMatch;
 					validatedNameUsage.setAuthorshipStringEditDistance(1d);
+			        addToComment("Exact match found in found in " + targetDataSetName + ".");
 				} else { 
 					NameComparison authorComparison = authorNameComparator.compare(authorship, potentialMatch.getAuthorship());
 					double similarity = authorComparison.getSimilarity();
@@ -329,6 +330,7 @@ public class GBIFService extends SciNameServiceParent {
 					potentialMatch.setMatchDescription(match);
 					validatedNameUsage = potentialMatch;
 					validatedNameUsage.setAuthorshipStringEditDistance(similarity);
+			        addToComment("Potential match found in found in " + targetDataSetName + ". " + validatedNameUsage.getMatchDescription());
 				}
 				validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 				validatedNameUsage.setScientificNameStringEditDistance(1d);
@@ -359,6 +361,7 @@ public class GBIFService extends SciNameServiceParent {
 							validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 							validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
 							validatedNameUsage.setScientificNameStringEditDistance(1d);
+			                addToComment("Exact match found in multiple results found in " + targetDataSetName + ".  There may be homonyms. " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() + " " + validatedNameUsage.getMatchDescription());
 							exactMatch = true;
 							result = true;
 						}
@@ -386,6 +389,7 @@ public class GBIFService extends SciNameServiceParent {
 						validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
 						validatedNameUsage.setScientificNameStringEditDistance(1d);
 						validatedNameUsage.setAuthorshipStringEditDistance(toCheck.getAuthorComparator().calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
+			            addToComment("Plausible match in multiple results found in " + targetDataSetName + ".  The result could incorrectly be a homonym of the desired name. " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() + " " + validatedNameUsage.getMatchDescription());
 						result = true;
 					}
 				}
@@ -397,6 +401,9 @@ public class GBIFService extends SciNameServiceParent {
 			validatedNameUsage.setScientificName(validatedNameUsage.getCanonicalName());
 			// set a guid for the gbif records
 			validatedNameUsage.setGuid("http://api.gbif.org/v1/species/" + Integer.toString(validatedNameUsage.getKey()));
+		}
+		if (!result) { 
+			addToComment("No match found in " + targetDataSetName + ".");
 		}
 		return result;
 	}

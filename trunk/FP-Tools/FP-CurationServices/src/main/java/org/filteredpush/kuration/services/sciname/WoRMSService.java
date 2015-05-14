@@ -293,6 +293,7 @@ public class WoRMSService extends SciNameServiceParent {
 					    validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 					    validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    validatedNameUsage.setAuthorshipStringEditDistance(ICZNAuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
+					    addToComment("Found plausible match in WoRMS: " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +  " " + validatedNameUsage.getMatchDescription());
 					    result = true;
 					}
 				} else { 
@@ -407,6 +408,9 @@ public class WoRMSService extends SciNameServiceParent {
 			}
 		}
 		depth--;
+		if (!result) { 
+			addToComment("No match found in WoRMS.");
+		}	
 		return result;
 	}
 

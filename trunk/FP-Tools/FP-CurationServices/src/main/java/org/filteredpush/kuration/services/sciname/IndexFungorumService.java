@@ -135,7 +135,7 @@ public class IndexFungorumService extends SciNameServiceParent  {
 								    validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 								    validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 								    result = true;
-								    addToComment("Found plausible match in IndexFungorum.");
+								    addToComment("Found plausible match in IndexFungorum. " + validatedNameUsage.getMatchDescription());
 								} 
 							}
 						}
@@ -147,6 +147,9 @@ public class IndexFungorumService extends SciNameServiceParent  {
 			logger.error(e.getMessage(),e);
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
+		}
+		if (!result) { 
+			addToComment("No match found in IndexFungorum.");
 		}
 		return result;
 	}
