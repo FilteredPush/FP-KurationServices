@@ -12,7 +12,8 @@ import org.junit.runners.Suite.SuiteClasses;
 	IPNIServiceTest.class,
 	WoRMSServiceTest.class,
 	GBIFServiceTest.class,
-	SciNameServiceParentTest.class
+	SciNameServiceParentTest.class,
+	IndexFungorumServiceTest.class
 	})
 public class AllTests {
 

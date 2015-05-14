@@ -47,13 +47,13 @@ public class IndexFungorumServiceTest {
 		
 		// Make sure that a second call with a different name doesn't retain information from the first call.
 		name = "Lecanora albicans";
-		author = "(Nyl) Hertel & Rambold";
+		author = "(Nyl.) Hertel & Rambold";
 		service.validateScientificName(name, author);
 		logger.debug(service.getCorrectedScientificName() + " " + service.getCorrectedAuthor() + " " + service.getCurationStatus());
 		assertEquals(name,service.getCorrectedScientificName());
 		assertEquals("(Nyl.) Hertel & Rambold",service.getCorrectedAuthor());
 		assertEquals("urn:lsid:indexfungorum.org:names:104445",service.getGUID());
-		assertEquals(CurationComment.CURATED, service.getCurationStatus());
+		assertEquals(CurationComment.CORRECT, service.getCurationStatus());
 	}
 
     @Test
