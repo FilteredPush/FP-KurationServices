@@ -54,6 +54,24 @@ public class IndexFungorumServiceTest {
 		assertEquals("(Nyl.) Hertel & Rambold",service.getCorrectedAuthor());
 		assertEquals("urn:lsid:indexfungorum.org:names:104445",service.getGUID());
 		assertEquals(CurationComment.CORRECT, service.getCurationStatus());
+		
+		name = "Lecanora albicans";
+		author = "(Nyla.) Hertel & Rambold";
+		service.validateScientificName(name, author);
+		logger.debug(service.getCorrectedScientificName() + " " + service.getCorrectedAuthor() + " " + service.getCurationStatus());
+		assertEquals(name,service.getCorrectedScientificName());
+		assertEquals("(Nyl.) Hertel & Rambold",service.getCorrectedAuthor());
+		assertEquals("urn:lsid:indexfungorum.org:names:104445",service.getGUID());
+		assertEquals(CurationComment.CORRECT, service.getCurationStatus());		
+		
+		name = "Lecanora albicans";
+		author = "(L.) Hertel & Rambold";
+		service.validateScientificName(name, author);
+		logger.debug(service.getCorrectedScientificName() + " " + service.getCorrectedAuthor() + " " + service.getCurationStatus());
+		assertEquals(name,service.getCorrectedScientificName());
+		assertEquals("(Nyl.) Hertel & Rambold",service.getCorrectedAuthor());
+		assertEquals("urn:lsid:indexfungorum.org:names:104445",service.getGUID());
+		assertEquals(CurationComment.CURATED, service.getCurationStatus());			
 	}
 
     @Test

@@ -116,7 +116,7 @@ public class IndexFungorumService extends SciNameServiceParent  {
 								addToComment("Found exact match in IndexFungorum.");
 								curationStatus = CurationComment.CORRECT;
 							} else { 
-								double similarity = AuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getAuthorship(), authorship);
+								double similarity = AuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getOriginalAuthorship(), authorship);
 								logger.debug(similarity);
 								if (similarity>.75d) { 
 									String uuid = mei.getChildElement(new QName("UUID")).getValue();
@@ -132,8 +132,8 @@ public class IndexFungorumService extends SciNameServiceParent  {
 									validatedNameUsage.setMatchDescription(NameComparison.MATCH_AUTHSIMILAR);
 									validatedNameUsage.setAuthorshipStringEditDistance(similarity);
 								    validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
-								    validatedNameUsage.setOriginalScientificName(toCheck.getScientificName());
-								    validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+								    validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
+								    validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 								    result = true;
 								    addToComment("Found plausible match in IndexFungorum.");
 								} 
