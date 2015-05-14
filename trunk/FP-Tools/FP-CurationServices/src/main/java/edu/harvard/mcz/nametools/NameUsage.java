@@ -4,9 +4,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.filteredpush.kuration.services.sciname.GBIFService;
+import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.model.common.LinneanClassification;
 import org.gbif.api.util.ClassificationUtils;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.nameparser.NameParser;
+import org.gbif.nameparser.UnparsableException;
 import org.json.simple.JSONObject;
 import org.marinespecies.aphia.v1_0.AphiaRecord;
 
@@ -21,7 +24,7 @@ public class NameUsage implements LinneanClassification {
 	private String scientificName;
 	private String canonicalName;
 	private String authorship;  // authorship string to accompany the scientificName 
-	private String acceptedAuthorship; // authorship string toa accompany the acceptedName
+	private String acceptedAuthorship; // authorship string to accompany the acceptedName
 	private String taxonomicStatus;
 	private String rank;
 	private String kingdom;  // classification
@@ -257,9 +260,12 @@ public class NameUsage implements LinneanClassification {
 	}
 
 	/**
-	 * @return the acceptedName
+	 * @return the acceptedName or an empty string if acceptedName is null.
 	 */
 	public String getAcceptedName() {
+		if (acceptedName==null) { 
+			return "";
+		}
 		return acceptedName;
 	}
 
@@ -601,9 +607,12 @@ public class NameUsage implements LinneanClassification {
 	}
 
 	/**
-	 * @return the acceptedAuthorship
+	 * @return the acceptedAuthorship or an empty string if acceptedAuthorship is null.
 	 */
 	public String getAcceptedAuthorship() {
+		if (acceptedAuthorship==null) { 
+			return "";
+		}
 		return acceptedAuthorship;
 	}
 
@@ -645,7 +654,7 @@ public class NameUsage implements LinneanClassification {
 	}	
 
 	/**
-	 * @return the guid
+	 * @return the guid for the NameUsage, or an empty string if the guid is null
 	 */
 	public String getGuid() {
 		if (guid==null) { 
@@ -659,6 +668,9 @@ public class NameUsage implements LinneanClassification {
 	 * @param guid the guid to set
 	 */
 	public void setGuid(String guid) {
+		if (guid.equals("http://api.gbif.org/v1/species/")) { 
+			guid = null;
+		}
 		this.guid = guid;
 	}
 	
@@ -708,6 +720,24 @@ public class NameUsage implements LinneanClassification {
 				}
 			}
 		}
+		
+		// Check to see if acceptedName contains the acceptedNameAuthorship.
+		if (getAcceptedName().length()>0 && getAcceptedAuthorship().length()==0 ) { 
+			NameParser parser = new NameParser();
+	        ParsedName parse = null;
+	        try {
+				parse = parser.parse(getAcceptedName());
+				if (parse!=null) { 
+                   String author = parse.authorshipComplete();
+				   setAcceptedAuthorship(author);
+				   setAcceptedName(getAcceptedName().substring(0, getAcceptedName().lastIndexOf(author)).trim());
+				}
+			} catch (UnparsableException e) {
+				// couldn't parse
+			}	
+	                
+		}
+		
 	}
 
 	@Override

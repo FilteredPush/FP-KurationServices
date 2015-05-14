@@ -385,7 +385,7 @@ public class SciNameServiceUtil {
 
                }
 
-               //after numarate all the names, check whether solved or not
+               //after enumerating all the names, check whether solved or not
                //still not unique
                if (nameUsageSet.size() - deletingNameSet.size() > 1){
                    curationStatus = CurationComment.UNABLE_CURATED;
@@ -463,7 +463,7 @@ public class SciNameServiceUtil {
                    resultMap.put("author", resultAuthor);
                    resultMap.put("curationStatus", curationStatus.toString());
                    resultMap.put("comment", comment);
-                   resultMap.put("guid", name.getSourceID());
+                   resultMap.put("guid", Integer.toString(name.getKey()));
                    return resultMap;
                }
            }

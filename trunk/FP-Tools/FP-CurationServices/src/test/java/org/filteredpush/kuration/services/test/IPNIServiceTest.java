@@ -77,5 +77,13 @@ public class IPNIServiceTest {
 		assertEquals("Sclerobunus",service.getCorrectedScientificName());	
 			
 	}
+	
+    @Test
+    public void unableNameTest() {
+    	// present with something that isn't a scientific name, should be unable to curate.
+        service.validateScientificName("John smith", "(not an author, 1897)");
+        assertTrue(service.getCorrectedScientificName().equals(""));
+        assertTrue(service.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
+    }	
 
 }

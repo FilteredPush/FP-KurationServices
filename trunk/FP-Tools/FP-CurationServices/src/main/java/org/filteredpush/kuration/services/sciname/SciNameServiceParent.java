@@ -1,12 +1,10 @@
 package org.filteredpush.kuration.services.sciname;
 
-
 import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.ICNafpAuthorNameComparator;
 import edu.harvard.mcz.nametools.NameComparison;
 import edu.harvard.mcz.nametools.NameUsage;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -44,8 +42,9 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     protected NameUsage validatedNameUsage = null;
     protected StringBuffer comment = new StringBuffer();
     protected StringBuffer serviceName = new StringBuffer();
+    protected String selectedMode = MODE_NOMENCLATURAL;
     
-    private String GBIF_name_GUID = "";
+    // private String GBIF_name_GUID = "";
     // Documented at http://api.gbif.org/
     private final static String GBIF_GUID_Prefix = "http://api.gbif.org/v1/species/";
 
@@ -57,6 +56,16 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     	init();
     }
     
+    
+	@Override
+	public void setValidationMode(String validationMode) {
+		if (validationMode.equals(MODE_TAXONOMIC)) { 
+			selectedMode = MODE_TAXONOMIC;
+		} else { 
+			selectedMode = MODE_NOMENCLATURAL;
+		}
+	}    
+    
    public void validateScientificName(String scientificName, String author){
 	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
    }
@@ -67,7 +76,25 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
    public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family) {
 
 	   // (1) set up initial conditions 
-	   NameUsage toCheck = new NameUsage();
+	   
+       // To carry over the orignial sciname and author:
+       // This has the appearance of an assignment to the wrong variable, but it isn't
+       // this data is extracted by MongoSummaryWriter to provide "WAS:" values
+       serviceName = new StringBuffer();
+       serviceName.append("scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#");
+       comment = new StringBuffer();
+       addToServiceName(this.getServiceImplementationName());
+	   
+       NameUsage toCheck = new NameUsage();
+	   if (authorToValidate!=null && authorToValidate.length()>0 && scientificNameToValidate!=null && scientificNameToValidate.endsWith(authorToValidate)) { 
+		   // remove author from scientific name
+		   int endIndex = scientificNameToValidate.lastIndexOf(authorToValidate) -1;
+		   if (endIndex>-1) { 
+		       scientificNameToValidate = scientificNameToValidate.substring(0, endIndex).trim();
+		       logger.debug(scientificNameToValidate);
+               addToComment("Removed authorship from scientificName for validation, retained in scientificNameAuthorship.");
+		   }
+	   }
 	   toCheck.setOriginalScientificName(scientificNameToValidate);
 	   toCheck.setOriginalAuthorship(authorToValidate);
 	   toCheck.setKingdom(kingdom);
@@ -77,14 +104,6 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
 	   validatedNameUsage.setOriginalAuthorship(authorToValidate);
 	   validatedNameUsage.setOriginalScientificName(scientificNameToValidate);
        //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
-       comment = new StringBuffer();;
-       GBIF_name_GUID = "";
-       
-       // To carry over the orignial sciname and author:
-       // This has the appearance of an assignment to the wrong variable, but it isn't
-       // this data is extracted by MongoSummaryWriter to provide "WAS:" values
-       serviceName = new StringBuffer();
-       serviceName.append("scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#");
        
        // Default response, unable to determine validity.  
        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
@@ -114,15 +133,15 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
                    validatedNameUsage.setScientificName(result3a.get("scientificName"));
                    validatedNameUsage.setAuthorship(result3a.get("author"));
                    addToComment("Got a valid result from GBIF checklistbank Backbone");
-                   GBIF_name_GUID = GBIF_GUID_Prefix + result3a.get("guid");
+                   validatedNameUsage.setGuid(GBIF_GUID_Prefix + result3a.get("guid"));
                }
     	   }
        }
        
        // (3b) compare the authors
        if (matched) {
-    	   if (GBIF_name_GUID.length()==0 && validatedNameUsage.getGuid()!=null) { 
-    		   GBIF_name_GUID = validatedNameUsage.getGuid();
+    	   if (validatedNameUsage.getAuthorComparator()==null) { 
+    		   validatedNameUsage.setAuthorComparator(getAuthorNameComparator(validatedNameUsage.getOriginalAuthorship(), kingdom));
     	   }
     	   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
     	   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
@@ -268,7 +287,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
                     validatedNameUsage.setScientificName(result2.get("scientificName"));
                     validatedNameUsage.setAuthorship(result2.get("author"));
                     addToComment("Got a valid result from GBIF checklistbank Backbone");
-                    GBIF_name_GUID = GBIF_GUID_Prefix + result2.get("guid");
+                    validatedNameUsage.setGuid(GBIF_GUID_Prefix + result2.get("guid"));;
                     return true;
                 }else{
                     return false;
@@ -289,9 +308,10 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
                     curationStatus = CurationComment.UNABLE_CURATED;
                     addToComment("Found a name in the same lexical group as the searched scientific name but failed to find this name in remote service.");
                 }else{
+                	// TODO: Not sure that we need to set this, nameSearchAgainstServices should set it.
                     //correct the wrong scientific name or author by searching in both IPNI and GNI
-                    validatedNameUsage.setScientificName(resolvedScientificName);
-                    validatedNameUsage.setAuthorship(resolvedScientificNameAuthorship);
+                    //validatedNameUsage.setScientificName(resolvedScientificName);
+                    //validatedNameUsage.setAuthorship(resolvedScientificNameAuthorship);
                     //GBIF_name_GUID = constructGBIFGUID(id);
                     addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
                     curationStatus = CurationComment.CURATED;
@@ -311,11 +331,19 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
 
     @Override
     public String getCorrectedScientificName(){
+    	if (selectedMode.equals(MODE_TAXONOMIC)) { 
+    		validatedNameUsage.fixAuthorship();
+    		return validatedNameUsage.getAcceptedName();
+    	} 
         return validatedNameUsage.getScientificName();
     }
 
     @Override
     public String getCorrectedAuthor(){
+    	if (selectedMode.equals(MODE_TAXONOMIC)) { 
+    		validatedNameUsage.fixAuthorship();
+    		return validatedNameUsage.getAcceptedAuthorship();
+    	} 
         return validatedNameUsage.getAuthorship();
     }
 
@@ -341,7 +369,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
 
     @Override
     public String getGUID(){
-        return GBIF_name_GUID;
+        return validatedNameUsage.getGuid();
     }
 
     @Override

@@ -13,6 +13,9 @@ import edu.harvard.mcz.nametools.AuthorNameComparator;
  */
 public interface INewScientificNameValidationService {
 	
+	public static final String MODE_TAXONOMIC = "taxonomic";
+	public static final String MODE_NOMENCLATURAL = "nomeclatural";
+	
 	/**
 	 * If the service is specific to a nomenclatural code, return the appropriate scientific 
 	 * name authorship comparator for that code.  If the service holds names for more than
@@ -26,7 +29,30 @@ public interface INewScientificNameValidationService {
 	 */
 	public AuthorNameComparator getAuthorNameComparator(String authorship, String kingdom);
 	
+	/**
+	 * Attempt to validate a scientific name and authorship.  Obtain the result by invoking
+	 * getCorrectedScientificName(), getCorrectedAuthor(), getCurationStatus(), and getComment(). 
+	 * 
+	 * @param scientificName the scientific name to validate
+	 * @param author the corresponding scientificNameAuthor to validate
+	 */
 	public void validateScientificName(String scientificName, String author);
+	
+	/**
+	 * Set the mode for returns from the service.  Not all service implementations
+	 * may support all modes.
+	 * 
+	 * Possible usage:
+	 * 
+	 * service.validateScientificName("Quercus alba", "L.");
+	 * service.setValidationMode(MODE_TAXONOMIC);
+	 * acceptedName = service.getCorrectedScientificName();
+	 * service.setValidationMode(MODE_NOMENCLATURAL);
+	 * name = service.getCorrectedScientificName();
+	 * 
+	 * @param validationMode either MODE_TAXONOMIC or MODE_NOMENCLATURAL
+	 */
+	public void setValidationMode(String validationMode);
 	
 	public String getCorrectedScientificName();
 	

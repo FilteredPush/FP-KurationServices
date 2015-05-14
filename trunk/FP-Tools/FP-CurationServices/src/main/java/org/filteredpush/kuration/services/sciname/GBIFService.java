@@ -93,7 +93,6 @@ public class GBIFService extends SciNameServiceParent {
 	
 	protected void init() { 
 		validatedNameUsage = new NameUsage("GBIF",new ICZNAuthorNameComparator(.75d, .5d));
-		addToServiceName("GBIF");
 	}
 	
 	protected void test() throws IOException  { 
@@ -300,10 +299,10 @@ public class GBIFService extends SciNameServiceParent {
 			// TODO: Handle autonyms of botanical names (should not have an authorship).
 			String taxonName = toCheck.getCanonicalName();
 			if (taxonName==null || taxonName.length()==0) { 
-				taxonName = toCheck.getScientificName();
+				taxonName = toCheck.getOriginalScientificName();
 				toCheck.setCanonicalName(taxonName);
 			}
-			String authorship = toCheck.getAuthorship();
+			String authorship = toCheck.getOriginalAuthorship();
 			List<NameUsage> hits = GBIFService.parseAllNameUsagesFromJSON(GBIFService.searchForTaxon(taxonName, targetKey));
 			if (hits==null || hits.size()==0) { 
 				// no matches
@@ -333,7 +332,7 @@ public class GBIFService extends SciNameServiceParent {
 				}
 				validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 				validatedNameUsage.setScientificNameStringEditDistance(1d);
-				validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 				validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
 				result = true;
 			} else { 
@@ -357,7 +356,7 @@ public class GBIFService extends SciNameServiceParent {
 							validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 							validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
 							validatedNameUsage.setAuthorshipStringEditDistance(1d);
-							validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+							validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 							validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
 							validatedNameUsage.setScientificNameStringEditDistance(1d);
 							exactMatch = true;
@@ -383,7 +382,7 @@ public class GBIFService extends SciNameServiceParent {
 						validatedNameUsage = closest;
 						validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 						validatedNameUsage.setMatchDescription(NameComparison.MATCH_MULTIPLE + " " + names.toString());
-						validatedNameUsage.setOriginalAuthorship(toCheck.getAuthorship());
+						validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 						validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
 						validatedNameUsage.setScientificNameStringEditDistance(1d);
 						validatedNameUsage.setAuthorshipStringEditDistance(toCheck.getAuthorComparator().calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));

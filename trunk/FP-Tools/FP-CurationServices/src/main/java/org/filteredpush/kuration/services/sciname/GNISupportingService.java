@@ -12,7 +12,6 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
-import org.filteredpush.kuration.services.GBIFService;
 import org.filteredpush.kuration.util.CurationException;
 
 import java.io.IOException;
@@ -26,11 +25,10 @@ import java.util.Vector;
  * Services provided by GNI, the global names index, an index of text strings of 
  * names of organisms.
  * 
- * Does not provide IScientificNameValidationService as GNI isn't a name validation
+ * Is not a child of SciNameServiceParent as GNI isn't a name validation
  * service.
  * 
- * @see GBIFService for a IScientificNameValidationService
- * @see IPNIService for a IScientificNameValidationService
+ * @see SciNameServiceParent
  * 
  * @author Lei Dou
  * @author Paul J. Morris
