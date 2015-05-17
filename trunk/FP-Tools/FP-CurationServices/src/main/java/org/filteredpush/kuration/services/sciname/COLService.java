@@ -102,7 +102,7 @@ public class COLService extends SciNameServiceParent {
         				// synonym
         				validatedNameUsage.setScientificName(document.selectSingleNode("/results/result/name").getText());
         				validatedNameUsage.setAcceptedName(document.selectSingleNode("/results/result/accepted_name/name").getText());
-        				validatedNameUsage.setAcceptedAuthorship(document.selectSingleNode("/results/accepted_name/author").getText());
+        				validatedNameUsage.setAcceptedAuthorship(document.selectSingleNode("/results/result/accepted_name/author").getText());
         				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
         				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
         				authorQuery = "/results/result/author";

@@ -252,7 +252,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     * @param family
     * @return
     */
-    private boolean validateScientificNameAgainstServices(String taxon, String author, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
+    protected boolean validateScientificNameAgainstServices(String taxon, String author, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
         boolean failedAtGNI = false;
         //System.err.println("remotestart#"+_id + "#" + System.currentTimeMillis());
         NameUsage toCheck = new NameUsage();
@@ -287,7 +287,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
                     validatedNameUsage.setScientificName(result2.get("scientificName"));
                     validatedNameUsage.setAuthorship(result2.get("author"));
                     addToComment("Got a valid result from GBIF checklistbank Backbone");
-                    validatedNameUsage.setGuid(GBIF_GUID_Prefix + result2.get("guid"));;
+                    validatedNameUsage.setGuid(GBIF_GUID_Prefix + result2.get("guid"));
                     return true;
                 }else{
                     return false;
@@ -366,7 +366,6 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     	}
     }
 
-
     @Override
     public String getGUID(){
         return validatedNameUsage.getGuid();
@@ -381,7 +380,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
      * Add a service to the list of invoked services for validation of a record.
      * Adds an appropriate separator.
      * 
-     * @param aComment comment to add to the current list of comments.
+     * @param aServiceName comment to add to the current list of comments.
      */
     public void addToServiceName(String aServiceName) { 
     	if (serviceName.toString().length()==0) { 

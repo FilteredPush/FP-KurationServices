@@ -12,6 +12,13 @@ import java.util.Map;
  */
 public class SpecimenRecord extends HashMap<String,String> {
 
+    public static final String SciName_Comment_Label = "scinComment";
+    public static final String SciName_Status_Label = "scinStatus";
+    public static final String SciName_Source_Label = "scinSource";
+
+    public static final String Original_SciName_Label = "originalScientificName";
+    public static final String Original_Authorship_Label = "origialScientificNameAuthorship";
+
     public SpecimenRecord() {
         super();
     }
