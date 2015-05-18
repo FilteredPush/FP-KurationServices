@@ -1,3 +1,21 @@
+/** 
+ * NameUsage.java 
+ * 
+ * Copyright 2014 Global Biodiversity Information Facility (GBIF)
+ * Copyright 2015 President and Fellows of Harvard College
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package edu.harvard.mcz.nametools;
 
 import java.util.regex.Matcher;
@@ -13,6 +31,22 @@ import org.gbif.nameparser.UnparsableException;
 import org.json.simple.JSONObject;
 import org.marinespecies.aphia.v1_0.AphiaRecord;
 
+/**
+ * Representation of a usage of a scientific name, suitable for validation of names against 
+ * authoritative sources.  Derived from an object that can handle NameUsage serializations 
+ * returned from GBIF's API, with extensions to support similar data objects returned by 
+ * the WoRMS aphia API, and by IndexFungorum, along with extensions to support metadata about 
+ * an original pre-validation record and the comparision between pre- and post- validation 
+ * records.  Derived in part from the GBIF api class of the same name.
+ * 
+ * Has responsibility for NameUsage data objects, serialization of those objects, comparison 
+ * between values (e.g. authorships) between name usages, and assertion of constants describing
+ * the nature of such comparisons.  Needs re-engineering.
+ * 
+ * @author mole
+ *
+ * $Id$ 
+ */
 public class NameUsage implements LinneanClassification { 
 	
 	private int key;  // GBIF key
