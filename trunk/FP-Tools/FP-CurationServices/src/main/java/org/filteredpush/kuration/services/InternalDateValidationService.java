@@ -2,6 +2,8 @@ package org.filteredpush.kuration.services;
 
 import com.hp.hpl.jena.rdf.model.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -24,15 +26,35 @@ import java.util.*;
 
 //todo: cache machanism is not finished
 public class InternalDateValidationService implements IInternalDateValidationService {
+	
+	private static final Log logger = LogFactory.getLog(InternalDateValidationService.class);
 
     private static boolean useCache = true;
     private static int count = 0;
     HashMap<String, CacheValue> eventDateCache = new HashMap<String, CacheValue>();
+    
+	private File cacheFile = null;
+    private boolean UsingSolr = true;
+    private Double scoreThredhold = 3.0;
 
-	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
-        curationStatus = CurationComment.CORRECT;
+	private CurationStatus curationStatus;
+	private String comment = "";
+    private String correctEventDate = "";
+	
+	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
+	private static final String ColumnDelimiterInCacheFile = "\t";
+	
+	private String serviceName = "";    
+	
+	private void init() { 
         comment = "";
         serviceName = "";
+        correctEventDate = "";
+	}
+
+	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
+		init();
+        curationStatus = CurationComment.CORRECT;
 
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
@@ -162,7 +184,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 	}
 
     //////////////////////////////////
-    private DateMidnight parseDate (String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified) {
+    public DateMidnight parseDate (String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified) {
         DateMidnight parsedEventDate = null;      //also for consensus date
         DateMidnight constructedDate = null;
         DateTimeFormatter format = ISODateTimeFormat.date();
@@ -276,16 +298,28 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         return parsedEventDate;
     }
 
-    private Boolean checkWithAuthorHarvard(DateMidnight eventDate, String collector){
+    /**
+     * 
+     * @param eventDate
+     * @param collector
+     * @return true if event date is inside collector's lifespan, false if it is outside, null if collector
+     * is not found or if there is an error.
+     */
+    public Boolean checkWithAuthorHarvard(DateMidnight eventDate, String collector){
+    	Boolean result = null;
         serviceName += "Harvard List of Botanists";
         String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
         String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
         Model model = ModelFactory.createDefaultModel();
-        //System.out.println("url = " + url);
+        logger.debug("url = " + url);
         model.read(url);
         //model.write(System.out);
         //use object to find subject
+        if (model.isEmpty()) {
+        	// no matches found.
+        	return null;
+        }
         StmtIterator nis = model.listStatements();
         Resource birthSubject = null;
         Resource deathSubject = null;
@@ -294,10 +328,10 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             //Property prop = new Property();
             if (stmt.getObject().toString().equals("http://purl.org/vocab/bio/0.1/Birth")){
                 birthSubject = stmt.getSubject();
-                //System.out.println("birthSubject = " + birthSubject);
+                logger.debug("birthSubject = " + birthSubject);
             }else if (stmt.getObject().toString().equals("http://purl.org/vocab/bio/0.1/Death")) {
                 deathSubject = stmt.getSubject();
-                //System.out.println("deathSubject = " + deathSubject);
+                logger.debug("deathSubject = " + deathSubject);
             }
         }
         //use subject and predicate to find object
@@ -307,33 +341,41 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         while (nis2.hasNext()){
             Statement stmt = nis2.next();
             //Property prop = new Property();
-            birthDate = null;
-            deathDate = null;
+            //birthDate = null;
+            //deathDate = null;
 
             if (stmt.getSubject().equals(birthSubject) && stmt.getPredicate().toString().equals("http://purl.org/vocab/bio/0.1/date")){
                 birthDate = stmt.getObject().toString().replace("^^http://www.w3.org/2001/XMLSchema#date","");  //todo:manually select the number here
-                //System.out.println("birth = " + birthDate);
+                logger.debug("birthDate = " + birthDate);
             }else if (stmt.getSubject().equals(deathSubject) && stmt.getPredicate().toString().equals("http://purl.org/vocab/bio/0.1/date")) {
                 deathDate = stmt.getObject().toString().replace("^^http://www.w3.org/2001/XMLSchema#date","");
-                //System.out.println("deathDate = " + deathDate);
+                logger.debug("deathDate = " + deathDate);
             }
         }
 
         int year = eventDate.year().get();
+        logger.debug(year);
         if ( (birthDate != null && (year < Integer.parseInt(birthDate) + 10)) ||          //assume before 10 years old is not valid
                 (deathDate != null && (year > Integer.parseInt(deathDate))) ) {
             curationStatus = CurationComment.UNABLE_CURATED;
             comment = "Internal inconsistent: eventDate:" + eventDate + " doesn't lie within the life span of collector:" + collector;
-            return false;
-        }else if (birthDate == null || deathDate == null){
+            logger.debug(comment);
+            // found a result and there is a mismatch = false;
+            result =  false;
+        } else if (birthDate == null || deathDate == null){
             //curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
             comment = comment + " | Unable to get the Life span data of collector:" + collector;
-            return false;
+            logger.debug(comment);
+            // did not find a result = null
+            result = null;
         }else{
             curationStatus = CurationComment.CORRECT;
             comment = comment + " | life span check is OK";
-            return true;
+            logger.debug(comment);
+            // found a result and it is consistent
+            result = true;
         }
+        return result;
     }
 
     /**
@@ -344,7 +386,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
      * @return true if found and date is inside lifespan, false if found and date outside lifespan, null if
      * not found or a service error. 
      */
-    private Boolean checkWithAuthorSolr(DateMidnight eventDate, String collector){
+    public Boolean checkWithAuthorSolr(DateMidnight eventDate, String collector){
         serviceName += "Filteredpush Entomologists List";
         String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
         String birthLabel = "birth";
@@ -395,7 +437,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 Iterator it = docs.iterator();
 
                 if(docs.size() == 0){
-                    //System.out.println("no result: " + collector);
+                    logger.debug("no result: " + collector);
                     comment = comment + " | Unable to get the Life span data of collector:" + collector;
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return null;
@@ -409,12 +451,12 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                             birthAdnDeath.put(birthLabel, doc.get(birthLabel).toString());
                             birthAdnDeath.put(deathLabel, doc.get(deathLabel).toString());
                         }catch(Exception e){
-                            //System.out.println("doc.toString() = " + doc.toString());
+                            logger.debug("doc.toString() = " + doc.toString());
                         }
 
                         lifeSpan.add(birthAdnDeath);
                     }
-                    //todo: handle multiple results
+                    //TODO: handle multiple results
                 }
 
             } catch (SolrException e) {
@@ -428,12 +470,12 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             }
 
             if(lifeSpan.size() == 0){
-                //System.out.println("no valid result: " + collector);
+                logger.debug("no valid result: " + collector);
                 comment = comment + " | Unable to get the valid life span data of collector:" + collector;
                 if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                 return null;
             }else{
-                //System.out.println("has result: " + collector);
+                logger.debug("has result: " + collector);
                 boolean liesIn = true;
                 //for handling empty birth or death date, set the default boundary
                 int birth = 1000;
@@ -442,29 +484,36 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
                     if(birthAndDeath.containsKey(birthLabel) && !birthAndDeath.get(birthLabel).equals(" ")) {
                         birth = Integer.valueOf(birthAndDeath.get(birthLabel));
-                        //System.out.println("birth collector = " + birth);
+                        logger.debug("birth collector = " + birth);
                     }else{
-                        //System.out.println("no birth for collector = " + birth);
+                        logger.debug("no birth for collector = " + birth);
                     }
                     if(birthAndDeath.containsKey(deathLabel) && !birthAndDeath.get(deathLabel).equals(" ")) {
                         death = Integer.valueOf(birthAndDeath.get(deathLabel));
-                        //System.out.println("death collector = " + death);
+                        logger.debug("death collector = " + death);
                     } else{
-                        //System.out.println("no death for collector = " + collector);
+                        logger.debug("no death for collector = " + collector);
                     }
                     if(eventDate.getYear() > death || eventDate.getYear() < birth){
-                         liesIn = false;
+                    	logger.debug("event date before birth or after death");
+                        liesIn = false;
+                    } else { 
+                    	logger.debug(birth);
+                    	logger.debug(eventDate.getYear());
+                    	logger.debug(death);
                     }
                 }
+                logger.debug(liesIn);
 
                 if(liesIn){
                     comment += " | eventDate "  + eventDate.getYear() + " lies within the life span (" + birth + "-" + death + ") of collector: " + collector + " (" + birth + " - " + death + ").";
-
+                    logger.debug(comment);
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return true;
 
                 } else{
                     comment += " | eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector" + collector;
+                    logger.debug(comment);
                     curationStatus = CurationComment.UNABLE_CURATED;
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return false;
@@ -473,54 +522,5 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         }
     }
 	
-	
-	private File cacheFile = null;
-    private boolean UsingSolr = true;
-    private Double scoreThredhold = 3.0;
 
-	private CurationStatus curationStatus;
-	private String comment = "";
-    private String correctEventDate;
-	
-	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
-	private static final String ColumnDelimiterInCacheFile = "\t";
-	
-	private String serviceName = "";
 }
-          /*
-        SimpleDateFormat dataFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        Date parsedEventDate = null;
-        try {
-            parsedEventDate = dataFormatter.parse(eventDate);
-        } catch (ParseException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(parsedEventDate);
-        */
-
-        /*
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH);
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-
-        if(authoritativeFloweringTimeMap != null && authoritativeFloweringTimeMap.containsKey(scientificName.toLowerCase())){
-			foundFloweringTime = authoritativeFloweringTimeMap.get(scientificName.toLowerCase());
-		}
-
-		if(foundFloweringTime == null){
-			curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-			comment = "Can't find the flowering time of the "+scientificName+" in the current availabel phenoloty data from FNA.";
-			correctedFloweringTime = null;
-		}else{
-			if(months==null || !months.containsAll(foundFloweringTime) || !foundFloweringTime.containsAll(months) ){
-				curationStatus = CurationComment.CURATED;
-				comment= "Update flowering time by using authoritative data from FNA";
-				correctedFloweringTime = foundFloweringTime;
-			}else{
-				curationStatus = CurationComment.CORRECT;
-				comment= "The flowering time is correct according to the authoritative data from FNA";
-				correctedFloweringTime = months;
-			}
-		}
-		*/
