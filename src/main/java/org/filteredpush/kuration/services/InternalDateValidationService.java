@@ -374,7 +374,13 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 SolrServer server = new HttpSolrServer(url);
                 params = new ModifiableSolrParams();
                 //remove"[]"
-                params.set("q", "namePre:\""+ collector + "\"~3");
+                String distance = "~3";
+                if (collector.trim().matches(".* .* .* .*")) {
+                	// for names with four words, try a wider net
+                	distance = "~4";
+                }
+                
+                params.set("q", "namePre:\""+ collector + "\""+ distance);
                 for (String item : collector.split(" ")){
                     if(!item.contains(".") && item.length() > 1){
                         params.add("fq", "name:" + item);
@@ -436,13 +442,15 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
                     if(birthAndDeath.containsKey(birthLabel) && !birthAndDeath.get(birthLabel).equals(" ")) {
                         birth = Integer.valueOf(birthAndDeath.get(birthLabel));
+                        //System.out.println("birth collector = " + birth);
                     }else{
-                        //System.out.println("birht collector = " + collector);
+                        //System.out.println("no birth for collector = " + birth);
                     }
                     if(birthAndDeath.containsKey(deathLabel) && !birthAndDeath.get(deathLabel).equals(" ")) {
                         death = Integer.valueOf(birthAndDeath.get(deathLabel));
+                        //System.out.println("death collector = " + death);
                     } else{
-                        //System.out.println("death collector = " + collector);
+                        //System.out.println("no death for collector = " + collector);
                     }
                     if(eventDate.getYear() > death || eventDate.getYear() < birth){
                          liesIn = false;
@@ -450,13 +458,13 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 }
 
                 if(liesIn){
-                    comment += " | eventDate lies within the life span data of collector: " + collector + " (" + birth + " - " + death + ").";
+                    comment += " | eventDate "  + eventDate.getYear() + " lies within the life span (" + birth + "-" + death + ") of collector: " + collector + " (" + birth + " - " + death + ").";
 
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return true;
 
                 } else{
-                    comment += " | eventDate lies outside of the life span of collector" + collector;
+                    comment += " | eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector" + collector;
                     curationStatus = CurationComment.UNABLE_CURATED;
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     return false;
