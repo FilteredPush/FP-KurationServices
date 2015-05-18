@@ -1,5 +1,7 @@
 package org.filteredpush.kuration.services;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.ClientProtocolException;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -21,6 +23,8 @@ import java.net.URLConnection;
 import java.util.*;
 
 public class GeoLocate3 implements IGeoRefValidationService {
+	
+	private static final Log logger = LogFactory.getLog(GeoLocate3.class);
 
     private boolean useCache = true;
     private Cache cache;
