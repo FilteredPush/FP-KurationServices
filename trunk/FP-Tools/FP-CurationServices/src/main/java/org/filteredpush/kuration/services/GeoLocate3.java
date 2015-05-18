@@ -90,6 +90,8 @@ public class GeoLocate3 implements IGeoRefValidationService {
 
             double originalLat = Double.valueOf(latitude);
             double originalLng = Double.valueOf(longitude);
+            double rawLat = originalLat;
+            double rawLong = originalLng;
 
             //zero, check if it's close to GeoLocate referecne
             double distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
@@ -256,13 +258,32 @@ public class GeoLocate3 implements IGeoRefValidationService {
                                 swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
                             }
                         }
+                        
+                        String action = "transposed/sign changed";
+                        // If still not in country and values are small, try scaling by 10.
+                        if (!swapInBoundary && (Math.abs(rawLat)<10 || Math.abs(rawLong)<10)) {
+                            if (!swapInBoundary && (Math.abs(rawLat)<10)) {
+                        	   swapInBoundary = testInPolygon(boundary, rawLong, rawLat*10d);
+                        	   if (swapInBoundary) { 
+                        		   originalLat = rawLat * 10d;
+                        		   action = "scaled";
+                        	   }
+                            }
+                            if (!swapInBoundary && (Math.abs(rawLong)<10)) {
+                        	   swapInBoundary = testInPolygon(boundary, rawLong*10d, rawLat);
+                        	   if (swapInBoundary) { 
+                        		   originalLng = rawLong * 10d;
+                        		   action = "scaled";
+                        	   }
+                            }
+                        }
 
                         if (swapInBoundary) {
                             curationStatus = CurationComment.CURATED;
-                            comment = comment + " | transposed/sign changed coordinates to place inside country.";
+                            comment = comment + " | " + action + " coordinates to place inside country.";
                         } else {
                             curationStatus = CurationComment.UNABLE_CURATED;
-                            comment = comment + " | Can't transpose/sign change coordinates to place inside country. ";
+                            comment = comment + " | Can't transpose/sign change/scale coordinates to place inside country. ";
                             return;
                         }
                     }
