@@ -734,7 +734,7 @@ public class NameUsage implements LinneanClassification {
 			    scientificName = scientificName.trim();
 			}
 			authorship = authorship.trim();
-			if (kingdom.equals("Animalia")) { 
+			if (kingdom!=null && kingdom.equals("Animalia")) { 
 				if (ICZNAuthorNameComparator.containsParenthesies(authorship)) { 
 					// Fix pathological case sometimes returned by COL: Author (year)
 					// which should be (Author, year).
