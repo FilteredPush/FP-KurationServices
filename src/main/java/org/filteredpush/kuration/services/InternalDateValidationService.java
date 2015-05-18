@@ -56,9 +56,12 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 comment = comment + " | collector name is not available";
             }else{
                 // can switch between using old Harvard list or new Solr dataset
-                boolean inAuthorLife = false;
+                Boolean inAuthorLife = false;
                 if (UsingSolr){
                     inAuthorLife = checkWithAuthorSolr(consesEventDate, collector);
+                    if (inAuthorLife==null) { 
+                        inAuthorLife = checkWithAuthorHarvard(consesEventDate, collector);
+                    }
                     //if(inAuthorLife) curationStatus = CurationComment.CORRECT;
                 }
                else{
@@ -333,6 +336,14 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         }
     }
 
+    /**
+     * Check if name is known on solr indexed list and if date is in lifespan.
+     * 
+     * @param eventDate to check if occurs within collectors lifespan
+     * @param collector to check against date.
+     * @return true if found and date is inside lifespan, false if found and date outside lifespan, null if
+     * not found or a service error. 
+     */
     private Boolean checkWithAuthorSolr(DateMidnight eventDate, String collector){
         serviceName += "Filteredpush Entomologists List";
         String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
@@ -381,7 +392,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     //System.out.println("no result: " + collector);
                     comment = comment + " | Unable to get the Life span data of collector:" + collector;
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
-                    return false;
+                    return null;
                 }
 
                 while (it.hasNext()){
@@ -414,7 +425,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 //System.out.println("no valid result: " + collector);
                 comment = comment + " | Unable to get the valid life span data of collector:" + collector;
                 if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
-                return false;
+                return null;
             }else{
                 //System.out.println("has result: " + collector);
                 boolean liesIn = true;
