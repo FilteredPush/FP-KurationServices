@@ -29,7 +29,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 	
 	private static final Log logger = LogFactory.getLog(InternalDateValidationService.class);
 
-    private static boolean useCache = true;
+    private static boolean useCache = false;  //todo: need to to fix cache
     private static int count = 0;
     HashMap<String, CacheValue> eventDateCache = new HashMap<String, CacheValue>();
     
@@ -60,6 +60,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         if(consesEventDate != null){
             // insert cache check functionality, put after consistency check to maximize hit rate
 
+            /*
             if(useCache){
                 if(eventDateCache.containsKey(collector)){
                     CacheValue hitValue = eventDateCache.get(collector);
@@ -71,9 +72,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     return;
                 }
             }
+            */
 
-
-            serviceName = "eventDate:" + eventDate + "#";
             if (collector == null || collector.equals("")){
                 comment = comment + " | collector name is not available";
             }else{
@@ -512,7 +512,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     return true;
 
                 } else{
-                    comment += " | eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector" + collector;
+                    comment += " | eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector: " + collector;
                     logger.debug(comment);
                     curationStatus = CurationComment.UNABLE_CURATED;
                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
