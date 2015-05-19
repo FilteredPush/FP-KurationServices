@@ -18,9 +18,13 @@ public class DateServiceTest {
     @Test
     public void validNameTest(){
         internalDateValidationService.validateDate("1948-08-24","","237","1948","8","24","2012-09-26 02:54:34","A.C. Cole");
-        //assertTrue(internalDateValidationService.getCorrectedDate().equals("1948-08-24"));
+        // assertTrue(internalDateValidationService.getCorrectedDate().equals("1948-08-24"));
         assertEquals(null,internalDateValidationService.getCorrectedDate());
         assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.CORRECT));
+        internalDateValidationService.validateDate("1848-08-24","","237","1848","8","24","2012-09-26 02:54:34","A.C. Cole");
+        //assertTrue(internalDateValidationService.getCorrectedDate().equals("1848-08-24"));
+        assertEquals(null,internalDateValidationService.getCorrectedDate());
+        assertEquals(CurationComment.UNABLE_CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
     }
     @Test
     public void inconsistentTest(){
