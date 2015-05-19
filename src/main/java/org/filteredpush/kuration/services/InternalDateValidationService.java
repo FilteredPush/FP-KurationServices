@@ -49,7 +49,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 	private void init() { 
         comment = "";
         serviceName = "";
-        correctEventDate = "";
+        correctEventDate = null;
 	}
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
