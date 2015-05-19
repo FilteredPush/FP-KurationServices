@@ -44,6 +44,16 @@ public class DateServiceTest {
         //assertTrue(internalDateValidationService.getCorrectedDate().equals("1948-07-27"));
         assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.UNABLE_DETERMINE_VALIDITY));
     }
+    @Test
+    public void rangeTest(){
+    	// A date range
+        internalDateValidationService.validateDate("1948-08-24/1948-09-01","","237","1948","8","24","2012-09-26 02:54:34","A.C. Cole");
+        assertEquals(CurationComment.CORRECT.toString(), internalDateValidationService.getCurationStatus().toString());
+        
+        // Try a date range that puts the earlier date last
+        internalDateValidationService.validateDate("1948-08-24/1947-09-01","","237","1948","8","24","2012-09-26 02:54:34","A.C. Cole");
+        assertEquals(CurationComment.UNABLE_CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
+    }
 
 
 }

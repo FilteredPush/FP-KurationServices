@@ -24,12 +24,12 @@ import org.joda.time.format.*;
 import java.io.*;
 import java.util.*;
 
-//todo: cache machanism is not finished
+//TODO: cache mechanism is not finished
 public class InternalDateValidationService implements IInternalDateValidationService {
 	
 	private static final Log logger = LogFactory.getLog(InternalDateValidationService.class);
 
-    private static boolean useCache = false;  //todo: need to to fix cache
+    private static boolean useCache = false;  //TODO: need to to fix cache
     private static int count = 0;
     HashMap<String, CacheValue> eventDateCache = new HashMap<String, CacheValue>();
     
@@ -187,27 +187,51 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     public DateMidnight parseDate (String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified) {
         DateMidnight parsedEventDate = null;      //also for consensus date
         DateMidnight constructedDate = null;
+        // TODO: Handle ISO date ranges.
+        
+        // JODA ISO Date format supports only single dates, might be able to use interval.
         DateTimeFormatter format = ISODateTimeFormat.date();
         //for multiple date formats
         DateTimeParser[] parsers = {
                 DateTimeFormat.forPattern("yyyy/MM/dd").getParser(),
                 ISODateTimeFormat.date().getParser() };
         DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-
-        //get two eventDate first
-        try{
-            parsedEventDate = DateMidnight.parse(eventDate, formatter);
-        } catch(IllegalFieldValueException e){
-            //can't parse eventDate
-            //System.out.println("can't parse eventDate");
-            comment = comment + " | Can't parse eventDate";
-            parsedEventDate=null;
-        } catch(NullPointerException e){
-            //System.out.println("eventDate = " + eventDate);
-            comment = comment + " | eventDate is null?";
-        } catch(IllegalArgumentException e){
-            if(eventDate.length() == 0) comment += " | eventDate is empty";
-            else comment += " | not encoded format for date: " + eventDate;
+        // check to see if event date is a range.
+        String[] dateBits = eventDate.split("/");
+        if (dateBits!=null && dateBits.length==2) { 
+        	//probably a range.
+        	try { 
+        	   DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
+        	   DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
+        	   if (startDate.isAfter(endDate)) { 
+                   comment = comment + " | Event date ("+eventDate+") appears to be a range, but the start date is after the end date.";
+                   curationStatus = CurationComment.UNABLE_CURATED;
+                   return null;
+        	   }
+               comment = comment + " | Event date ("+eventDate+") appears to be a range, treating the start date as the event date.";
+        	   parsedEventDate = startDate;
+        	} catch (Exception e) { 
+                 comment = comment + " | Event date ("+eventDate+") appears to be a range, but can't parse out the start and end dates.";
+        	}
+        }
+        
+        
+        if (parsedEventDate==null) { 
+        	//get two eventDate first
+        	try{
+        		parsedEventDate = DateMidnight.parse(eventDate, formatter);
+        	} catch(IllegalFieldValueException e){
+        		//can't parse eventDate
+        		//System.out.println("can't parse eventDate");
+        		comment = comment + " | Can't parse eventDate";
+        		parsedEventDate=null;
+        	} catch(NullPointerException e){
+        		//System.out.println("eventDate = " + eventDate);
+        		comment = comment + " | eventDate is null?";
+        	} catch(IllegalArgumentException e){
+        		if(eventDate.length() == 0) comment += " | eventDate is empty";
+        		else comment += " | not encoded format for date: " + eventDate;
+        	}
         }
 
         try{
