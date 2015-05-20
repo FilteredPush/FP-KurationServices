@@ -6,8 +6,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ 
-	DateServiceTest.class, 
-	DateValidationServiceTest.class,
+	InternalDateValidationServiceTest.class, 
 	GeoRefServiceTest.class,
 	COLServiceTest.class,
 	IPNIServiceTest.class,

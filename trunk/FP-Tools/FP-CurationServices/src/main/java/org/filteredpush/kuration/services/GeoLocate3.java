@@ -137,6 +137,8 @@ public class GeoLocate3 implements IGeoRefValidationService {
 
             //System.out.println("down to second");
             //Second, check whether it's on land
+            // TODO: Localities can be marine.  I think this is a missinterpretation of "on the earth's surface"
+            // as on land rather than having a valid latitude/longitude
             Set<Path2D> setPolygon = null;
             try {
                 setPolygon = ReadLandData();
@@ -265,6 +267,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
                         
                         String action = "transposed/sign changed";
                         // If still not in country and values are small, try scaling by 10.
+                        // TODO: follow scaling check with scaling and transposition check.
                         if (!swapInBoundary && (Math.abs(rawLat)<10 || Math.abs(rawLong)<10)) {
                             if (!swapInBoundary && (Math.abs(rawLat)<10)) {
                         	   swapInBoundary = testInPolygon(boundary, rawLong, rawLat*10d);
