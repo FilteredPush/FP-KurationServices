@@ -3,8 +3,10 @@ package org.filteredpush.kuration.services.test;
 import org.filteredpush.kuration.interfaces.IInternalDateValidationService;
 import org.filteredpush.kuration.services.InternalDateValidationService;
 import org.filteredpush.kuration.util.CurationComment;
+import org.joda.time.Interval;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -53,7 +55,40 @@ public class DateServiceTest {
         // Try a date range that puts the earlier date last
         internalDateValidationService.validateDate("1948-08-24/1947-09-01","","237","1948","8","24","2012-09-26 02:54:34","A.C. Cole");
         assertEquals(CurationComment.UNABLE_CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
+    } 
+    @Test
+    public void isRangeTest() { 
+        assertFalse(InternalDateValidationService.isRange("1880-01-02"));
+        assertTrue(InternalDateValidationService.isRange("1880-01-01/1880-12-31"));
+        assertFalse(InternalDateValidationService.isRange("1880/01"));
+        assertFalse(InternalDateValidationService.isRange("1880/01/01"));
+        assertTrue(InternalDateValidationService.isRange("1980-01-01/1880-12-31"));  // is range doesn't test start/end
+        assertTrue(InternalDateValidationService.isRange("1880/1881"));
     }
-
+    
+    @Test
+    public void extractRangeTest() { 
+    	Interval test = InternalDateValidationService.extractInterval("1880-01-01/1880-12-31");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(12, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth());
+    	test = InternalDateValidationService.extractInterval("1880");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(12, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth());
+    	test = InternalDateValidationService.extractInterval("1880-02");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(2, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfMonth());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(2, test.getEnd().getMonthOfYear());
+    	assertEquals(29, test.getEnd().getDayOfMonth());
+    }
 
 }

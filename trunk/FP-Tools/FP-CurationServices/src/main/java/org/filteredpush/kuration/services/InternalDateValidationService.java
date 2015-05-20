@@ -19,6 +19,7 @@ import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
 import org.joda.time.DateMidnight;
 import org.joda.time.IllegalFieldValueException;
+import org.joda.time.Interval;
 import org.joda.time.format.*;
 
 import java.io.*;
@@ -56,6 +57,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 		init();
         curationStatus = CurationComment.CORRECT;
 
+        // TODO: Assess if eventDate is a range
+        
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
             // insert cache check functionality, put after consistency check to maximize hit rate
@@ -196,7 +199,9 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 DateTimeFormat.forPattern("yyyy/MM/dd").getParser(),
                 ISODateTimeFormat.date().getParser() };
         DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+        
         // check to see if event date is a range.
+        boolean isRange = false;
         String[] dateBits = eventDate.split("/");
         if (dateBits!=null && dateBits.length==2) { 
         	//probably a range.
@@ -210,6 +215,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         	   }
                comment = comment + " | Event date ("+eventDate+") appears to be a range, treating the start date as the event date.";
         	   parsedEventDate = startDate;
+        	   isRange = true;
         	} catch (Exception e) { 
                  comment = comment + " | Event date ("+eventDate+") appears to be a range, but can't parse out the start and end dates.";
         	}
@@ -546,5 +552,83 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         }
     }
 	
-
+    /**
+     * Given a string that may be a date or a date range, extract an interval of
+     * time from that date range.
+     * 
+     * @param eventDate
+     * @return
+     */
+    public static Interval extractInterval(String eventDate) {
+    	Interval result = null;
+    	DateTimeParser[] parsers = { 
+    			DateTimeFormat.forPattern("yyyy-MM").getParser(),
+    			DateTimeFormat.forPattern("yyyy").getParser(),
+    			ISODateTimeFormat.date().getParser() 
+    	};
+    	DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+    	if (isRange(eventDate)) {
+    		String[] dateBits = eventDate.split("/");
+    		try { 
+    			// must be at least a 4 digit year.
+    			if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
+    				DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
+    				DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
+    				// both start date and end date must parse as dates.
+    				result = new Interval(startDate, endDate);
+    			}
+    		} catch (Exception e) { 
+    			// not a date range
+               logger.error(e.getMessage());
+    		}
+    	} else {
+    		try { 
+               DateMidnight startDate = DateMidnight.parse(eventDate, formatter);
+               logger.debug(startDate);
+               if (eventDate.length()==4) { 
+                  result = new Interval(startDate,startDate.plusMonths(12).minusDays(1));
+               } else if (eventDate.length()==7) { 
+                  result = new Interval(startDate,startDate.plusMonths(1).minusDays(1));
+               } else { 
+                  result = new Interval(startDate,startDate.plusDays(1));
+               }
+    		} catch (Exception e) { 
+    			// not a date
+               logger.error(e.getMessage());
+    		}
+    	}
+    	return result;
+    }
+    
+    /**
+     * Test to see if a string appears to represent a date range.
+     * 
+     * @param eventDate to check
+     * @return true if a date range, false otherwise.
+     */
+    public static boolean isRange(String eventDate) { 
+    	boolean isRange = false;
+    	String[] dateBits = eventDate.split("/");
+    	if (dateBits!=null && dateBits.length==2) { 
+    		//probably a range.
+    		DateTimeParser[] parsers = { 
+                    DateTimeFormat.forPattern("yyyy-MM").getParser(),
+                    DateTimeFormat.forPattern("yyyy").getParser(),
+    				ISODateTimeFormat.date().getParser() 
+    		};
+    		DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+    		try { 
+    			// must be at least a 4 digit year.
+    			if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
+    			   DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
+    			   DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
+    			   // both start date and end date must parse as dates.
+    			   isRange = true;
+    			}
+    		} catch (Exception e) { 
+    			// not a date range
+    		}
+    	}
+    	return isRange;
+    }
 }
