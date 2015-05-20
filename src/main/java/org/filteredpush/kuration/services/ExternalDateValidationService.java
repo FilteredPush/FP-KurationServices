@@ -22,7 +22,16 @@ import java.io.*;
 import java.net.UnknownHostException;
 import java.util.*;
 
-//todo: cache machanism is not finished
+//TODO: cache mechanism is not finished
+//TODO: services have changed location
+/**
+ * Check a collecting event date by comparison to known birth/death dates and for
+ * clustering with nearby (temporaly and spatialy) collecting event dates by the 
+ * same collector.  External as in comparison to other collecting event records.
+ * 
+ * @author Tianhong Song
+ *
+ */
 public class ExternalDateValidationService implements IExternalDateValidationService {
 
     private boolean useCache;
@@ -181,6 +190,7 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
 
     private HashSet<HashMap<String, String>> querySolr (String collector , DateMidnight eventDate) {
         HashSet<HashMap<String, String>> resultSet = null;
+        // Old location for index.
         String url = "http://fp1.acis.ufl.edu:8983/solr/biologist" ;
         String dateLabel = "eventDate";
         String latitudeLabel = "decimalLatitude";
