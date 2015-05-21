@@ -279,5 +279,12 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
 	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	
-	private final String serviceName = "Harvard List of Botanists";
+	private final String serviceName = "Harvard List of Botanists"; 
+	
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
 }

@@ -565,5 +565,12 @@ public class NewGeoLocate implements IGeoRefValidationService {
 	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
 	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
 
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
+	
 }
 

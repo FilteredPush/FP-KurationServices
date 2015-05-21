@@ -8,6 +8,7 @@ public interface ICurationService {
     public List<List> getLog();
     public void setUseCache(boolean use);
 	public String getComment();		
+	public void addToComment(String comment);
 	public CurationStatus getCurationStatus();
 	public String getServiceName();	
 }

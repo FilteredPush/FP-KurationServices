@@ -65,8 +65,15 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
 		init();
         curationStatus = CurationComment.CORRECT;
+        serviceName = "eventDate:" + eventDate + "#";
 
         // TODO: Assess if eventDate is a range
+        if (eventDate!=null && (eventDate.length()==4 || eventDate.length()==7 )) {
+        	Interval interval = extractInterval(eventDate);
+        	eventDate = interval.getStart().toString("yyyy-MM-dd") + "/" + interval.getEnd().toString("yyyy-MM-dd");
+            curationStatus = CurationComment.CURATED;
+            comment = comment + " | expanded event date to a date range";
+        }
         
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
@@ -365,9 +372,9 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         }
 
         //second, compare in different cases
-        if (parsedEventDate == null && constructedDate == null){
+        if (parsedEventDate == null && constructedDate == null && !isRange ){
             curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-            comment = " | Can't get a valid eventDate from the record";
+            comment = comment + " | Can't get a valid eventDate from the record";
             return null;
         }else if (parsedEventDate != null && constructedDate == null){
             //System.out.println("parsedEventDate = " + parsedEventDate.toString());
@@ -449,7 +456,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     @Deprecated
     public Boolean checkWithAuthorHarvard(DateMidnight eventDate, String collector){
     	Boolean result = null;
-        serviceName += "Harvard List of Botanists";
+        serviceName += " | Harvard List of Botanists";
         String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
         String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
@@ -540,7 +547,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
      */
     @Deprecated
     public Boolean checkWithAuthorSolr(DateMidnight eventDate, String collector){
-        serviceName += "Filteredpush Entomologists List";
+        serviceName += " | Filteredpush Entomologists List";
         String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
         String birthLabel = "birth";
         String deathLabel = "death";
@@ -789,7 +796,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
      */
     public Interval lookUpHarvardBotanist(String collector) { 
     	Interval result = null;
-    	serviceName += "Harvard List of Botanists";
+    	serviceName += " | Harvard List of Botanists";
     	String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
     	String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
@@ -862,7 +869,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     
     public Interval lookupEntomologist(String collector) { 
     	Interval result = null;
-    	 serviceName += "FilteredPush Entomologists List";
+    	 serviceName += " | FilteredPush Entomologists List";
          String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
          String birthLabel = "birth";
          String deathLabel = "death";
@@ -978,4 +985,10 @@ public class InternalDateValidationService implements IInternalDateValidationSer
          return result;
     }
     
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
 }
