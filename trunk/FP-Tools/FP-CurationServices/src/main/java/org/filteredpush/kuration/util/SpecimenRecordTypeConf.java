@@ -40,7 +40,8 @@ public final class SpecimenRecordTypeConf {
             {"EventDate", "eventDate", "String"},
             {"Modified", "modified", "String"},
             {"StartDayOfYear", "startDayOfYear", "String"},
-            {"VerbatimEventDate", "verbatimEventDate", "String"}
+            {"VerbatimEventDate", "verbatimEventDate", "String"}, 
+            {"BasisOfRecord", "basisOfRecord", "String"}
 
         };
 

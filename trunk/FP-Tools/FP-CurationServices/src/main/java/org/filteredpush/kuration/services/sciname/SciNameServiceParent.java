@@ -255,11 +255,19 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
            //no result, stop
        }
        //System.err.println("serviceend#"+_id + "#" + System.currentTimeMillis());
-       if (curationStatus.toString().equals(CurationComment.CORRECT.toString()) && this.selectedMode.equals(MODE_TAXONOMIC)) { 
-    	   if (!validatedNameUsage.getScientificName().equals(validatedNameUsage.getAcceptedName()) && validatedNameUsage.getAcceptedName().length()>0) {
-    		   curationStatus = CurationComment.CURATED;
-               addToComment("Replacing " + validatedNameUsage.getScientificName() + " with name in current use " + validatedNameUsage.getAcceptedName());                       
-    	   }	   
+       
+       // Handle replacements in taxonomic mode
+       if (this.selectedMode.equals(MODE_TAXONOMIC)) { 
+    	   if (curationStatus.toString().equals(CurationComment.CORRECT.toString())) { 
+    		   if (!validatedNameUsage.getScientificName().equals(validatedNameUsage.getAcceptedName()) && validatedNameUsage.getAcceptedName().length()>0) {
+    			   curationStatus = CurationComment.CURATED;
+    			   addToComment("Replacing " + validatedNameUsage.getScientificName() + " with name in current use " + validatedNameUsage.getAcceptedName());                       
+    		   }	   
+    	   } else {
+    		   if (!validatedNameUsage.getScientificName().equals(validatedNameUsage.getAcceptedName()) && validatedNameUsage.getAcceptedName().length()>0) {
+    			   addToComment("Replacing " + validatedNameUsage.getScientificName() + " with name in current use " + validatedNameUsage.getAcceptedName());                       
+    		   }
+    	   }
        }
    }
 

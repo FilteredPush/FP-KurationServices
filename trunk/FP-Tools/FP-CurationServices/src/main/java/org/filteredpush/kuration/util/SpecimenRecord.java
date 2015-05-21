@@ -27,12 +27,14 @@ public class SpecimenRecord extends HashMap<String,String> {
     public static final String Original_EventDate_Label = "origialEventDate";
     public static final String Original_Latitude_Label = "origialDecimalLatitude";
     public static final String Original_Longitude_Label = "origialDecimalLongitude";
+    public static final String Original_BasisOfRecord_Label = "originalBasisOfRecord";
 
     public static final String dwc_scientificName = "scientificName";
     public static final String dwc_scientificNameAuthorship = "scientificNameAuthorship";
     public static final String dwc_eventDate = "eventDate";
     public static final String dwc_decimalLatitude = "decimalLatitude";
     public static final String dwc_decimalLongitude = "decimalLongitude";
+    public static final String dwc_basisOfRecord = "basisOfRecord";
 
     public SpecimenRecord() {
         super();
