@@ -907,5 +907,12 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 		return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
 	}
 
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
+
 
 }

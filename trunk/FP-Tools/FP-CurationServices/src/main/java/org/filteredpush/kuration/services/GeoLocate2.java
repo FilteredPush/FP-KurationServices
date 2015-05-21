@@ -616,4 +616,11 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
     //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
 	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
+	
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
 }

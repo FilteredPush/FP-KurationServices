@@ -195,4 +195,11 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	
 	private final String serviceName = "Authoritative Data from FNA";
+	
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
 }

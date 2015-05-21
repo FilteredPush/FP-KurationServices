@@ -265,5 +265,6 @@ public class GeoLocate {
     private final String urlhost = "www.museum.tulane.edu";
     private final String urlpath = "/webservices/geolocatesvc/geolocatesvc.asmx/Georef2";
     private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
+    
 }
 

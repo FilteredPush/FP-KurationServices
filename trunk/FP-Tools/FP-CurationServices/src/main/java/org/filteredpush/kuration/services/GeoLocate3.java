@@ -39,6 +39,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 		correctedLatitude = -1;
 		correctedLongitude = -1;
 		comment = "";
+		// overloaded for extraction into "WAS" values by MongoSummaryWriter
         serviceName = "decimalLatitude:" + latitude + "#decimalLongitude:" + longitude + "#";
         log = new LinkedList<List>();
 
@@ -57,6 +58,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
             Vector<Double> coordinatesInfo = null;
             try {
                 coordinatesInfo = queryGeoLocate(country, stateProvince, county, locality);
+                serviceName += " | Geolocate";
             } catch (CurationException e) {
                 curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                 comment = comment + " | " + e.getMessage();
@@ -673,4 +675,11 @@ public class GeoLocate3 implements IGeoRefValidationService {
 	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
     //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
 	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
+	
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
 }

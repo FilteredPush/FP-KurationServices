@@ -392,4 +392,11 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
     private final int day = 86400000;    
 	
 	private final String serviceName = "Collecting Event Outlier Identification Service";
+	
+	@Override
+	public void addToComment(String comment) {
+		if (comment!=null) { 
+		   this.comment += " | " + comment;
+		}
+	}
 }
