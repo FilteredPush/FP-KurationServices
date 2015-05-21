@@ -28,6 +28,26 @@ public class GeoLocate3 implements IGeoRefValidationService {
 
     private boolean useCache = true;
     private Cache cache;
+    
+	private File cacheFile = null;
+
+	private CurationStatus curationStatus;
+	private double correctedLatitude;
+	private double correctedLongitude;
+	private String comment = "";	
+//	private boolean isCoordinatesFound;
+    private List<List> log = new LinkedList<List>();
+
+    static int count = 0;
+	private static HashMap<String, CacheValue> coordinatesCache = new HashMap<String, CacheValue>();
+	private Vector<String> newFoundCoordinates;
+	private static final String ColumnDelimiterInCacheFile = "\t";
+	
+	private String serviceName = "";
+	
+	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
+    //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
+	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";    
 	
 	/*
 	 * If latitude or longitude is null, it means such information is missing in the original records
@@ -656,25 +676,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 	}
 
 	
-	private File cacheFile = null;
 
-	private CurationStatus curationStatus;
-	private double correctedLatitude;
-	private double correctedLongitude;
-	private String comment = "";	
-//	private boolean isCoordinatesFound;
-    private List<List> log = new LinkedList<List>();
-
-    static int count = 0;
-	private static HashMap<String, CacheValue> coordinatesCache = new HashMap<String, CacheValue>();
-	private Vector<String> newFoundCoordinates;
-	private static final String ColumnDelimiterInCacheFile = "\t";
-	
-	private String serviceName = "";
-	
-	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
-    //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
-	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
 	
 	@Override
 	public void addToComment(String comment) {
