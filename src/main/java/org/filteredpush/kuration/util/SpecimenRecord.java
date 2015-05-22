@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class SpecimenRecord extends HashMap<String,String> {
 
+	// TODO: Make lists of these so that MongoSummaryWriter can iterate and doesn't need to hard code them.
     public static final String SciName_Comment_Label = "scinComment";
     public static final String SciName_Status_Label = "scinStatus";
     public static final String SciName_Source_Label = "scinSource";
@@ -21,6 +22,9 @@ public class SpecimenRecord extends HashMap<String,String> {
     public static final String geoRef_Comment_Label = "geoRefComment";
     public static final String geoRef_Status_Label = "geoRefStatus";
     public static final String geoRef_Source_Label = "geoRefSource";
+    public static final String borRef_Comment_Label = "borComment";
+    public static final String borRef_Status_Label = "borStatus";
+    public static final String borRef_Source_Label = "borSource";
 
     public static final String Original_SciName_Label = "originalScientificName";
     public static final String Original_Authorship_Label = "origialScientificNameAuthorship";
