@@ -364,7 +364,7 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		double latitude2 = Double.valueOf(r2.get(latitudeLabel));
 		double longitutde2 = Double.valueOf(r2.get(longitudeLabel));
 		
-		double travelDistancePerDay = GEOUtil.getDistance(latitude1, longitutde1, latitude2, longitutde2)/(Math.abs(timestamp2 - timestamp1)/day);
+		double travelDistancePerDay = GEOUtil.getDistanceKm(latitude1, longitutde1, latitude2, longitutde2)/(Math.abs(timestamp2 - timestamp1)/day);
 		if(travelDistancePerDay>=travelDistanceThreshold){ 
 			return true;
 		}else{

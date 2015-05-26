@@ -272,7 +272,7 @@ public class GeoLocate2 implements IGeoRefValidationService {
                 //System.out.println("foundLat = " + foundLat);
 
                 //finally, check whether it's close to GeoLocate referecne or not
-                double distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
+                double distance = GEOUtil.getDistanceKm(foundLat, foundLng, originalLat, originalLng);
                 serviceName = serviceName + " | GeoLocate";
                 if(distance>Double.valueOf(certainty)){
                     //use the found coordinates

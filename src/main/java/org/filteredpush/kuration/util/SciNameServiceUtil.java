@@ -232,8 +232,13 @@ public class SciNameServiceUtil {
             //System.out.println("object = " + object.toString());
 
             JSONArray jdata = (JSONArray)object.get("data");
-            JSONObject jone = (JSONObject)jdata.get(0);
-            JSONArray jresults = (JSONArray)jone.get("results");
+            JSONArray jresults = null;
+            if (jdata!=null) { 
+                JSONObject jone = (JSONObject)jdata.get(0);
+                if (jone!=null) { 
+                    jresults = (JSONArray)jone.get("results");
+                }
+            }
             //if there is no possible correction, return now
             if (jresults == null){
                 //comment = comment + " | the name is misspelled and cannot be corrected.";
