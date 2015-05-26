@@ -311,11 +311,13 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         //for multiple date formats
         DateTimeParser[] parsers = {
                 DateTimeFormat.forPattern("yyyy/MM/dd").getParser(),
-                ISODateTimeFormat.date().getParser() };
+                ISODateTimeFormat.date().getParser()
+                };
         DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
         
         // check to see if event date is a range.
         boolean isRange = false;
+        if (eventDate!=null) { 
         String[] dateBits = eventDate.split("/");
         if (dateBits!=null && dateBits.length==2) { 
         	//probably a range.
@@ -334,7 +336,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                  comment = comment + " | Event date ("+eventDate+") appears to be a range, but can't parse out the start and end dates.";
         	}
         }
-        
+        }
         
         if (parsedEventDate==null) { 
         	//get two eventDate first
@@ -428,9 +430,18 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         if(modified != null && !modified.isEmpty()){
             //System.out.println("parsedEventDate = " + parsedEventDate.toString());
             //System.out.println("modified = " + modified);
+        	
+            DateTimeParser[] modifiedParsers = {
+                    DateTimeFormat.forPattern("yyyy/MM/dd").getParser(),
+                    ISODateTimeFormat.date().getParser(),
+                    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").getParser(),
+                    DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").getParser(),
+                    ISODateTimeFormat.dateTimeParser().getParser() };
+            formatter = new DateTimeFormatterBuilder().append( null, modifiedParsers ).toFormatter();      	
 
             try{
-                if (parsedEventDate.isAfter(DateMidnight.parse(modified.split(" ")[0], formatter)) ) {
+                // if (parsedEventDate.isAfter(DateMidnight.parse(modified.split(" ")[0], formatter)) ) {
+                if (parsedEventDate.isAfter(DateMidnight.parse(modified, formatter)) ) {
                     curationStatus = CurationComment.UNABLE_CURATED;
                     comment = comment + " | Internal inconsistent: EventDate:" + parsedEventDate.toString(format) + " occurs after modified date:" + DateMidnight.parse(modified.split(" ")[0], format) + ".";
                     return null;
@@ -978,7 +989,11 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                  if (birth>0 && death>0) { 
                 	 String startDate = Integer.toString(birth);
                 	 String endDate = Integer.toString(death);
-                	 result = new Interval(InternalDateValidationService.extractDate(startDate), InternalDateValidationService.extractDate(endDate));
+                	 if (death>birth) { 
+                	     result = new Interval(InternalDateValidationService.extractDate(startDate), InternalDateValidationService.extractDate(endDate));
+                	 } else { 
+                		 logger.debug("Can't construct interval from " + startDate  +"-" + endDate );
+                	 }
                  }
              }
          }   	

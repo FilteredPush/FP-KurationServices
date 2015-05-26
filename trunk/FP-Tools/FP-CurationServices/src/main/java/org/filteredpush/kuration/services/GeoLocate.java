@@ -123,7 +123,7 @@ public class GeoLocate {
             //Otherwise, use the point returned from GeoLocate
             double originalLat = Double.valueOf(latitude);
             double originalLng = Double.valueOf(longitude);
-            double distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
+            double distance = GEOUtil.getDistanceKm(foundLat, foundLng, originalLat, originalLng);
             if (distance > Double.valueOf(certainty)) {
                 //use the found coordinates
                 curationStatus = true;

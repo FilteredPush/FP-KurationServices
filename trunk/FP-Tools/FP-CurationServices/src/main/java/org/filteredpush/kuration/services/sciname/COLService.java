@@ -17,19 +17,28 @@
  */
 package org.filteredpush.kuration.services.sciname;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.ICZNAuthorNameComparator;
+import edu.harvard.mcz.nametools.NameComparison;
 import edu.harvard.mcz.nametools.NameUsage;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
+import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 import org.filteredpush.kuration.util.SciNameCacheValue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
 
 
 public class COLService extends SciNameServiceParent {
+	
+	private static final Log logger = LogFactory.getLog(COLService.class);
 	
 	private final static String Url = "http://www.catalogueoflife.org/col/webservice";
 
@@ -65,7 +74,7 @@ public class COLService extends SciNameServiceParent {
             return hitValue.getHasResult();
         }
 
-        addToServiceName("Catalog of Life");
+        addToServiceName(getServiceImplementationName());
         Document document = null;
         URL url;
 
@@ -84,10 +93,11 @@ public class COLService extends SciNameServiceParent {
             //System.out.println("url = " + url.toString());
             document = reader.read(url);
         } catch (DocumentException e) {
-        	addToComment("Failed to get information by parsing the response from Catalog of Life service for: "+e.getMessage());
+        	addToComment("Failed to get information on " + name + " by parsing the response from Catalog of Life service: "+e.getMessage());
             addToCache(false);
         } catch (MalformedURLException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        	addToComment("Error requesting information from the Catalog of Life service: "+e.getMessage());
+            logger.error(e.getMessage());
         }
 
         if (document!=null) { 
@@ -96,7 +106,36 @@ public class COLService extends SciNameServiceParent {
         if (matches < 1) {
         	addToComment("Cannot find matches in Catalog of Life service");
         } else if (matches > 1) {
-        	addToComment("More than one match in Catalog of Life service, may be homonym or hemihomonym.");
+        	addToComment("More than one (" + matches +") match in Catalog of Life service, may be homonym or hemihomonym.");
+        	List<Node> results = document.selectNodes("/results/result");
+        	Iterator<Node> i = results.iterator();
+        	while (i.hasNext()) { 
+        		Node aResult = i.next();
+        	    String rank = aResult.selectSingleNode("/rank").getText();
+        	    if (rank.equals("Species") || rank.equals("Infraspecies")) {
+        			if (
+        				  aResult.selectSingleNode("/name_status").getText().contains("accepted name") ||
+        				  aResult.selectSingleNode("/name_status").getText().contains("provisionally accepted name")
+        			   ) 
+        			{ 
+        			    String authorship = aResult.selectSingleNode("/author").getText();
+        			    AuthorNameComparator comparator = this.getAuthorNameComparator(authorship, "");
+        			    NameComparison comparison = comparator.compare(toCheck.getAuthorship(), authorship);
+        			    if (comparison.getMatchType().equals(NameComparison.MATCH_EXACT)) { 
+            				validatedNameUsage.setScientificName(aResult.selectSingleNode("/name").getText());
+            				validatedNameUsage.setAcceptedName(aResult.selectSingleNode("/name").getText());
+            				validatedNameUsage.setAcceptedAuthorship(aResult.selectSingleNode("/author").getText());
+            				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+            				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
+            				validatedNameUsage.setAuthorship(aResult.selectSingleNode("/author").getText());
+            	            addToComment("Found accepted name " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +" in Catalog of Life service.");
+            				result = true;	
+        			    }
+        			} else {
+        				//TODO: Make list of homonyms, pick best match.
+        			}
+        	    }
+        	}
         } else {
         	String rank = document.selectSingleNode("/results/result/rank").getText();
         	if (rank.equals("Species") || rank.equals("Infraspecies")) { 
@@ -114,6 +153,7 @@ public class COLService extends SciNameServiceParent {
         				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
         				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
         				authorQuery = "/results/result/author";
+        	            addToComment("Found accepted name " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +" in Catalog of Life service.");
         				result = true;
         			} else if(document.selectSingleNode("/results/result/name_status").getText().equals("synonym")){
         				// synonym
@@ -124,7 +164,7 @@ public class COLService extends SciNameServiceParent {
         				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
         				authorQuery = "/results/result/author";
         				result = true;
-        				addToComment("Found and resolved synonym");
+        	            addToComment("Found and resolved synonym " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +" in Catalog of Life service.");
         			} else if(document.selectSingleNode("/results/result/name_status").getText().equals("ambiguous synonym")){
         				// TODO: Authorship may be able to provide guidance on name to return for scientificName, won't be able
         				// to return acceptedName.

@@ -239,7 +239,7 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
             long dayDifference = Math.abs( (eventDate.getMillis() - ReferenceEventDate.getMillis())/86400000 );
 
             if(dayDifference < temporalDistanceThreshold){   //no point to calculate two eventDate far away from each other
-                double travelDistancePerDay = GEOUtil.getDistance(Long.parseLong(latitude), Long.parseLong(longitude), refLatitude, refLongitude)/dayDifference;
+                double travelDistancePerDay = GEOUtil.getDistanceKm(Long.parseLong(latitude), Long.parseLong(longitude), refLatitude, refLongitude)/dayDifference;
                 if(travelDistancePerDay>=travelDistanceThreshold){
                     isOutlier = true;
                     break;

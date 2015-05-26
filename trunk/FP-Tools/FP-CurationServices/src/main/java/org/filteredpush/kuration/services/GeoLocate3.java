@@ -54,7 +54,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
 	 * 
 	 * @see org.kepler.actor.SpecimenQC.IGeoRefValidationService#validateGeoRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
-	public void validateGeoRef(String country, String stateProvince, String county, String locality, String latitude, String longitude, double certainty){
+	public void validateGeoRef(String country, String stateProvince, String county, String locality, String latitude, String longitude, double thresholdDistanceKm){
 		curationStatus = CurationComment.UNABLE_CURATED;
 		correctedLatitude = -1;
 		correctedLongitude = -1;
@@ -86,12 +86,12 @@ public class GeoLocate3 implements IGeoRefValidationService {
             }
 
             if(coordinatesInfo == null || coordinatesInfo.size()<2){
-                //todo: very ad-hoc way for now, need to handle all the combinations of the two missings
+                //TODO: very ad-hoc way for now, need to handle all the combinations of the two missings
                 if(latitude == null || longitude == null){
                     comment = comment + " | The original coordinates are missing.";
                 }
                 curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-                comment = " | Can't find coordinates by searching for locality in GeoLocate service.";
+                comment = " | GeoLocate service can't find coordinates of Locality. ";
                 return;
             }else{
                 foundLat = coordinatesInfo.get(0);
@@ -108,7 +108,8 @@ public class GeoLocate3 implements IGeoRefValidationService {
             curationStatus = CurationComment.CURATED;
             correctedLatitude = foundLat;
             correctedLongitude = foundLng;
-            comment = comment + " | Insert the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are missing.";
+            // TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
+            comment = comment + " | Added a georeference using cached data or "+getServiceName()+"service since the original coordinates are missing.";
         }else {
             //calculate the distance from the returned point and original point in the record
             //If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
@@ -120,12 +121,12 @@ public class GeoLocate3 implements IGeoRefValidationService {
             double rawLong = originalLng;
 
             //zero, check if it's close to GeoLocate referecne
-            double distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
-            if (distance < Double.valueOf(certainty)) {
+            double distance = GEOUtil.getDistanceKm(foundLat, foundLng, originalLat, originalLng);
+            if (distance < Double.valueOf(thresholdDistanceKm)) {
                 curationStatus = CurationComment.CORRECT;
                 correctedLatitude = originalLat;
                 correctedLongitude = originalLng;
-                comment = comment + " | Original coordinates are near georeference of locality from Geolocate with certainty: " + certainty;
+                comment = comment + " | Original coordinates are near (within " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ";
                 return;
             }
 
@@ -309,10 +310,10 @@ public class GeoLocate3 implements IGeoRefValidationService {
 
                         if (swapInBoundary) {
                             curationStatus = CurationComment.CURATED;
-                            comment = comment + " | " + action + " coordinates to place inside country.";
+                            comment = comment + " | " + action + " coordinates to place inside the provided Country " + country;
                         } else {
                             curationStatus = CurationComment.UNABLE_CURATED;
-                            comment = comment + " | Can't transpose/sign change/scale coordinates to place inside country. ";
+                            comment = comment + " | Can't transpose/sign change/scale coordinates to place the georeference inside the provided Country " + country ;
                             return;
                         }
                     }
@@ -330,18 +331,19 @@ public class GeoLocate3 implements IGeoRefValidationService {
             //System.out.println("foundLat = " + foundLat);
 
 
-            distance = GEOUtil.getDistance(foundLat, foundLng, originalLat, originalLng);
-            if (distance > Double.valueOf(certainty)) {
+            distance = GEOUtil.getDistanceKm(foundLat, foundLng, originalLat, originalLng);
+            if (distance > Double.valueOf(thresholdDistanceKm)) {
                 //use the found coordinates
                 curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + " | Coordinates are not near georeference of locality from geolocate with certainty: " + certainty;
+                comment = comment + " | Coordinates are not near (within " +  thresholdDistanceKm + " km) georeference of locality from the Geolocate service.";
             } else {
                 //use the original coordinates
                 if (curationStatus == CurationComment.CURATED) {
-                    comment = comment + " | Transposed/sign changed coordinates are near georeference of locality from Geolocate.";
+                    comment = comment + " | Transposed/sign changed coordinates are near (within " +  thresholdDistanceKm + " km) georeference of locality from the Geolocate service.";
                     correctedLatitude = originalLat;
                     correctedLongitude = originalLng;
                 } else {
+                	logger.error("wrongStatus, no change, but near.");
                     System.out.println("wrong status in GeoLocate3: no change but near");
                     System.out.println("debugging = " + serviceName);
                 }
@@ -631,11 +633,11 @@ public class GeoLocate3 implements IGeoRefValidationService {
                     cache.insert(skey);
                 }
             } catch (ClientProtocolException e) {
-                throw new CurationException("GeoLocateService failed to access GeoLocate service for A "+e.getMessage());
+                throw new CurationException("GeoLocate3 failed to access GeoLocate service for A "+e.getMessage());
             } catch (UnsupportedEncodingException e) {
-                throw new CurationException("GeoLocateService failed to access GeoLocate service for B "+e.getMessage());
+                throw new CurationException("GeoLocate3 failed to access GeoLocate service for B "+e.getMessage());
             } catch (IOException e) {
-                throw new CurationException("GeoLocateService failed to access GeoLocate service for C "+e.getMessage());
+                throw new CurationException("GeoLocate3 failed to access GeoLocate service for C "+e.getMessage());
             }
         }
 
@@ -646,7 +648,7 @@ public class GeoLocate3 implements IGeoRefValidationService {
         try {
             document = reader.read(stream);
         } catch (DocumentException e) {
-            throw new CurationException("GeoLocateService failed to get the coordinates information by parsing the response from GeoLocate service at: "+url+" for: "+e.getMessage());
+            throw new CurationException("GeoLocate3 failed to get the coordinates information by parsing the response from GeoLocate service at: "+url+" for: "+e.getMessage());
         }
 
         Node latitudeNode = document.selectSingleNode("/geo:Georef_Result_Set/geo:ResultSet[1]/geo:WGS84Coordinate/geo:Latitude");
