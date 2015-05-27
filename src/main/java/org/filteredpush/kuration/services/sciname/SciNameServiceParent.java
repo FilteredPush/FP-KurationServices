@@ -230,7 +230,14 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
                 		   if (match.equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
            				       addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author.  ");
                 		       curationStatus = CurationComment.CORRECT;
-                	       } else { 
+                	       } else if (match.equals(NameComparison.MATCH_ADDSAUTHOR)) { 
+                	    	   logger.debug(match);
+                	    	   logger.debug(validatedNameUsage.getAuthorship());
+                	    	   logger.debug(validatedNameUsage.getAcceptedAuthorship());
+                	    	   logger.debug(validatedAuthor);
+                		       validatedNameUsage.setMatchDescription(match);
+                		       curationStatus = CurationComment.CURATED;
+                	       }else { 
                 		       validatedNameUsage.setMatchDescription(match);
                 		       curationStatus = CurationComment.CURATED;
                 	       }

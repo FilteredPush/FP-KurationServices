@@ -932,8 +932,17 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                  }
                  params.set("fl", "*,score");
                  QueryResponse rsp = null;
-
-                 rsp = server.query( params );
+                 try { 
+                     rsp = server.query( params );
+                 } catch (SolrServerException ex) { 
+                	 // pause and try again.
+                	try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						// continue
+					}
+                    rsp = server.query( params );
+                 }
 
                  SolrDocumentList docs = rsp.getResults();
                  Iterator it = docs.iterator();
@@ -968,7 +977,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                  System.out.println("collector = " + collector);
                  System.out.println("=====");
              } catch (SolrServerException e) {
-                 e.printStackTrace();
+            	 System.out.println(e.getMessage());
+                 logger.error(e.getMessage(),e);
              }
 
              if(lifeSpan.size() == 0){

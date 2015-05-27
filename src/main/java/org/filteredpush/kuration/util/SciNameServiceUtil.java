@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  */
 public class SciNameServiceUtil {
 	
-	private static final Log log = LogFactory.getLog(SciNameServiceUtil.class);
+	private static final Log logger = LogFactory.getLog(SciNameServiceUtil.class);
 
     private boolean useCache = false;
    private File cacheFile = null;
@@ -67,7 +67,7 @@ public class SciNameServiceUtil {
 			nameBits = parser.parse(scientificName);
 			result = nameBits.isAutonym();
 		} catch (UnparsableException e) {
-			log.debug(e.getMessage());
+			logger.debug(e.getMessage());
 		}
     	}
 		return result;
@@ -419,34 +419,40 @@ public class SciNameServiceUtil {
                resultMap.put("comment", comment);
                return resultMap;
            }else{  //solved homonyms
-               for (NameUsage name : nameUsageSet){
-                       //first get the name form the result
-                   boolean isSynonyms = name.getSynonyms();
-                   if (isSynonyms){
-                       try{
-                           Vector<String> nameBits = GNISupportingService.parseName(name.getAcceptedName());
-                           if (nameBits.size()==2) {
-                               //todo check whether the match is senior or junior synonyms?
-                               resultName = nameBits.get(0);
-                               resultAuthor = nameBits.get(1);
-                               curationStatus = CurationComment.CURATED;
-                               comment = comment + " | found synonyms and synonyms have been resolved";
-                           }else{
-                               throw new CurationException("can't solve synonyms");
-                           }
-                       }catch (CurationException e){
-                           comment = comment + " | found synonyms but can't parse accepted name";
-                           resultMap.put("scientificName", null);
-                           resultMap.put("curationStatus", CurationComment.UNABLE_DETERMINE_VALIDITY.toString());
-                           resultMap.put("comment", comment);
-                           return resultMap;
-                       }
+        	   for (NameUsage name : nameUsageSet){
+        		   //first get the name form the result
 
-                   } else{
-                       resultName = name.getCanonicalName();
-                       resultAuthor = name.getAuthorship();
-                   }
-                   /*
+        		   logger.debug(name.getAcceptedName());            	   
+        		   logger.debug(name.getAcceptedAuthorship());            	   
+        		   logger.debug(name.getScientificName());            	   
+        		   logger.debug(name.getAuthorship()); 
+
+        		   boolean isSynonyms = name.getSynonyms();
+        		   if (isSynonyms){
+        			   try{
+        				   Vector<String> nameBits = GNISupportingService.parseName(name.getAcceptedName());
+        				   if (nameBits.size()==2) {
+        					   //todo check whether the match is senior or junior synonyms?
+        					   resultName = nameBits.get(0);
+        					   resultAuthor = nameBits.get(1);
+        					   curationStatus = CurationComment.CURATED;
+        					   comment = comment + " | found synonyms and synonyms have been resolved";
+        				   }else{
+        					   throw new CurationException("can't solve synonyms");
+        				   }
+        			   }catch (CurationException e){
+        				   comment = comment + " | found synonyms but can't parse accepted name";
+        				   resultMap.put("scientificName", null);
+        				   resultMap.put("curationStatus", CurationComment.UNABLE_DETERMINE_VALIDITY.toString());
+        				   resultMap.put("comment", comment);
+        				   return resultMap;
+        			   }
+
+        		   } else{
+        			   resultName = name.getCanonicalName();
+        			   resultAuthor = name.getAuthorship();
+        		   }
+        		   /*
                    System.out.println("taxon = " + taxon);
                    System.out.println("author = " + author);
                    System.out.println("validatedAuthor = " + resultAuthor);
@@ -462,15 +468,15 @@ public class SciNameServiceUtil {
                        curationStatus = CurationComment.CURATED;
                        comment = comment + " | Curated by searching GBIF checklist bank API";
                    }
-                   */
+        		    */
 
-                   resultMap.put("scientificName", resultName);
-                   resultMap.put("author", resultAuthor);
-                   resultMap.put("curationStatus", curationStatus.toString());
-                   resultMap.put("comment", comment);
-                   resultMap.put("guid", Integer.toString(name.getKey()));
-                   return resultMap;
-               }
+        		   resultMap.put("scientificName", resultName);
+        		   resultMap.put("author", resultAuthor);
+        		   resultMap.put("curationStatus", curationStatus.toString());
+        		   resultMap.put("comment", comment);
+        		   resultMap.put("guid", Integer.toString(name.getKey()));
+        		   return resultMap;
+        	   }
            }
        }
        System.out.println("something wrong...");
@@ -518,7 +524,7 @@ public class SciNameServiceUtil {
                     System.out.println("no result in json object");
                 }
             } catch (ClassCastException e) {
-            	log.debug(e.getMessage(), e);
+            	logger.debug(e.getMessage(), e);
             }
 
             Iterator i = array.iterator();
@@ -537,10 +543,10 @@ public class SciNameServiceUtil {
             }
 
         } catch (ParseException e) {
-            log.debug(e.getMessage(), e);
+            logger.debug(e.getMessage(), e);
         }   catch (Exception e){
-        	log.error("parsing error url = " + url.toString());
-        	log.error(e.getMessage());
+        	logger.error("parsing error url = " + url.toString());
+        	logger.error(e.getMessage());
         }
         return nameUsageSet;
     }
