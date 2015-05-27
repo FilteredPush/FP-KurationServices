@@ -119,10 +119,15 @@ public class SciNameServiceUtil {
             //System.out.println("scientificName = " + scientificName);
             //System.out.println("constructName = " + constructName);
             try {
-
                 //System.out.println("constructName111 = " + constructName.trim());
                 //System.out.println("scientificName = " + scientificName.equals(constructName.trim()));
                 pn = parser.parse(scientificName);
+            } catch (UnparsableException e) {
+            	// Hybrids are a likely cause of failure, put this into the output.
+                System.out.println("Parsing error: " + e);
+                comment = comment + " | " +  e.getMessage();
+            }
+            try { 
                 cn = parser.parse(constructName.trim());
             } catch (UnparsableException e) {
                 System.out.println("Parsing error: " + e);
@@ -145,10 +150,10 @@ public class SciNameServiceUtil {
 
 
             if(pn == null){
-                if(pn.equals(cn)){
+                if(cn == null){
                     curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                     comment = comment + "| cannot get a valid scientificName from the record";
-                    name =  pn.canonicalName();
+                    //name =  pn.canonicalName();
                     //validatedAuthor = pn.getAuthorship();
                 } else{
                     //validatedAuthor = null;
