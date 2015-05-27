@@ -242,7 +242,9 @@ public class GeoLocate3 implements IGeoRefValidationService {
                 serviceName = serviceName + " | Country boundary data from GeoCommunity";
                 if (country.toUpperCase().equals("USA")) {
                     country = "UNITED STATES";
-                } else if (country.equals("United States of America")) {
+                } else if (country.toUpperCase().equals("U.S.A.")) {
+                    country = "UNITED STATES";
+                } else if (country.toLowerCase().equals("united states of america")) {
                     country = "UNITED STATES";
                 } else {
                     country = country.toUpperCase();
