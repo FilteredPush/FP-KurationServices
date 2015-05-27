@@ -879,6 +879,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     			// If a birth date is given, but no death date, assume botanist is living.
     			endDate = new DateMidnight();
     		}
+            comment = comment + "  | Found " + collector + "("+startDate +"-"+endDate+") in botanists list.";
     		result = new Interval(startDate, endDate);
     	}  else  {
             comment = comment + " | Unable to get life span data of collector:" + collector;
@@ -1009,6 +1010,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 	 String startDate = Integer.toString(birth);
                 	 String endDate = Integer.toString(death);
                 	 if (death>birth) { 
+                		 comment = comment + "  | Found " + collector + "("+startDate +"-"+endDate+") in entomologists list.";
                 	     result = new Interval(InternalDateValidationService.extractDate(startDate), InternalDateValidationService.extractDate(endDate));
                 	 } else { 
                 		 logger.debug("Can't construct interval from " + startDate  +"-" + endDate );
