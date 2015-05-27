@@ -28,6 +28,16 @@ public class COLServiceTest {
         logger.debug(scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getCorrectedAuthor());
         assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CORRECT));
+    } 
+    
+    @Test
+    public void addAuthorCuratedTest() { 
+        scientificNameService.validateScientificName("Quercus alba", "");
+        assertEquals("L.", scientificNameService.getCorrectedAuthor());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
+        assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CURATED));        
     }
     
     @Test

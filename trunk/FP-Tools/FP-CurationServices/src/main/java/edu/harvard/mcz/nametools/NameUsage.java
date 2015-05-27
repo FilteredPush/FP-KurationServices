@@ -387,6 +387,9 @@ public class NameUsage implements LinneanClassification {
 	 * @return the status
 	 */
 	public String getTaxonomicStatus() {
+		if(taxonomicStatus==null) { 
+			return "";
+		}
 		return taxonomicStatus;
 	}
 

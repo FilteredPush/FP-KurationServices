@@ -95,7 +95,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
 
 	   // (1) set up initial conditions 
 	   
-       // To carry over the orignial sciname and author:
+       // To carry over the original sciname and author:
        // This has the appearance of an assignment to the wrong variable, but it isn't
        // this data is extracted by MongoSummaryWriter to provide "WAS:" values
        serviceName = new StringBuffer();
@@ -184,6 +184,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
     	   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
 
     	   addToComment(authorshipSimilarity);
+    	   
        }
            
        //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());

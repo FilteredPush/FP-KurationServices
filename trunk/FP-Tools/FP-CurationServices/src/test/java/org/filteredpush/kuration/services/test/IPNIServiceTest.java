@@ -85,5 +85,19 @@ public class IPNIServiceTest {
         assertTrue(service.getCorrectedScientificName().equals(""));
         assertTrue(service.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
     }	
+    
+    @Test
+    public void missingAuthorTest() { 
+		String scientificName = "Quercus alba";
+		String author = "";
+		service.validateScientificName(scientificName, author);
+		logger.debug(service.getCurationStatus().toString());
+		logger.debug(service.getCorrectedScientificName());
+		logger.debug(service.getCorrectedAuthor());
+		logger.debug(service.getComment());
+		assertEquals(CurationComment.CURATED,service.getCurationStatus());
+		assertEquals("L.",service.getCorrectedAuthor());
+		assertEquals(scientificName,service.getCorrectedScientificName());
+    }
 
 }
