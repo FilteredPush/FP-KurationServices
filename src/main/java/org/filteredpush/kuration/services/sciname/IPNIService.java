@@ -228,11 +228,13 @@ public class IPNIService extends SciNameServiceParent {
 		        }
 			}
 		} else if (searchResults.size()>1) {  
+		    addToComment("More than one (" + searchResults.size() + ") match in IPNI on scientific name, potential homonym.");
 		    Iterator<NameUsage> i = searchResults.iterator();
 		    boolean done = false;
 		    double bestMatch = -1d;
 		    while (i.hasNext() && !done) { 
 		    	NameUsage match = i.next();
+		    	addToComment("Possible match: " + match.getScientificName() + " " + match.getAuthorship() + " " + match.getTaxonomicStatus() );
 		    	// pick the best match out of the search results.
 		    	if (match.getAuthorshipStringEditDistance()>bestMatch) { 
 		    		bestMatch = match.getAuthorshipStringEditDistance();
