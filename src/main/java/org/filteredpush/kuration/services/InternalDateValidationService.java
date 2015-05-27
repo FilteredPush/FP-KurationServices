@@ -1,6 +1,7 @@
 package org.filteredpush.kuration.services;
 
 import com.hp.hpl.jena.rdf.model.*;
+import com.hp.hpl.jena.shared.JenaException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,6 +25,7 @@ import org.joda.time.Interval;
 import org.joda.time.format.*;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.util.*;
 
 //TODO: cache mechanism is not finished
@@ -813,7 +815,14 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
     	Model model = ModelFactory.createDefaultModel();
     	logger.debug("url = " + url);
-    	model.read(url);
+    	try { 
+    	    model.read(url);
+    	} catch (JenaException e) {
+    		if (e.getCause().getClass().equals(ConnectException.class)) {
+    			// try again
+    		    model.read(url);
+    		}
+    	}
     	logger.debug(model.listStatements().hasNext());
     	if (model.isEmpty()) {
     		// no matches found.

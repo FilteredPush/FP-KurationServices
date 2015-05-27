@@ -111,7 +111,11 @@ public class COLService extends SciNameServiceParent {
         	Iterator<Node> i = results.iterator();
         	while (i.hasNext()) { 
         		Node aResult = i.next();
-        	    String rank = aResult.selectSingleNode("/rank").getText();
+        		Node rankNode = aResult.selectSingleNode("/rank");
+        	    String rank = ""; 
+        	    if (rankNode!=null) { 
+        	    	rank = aResult.selectSingleNode("/rank").getText();
+        	    }
         	    if (rank.equals("Species") || rank.equals("Infraspecies")) {
         			if (
         				  aResult.selectSingleNode("/name_status").getText().contains("accepted name") ||
