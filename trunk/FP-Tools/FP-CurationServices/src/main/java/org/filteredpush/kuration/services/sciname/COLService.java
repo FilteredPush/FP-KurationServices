@@ -178,10 +178,11 @@ public class COLService extends SciNameServiceParent {
         			}
         		} catch (Exception e) {
         			System.out.println("---");
-        			e.printStackTrace();
+        			System.out.println(e.getMessage())
         			System.out.println("document = " + document.toString());
         			System.out.println("name = " + name);
         			System.out.println("===");
+        			logger.error(e.getMessage(),e);
         		}
         		try{
         			validatedNameUsage.setAuthorship(document.selectSingleNode(authorQuery).getText());

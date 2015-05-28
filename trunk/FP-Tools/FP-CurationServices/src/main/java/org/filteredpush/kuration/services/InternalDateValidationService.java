@@ -634,12 +634,14 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
             } catch (SolrException e) {
                 System.out.println("-----");
-                e.printStackTrace();
+                System.out.println(e.getMessage());
                 System.out.println("params = " + params.toString());
                 System.out.println("collector = " + collector);
                 System.out.println("=====");
+                logger.error(e.getMessage(),e);
             } catch (SolrServerException e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
+                logger.error(e.getMessage(),e);
             }
 
             if(lifeSpan.size() == 0){
@@ -820,7 +822,16 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     	} catch (JenaException e) {
     		if (e.getCause().getClass().equals(ConnectException.class)) {
     			// try again
-    		    model.read(url);
+    			try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+					// continue
+				}
+    			try {
+    		       model.read(url);
+    			} catch (JenaException ex) { 
+    				System.out.println(ex.getMessage());
+    			}
     		}
     	}
     	logger.debug(model.listStatements().hasNext());

@@ -167,9 +167,9 @@ public class GeoLocate3 implements IGeoRefValidationService {
                 setPolygon = ReadLandData();
                 //System.out.println("read data");
             } catch (IOException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            	logger.error(e.getMessage());
             } catch (InvalidShapeFileException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            	logger.error(e.getMessage());
             }
 
             boolean originalInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
@@ -230,10 +230,10 @@ public class GeoLocate3 implements IGeoRefValidationService {
                 fileIn.close();
                 //System.out.println("read boundary data");
             } catch (IOException i) {
-                i.printStackTrace();
+            	logger.error(i.getMessage(),i);
             } catch (ClassNotFoundException c) {
                 System.out.println("boundaries data not found");
-                c.printStackTrace();
+            	logger.error(c.getMessage(),c);
             }
 
             //standardize country names

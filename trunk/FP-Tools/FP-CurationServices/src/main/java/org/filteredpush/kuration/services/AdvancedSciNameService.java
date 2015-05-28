@@ -702,8 +702,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
             }
             //System.out.println("result = " + result.toString());
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	System.out.println(e.getMessage());
         }
         //start parsing
         JSONParser parser=new JSONParser();
