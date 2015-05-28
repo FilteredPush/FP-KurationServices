@@ -224,8 +224,8 @@ public class SciNameServiceUtil {
                 result.append(line);
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	System.out.println(e.getMessage());
+        	logger.error(e.getMessage(),e);
         }
 
 
@@ -512,7 +512,7 @@ public class SciNameServiceUtil {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             System.out.println("---sciNameServiceUtil---");
-            e.printStackTrace();
+            logger.error(e.getMessage(),e);
             System.out.println("url = " + url.toString());
             System.out.println("========================");
         }
