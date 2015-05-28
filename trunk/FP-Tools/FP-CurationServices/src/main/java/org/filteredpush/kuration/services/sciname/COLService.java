@@ -178,7 +178,7 @@ public class COLService extends SciNameServiceParent {
         			}
         		} catch (Exception e) {
         			System.out.println("---");
-        			System.out.println(e.getMessage())
+        			System.out.println(e.getMessage());
         			System.out.println("document = " + document.toString());
         			System.out.println("name = " + name);
         			System.out.println("===");
