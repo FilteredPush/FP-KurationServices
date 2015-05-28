@@ -973,7 +973,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
              } catch (SolrException e) {
                  System.out.println("-----");
-                 e.printStackTrace();
+                 logger.error(e.getMessage(),e);
                  System.out.println("params = " + params.toString());
                  System.out.println("collector = " + collector);
                  System.out.println("=====");
