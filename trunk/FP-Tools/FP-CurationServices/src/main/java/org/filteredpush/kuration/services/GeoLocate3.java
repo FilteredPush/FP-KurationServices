@@ -78,7 +78,8 @@ public class GeoLocate3 implements IGeoRefValidationService {
             Vector<Double> coordinatesInfo = null;
             try {
                 coordinatesInfo = queryGeoLocate(country, stateProvince, county, locality);
-                serviceName += " | Geolocate";
+                // next line isn't needed, queryGeolocate() adds the service.
+                // serviceName += " | GeoLocate";
             } catch (CurationException e) {
                 curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
                 comment = comment + " | " + e.getMessage();
