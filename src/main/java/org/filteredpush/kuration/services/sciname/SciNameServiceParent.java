@@ -128,6 +128,7 @@ public abstract class SciNameServiceParent implements INewScientificNameValidati
        
        // (2) perform internal consistency check
        HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
+       // TODO: [#384] Comment and status is confusing when atomic values are null 
        addToComment(result1.get("comment"));
        curationStatus = new CurationStatus(result1.get("curationStatus"));
 
