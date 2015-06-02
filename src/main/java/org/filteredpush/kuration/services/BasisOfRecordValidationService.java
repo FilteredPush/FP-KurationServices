@@ -9,6 +9,7 @@ import org.filteredpush.kuration.interfaces.IStringValidationService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
+import org.filteredpush.kuration.util.SpecimenRecord;
 
 /**
  * @author mole
@@ -20,9 +21,10 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	
 	public BasisOfRecordValidationService() { 
 		super();
+		initBR();
 	}
 	
-	protected void init() { 
+	protected void initBR() { 
 		correctedValue = "";
 	}
 	
@@ -68,6 +70,8 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	@Override
 	public void validateString(String aString) {
 		init();
+		initBR();
+		addInputValue(SpecimenRecord.dwc_basisOfRecord, aString);
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 
 			if (aString.equals("MaterialSample")) { setCurationStatus(CurationComment.CORRECT); } 
@@ -107,6 +111,9 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 			    	correctedValue = "Taxon";
 			    } 
 			}
+		}
+		if (getCorrectedValue().length()>0) { 
+			this.addCuratedValue(SpecimenRecord.dwc_basisOfRecord, getCorrectedValue());
 		}
 	}
 

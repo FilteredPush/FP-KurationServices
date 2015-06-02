@@ -79,14 +79,16 @@ public class WoRMSService extends SciNameServiceParent {
 	private final static String wormsLSIDPrefix = "urn:lsid:marinespecies.org:taxname:";
 
 	public WoRMSService() { 
-		init();
+		super();
+		initSciName();
 	}
 	
-	public WoRMSService(boolean test) throws IOException { 
-			init();
-			if (test) { 
-			   test();
-			}
+	public WoRMSService(boolean test) throws IOException {
+		super();
+		initSciName();
+		if (test) { 
+			test();
+		}
 	}
 	
 	protected void test()  throws IOException { 
@@ -96,7 +98,7 @@ public class WoRMSService extends SciNameServiceParent {
 		conn.connect();
 	}
 
-    protected void init() { 
+    protected void initSciName() { 
 		authorNameComparator = new ICZNAuthorNameComparator(.75d,.5d);
 		validatedNameUsage = new NameUsage("WoRMS",authorNameComparator);
 		depth = 0;
@@ -282,7 +284,7 @@ public class WoRMSService extends SciNameServiceParent {
 					    		validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    		exactMatch = true;
 					    		addToComment("Found exact match in WoRMS.");
-					    		curationStatus = CurationComment.CORRECT;
+					    		setCurationStatus(CurationComment.CORRECT);
 					    		result = true;
 					    	}
 					    }
@@ -331,8 +333,8 @@ public class WoRMSService extends SciNameServiceParent {
 							validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 							validatedNameUsage.setScientificNameStringEditDistance(1d);
 					    	addToComment("Found exact match in WoRMS.");
-					    	curationStatus = CurationComment.CORRECT;
-					    	logger.debug(curationStatus);
+					    	setCurationStatus(CurationComment.CORRECT);
+					    	logger.debug(getCurationStatus());
 					        result = true;
 						} else {
 							// find how 
@@ -354,7 +356,7 @@ public class WoRMSService extends SciNameServiceParent {
 							        validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 								    validatedNameUsage.setMatchDescription(match);		
 					    	        addToComment("Found plausible match in WoRMS: " + match);
-					    	        curationStatus = CurationComment.CURATED;
+					    	        setCurationStatus(CurationComment.CURATED);
 					                result = true;
 								}
 							} else { 

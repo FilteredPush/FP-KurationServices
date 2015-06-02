@@ -43,10 +43,11 @@ public class COLService extends SciNameServiceParent {
 	private final static String Url = "http://www.catalogueoflife.org/col/webservice";
 
 	public COLService() { 
-		init();
+		super();
+		initSciName();
 	}
 	
-	protected void init() {
+	protected void initSciName() {
 		validatedNameUsage = new NameUsage("Catalog Of Life",new ICZNAuthorNameComparator(.75d, .5d));
 	}
 	
@@ -65,7 +66,7 @@ public class COLService extends SciNameServiceParent {
         if(useCache && sciNameCache.containsKey(key)){
             SciNameCacheValue hitValue = (SciNameCacheValue) sciNameCache.get(key);
             addToComment(hitValue.getComment());
-            curationStatus = hitValue.getStatus();
+            setCurationStatus(hitValue.getStatus());
             addToServiceName(hitValue.getSource());
             validatedNameUsage.setAuthorship(hitValue.getAuthor());
             validatedNameUsage.setScientificName(hitValue.getTaxon());

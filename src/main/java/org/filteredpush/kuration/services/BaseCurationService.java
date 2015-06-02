@@ -49,7 +49,7 @@ public abstract class BaseCurationService implements ICurationService {
 		initBase();
 	}
 	
-	private void initBase() { 
+	protected void initBase() { 
 		comments = new StringBuffer();
 		services = new StringBuffer();
 		inputValues = new HashMap<String,String>();
@@ -73,7 +73,7 @@ public abstract class BaseCurationService implements ICurationService {
 	    	if (comments.length()>0) { 
                 comments.append(SEPARATOR).append(comment);
 	    	}  else { 
-	    		comments.append("comment");
+	    		comments.append(comment);
 	    	}
         }
 	}
@@ -93,7 +93,11 @@ public abstract class BaseCurationService implements ICurationService {
 	@Override
 	public void addToServiceName(String serviceName) {
 		if (serviceName!=null && serviceName.length()>0) { 
-			services.append(SEPARATOR).append(serviceName);
+			if (services.length() > 0 ) { 
+			   services.append(SEPARATOR).append(serviceName);
+			} else { 
+			   services.append(serviceName);
+			}
 		}
 		
 	}

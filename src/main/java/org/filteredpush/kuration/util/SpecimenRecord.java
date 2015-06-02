@@ -39,6 +39,7 @@ public class SpecimenRecord extends HashMap<String,String> {
     public static final String dwc_decimalLatitude = "decimalLatitude";
     public static final String dwc_decimalLongitude = "decimalLongitude";
     public static final String dwc_basisOfRecord = "basisOfRecord";
+    public static final String dwc_geodeticDatum = "geodeticDatum";
 
     public SpecimenRecord() {
         super();
