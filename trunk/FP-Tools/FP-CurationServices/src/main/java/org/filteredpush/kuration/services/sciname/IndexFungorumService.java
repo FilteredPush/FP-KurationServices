@@ -52,12 +52,13 @@ public class IndexFungorumService extends SciNameServiceParent  {
 	private FungusSoapProxy ifService;
 	protected AuthorNameComparator authorNameComparator;
 	
-	public IndexFungorumService() throws IOException { 
-		init();
+	public IndexFungorumService() throws IOException {
+		super();
+		initSciName();
 		test();
 	}
 	
-	protected void init(){ 
+	protected void initSciName(){ 
 		authorNameComparator = new ICNafpAuthorNameComparator(.70d,.5d);
 		validatedNameUsage = new NameUsage("IndexFungorum",authorNameComparator);
 	}
@@ -114,7 +115,7 @@ public class IndexFungorumService extends SciNameServiceParent  {
 								validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());
 								result = true;
 								addToComment("Found exact match in IndexFungorum.");
-								curationStatus = CurationComment.CORRECT;
+								setCurationStatus(CurationComment.CORRECT);
 							} else { 
 								double similarity = AuthorNameComparator.calulateSimilarityOfAuthor(toCheck.getOriginalAuthorship(), authorship);
 								logger.debug(similarity);

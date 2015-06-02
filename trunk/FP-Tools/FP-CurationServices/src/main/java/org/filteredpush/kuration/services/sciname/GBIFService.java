@@ -65,10 +65,11 @@ public class GBIFService extends SciNameServiceParent {
 	protected boolean fetchSynonymsAboveSpecies;
 
 	public GBIFService()  throws IOException  { 
+		super();
 		targetKey = GBIFService.KEY_GBIFBACKBONE;
 		targetDataSetName = "GBIF Backbone Taxonomy";
 		fetchSynonymsAboveSpecies = true;
-		init();
+		initSciName();
 		test();
 	}
 	
@@ -86,12 +87,12 @@ public class GBIFService extends SciNameServiceParent {
 		if (targetKey.equals(KEY_INDEXFUNGORUM)) { 
 		    targetDataSetName = "GBIF IndexFungorum Dataset"; 
 		}
-		init();
+		initSciName();
 		test();
 	}
 	
 	
-	protected void init() { 
+	protected void initSciName() { 
 		validatedNameUsage = new NameUsage("GBIF",new ICZNAuthorNameComparator(.75d, .5d));
 	}
 	
@@ -407,5 +408,7 @@ public class GBIFService extends SciNameServiceParent {
 		}
 		return result;
 	}
+
+
 	
 }

@@ -61,10 +61,11 @@ public class IPNIService extends SciNameServiceParent {
 	private String IPNISourceId = null;	
     
     public IPNIService(){
-    	init();
+    	super();
+    	initSciName();
 	}
 			
-    protected void init() { 
+    protected void initSciName() { 
 		validatedNameUsage = new NameUsage("IPNI",new ICNafpAuthorNameComparator(.70d, .5d));
     }
     
@@ -206,13 +207,13 @@ public class IPNIService extends SciNameServiceParent {
 			if ( match.getMatchDescription().equals(NameComparison.MATCH_EXACT)
 					|| match.getAuthorshipStringEditDistance()==1d) { 
 				addToComment("The scientific name and authorship are correct.  " + match.getMatchDescription());
-			   curationStatus = CurationComment.CORRECT;
+			   setCurationStatus(CurationComment.CORRECT);
 			} else if (match.getMatchDescription().equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
 				addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author (" + match.getOriginalAuthorship() + " vs. " + correctedAuthor + ").  " + match.getMatchDescription());
-			   curationStatus = CurationComment.CORRECT;
+			   setCurationStatus(CurationComment.CORRECT);
 			} else if (match.getMatchDescription().equals(NameComparison.MATCH_ADDSAUTHOR)) { 
 				addToComment("An authorship (" + correctedAuthor + ") is suggested where none was provided.  " + match.getMatchDescription());
-			   curationStatus = CurationComment.CURATED;
+			   setCurationStatus(CurationComment.CURATED);
 			} else if (match.getMatchDescription().equals(NameComparison.MATCH_ERROR) 
 					|| match.getMatchDescription().equals(NameComparison.MATCH_DISSIMILAR)) {
 				// no match to report
@@ -221,7 +222,7 @@ public class IPNIService extends SciNameServiceParent {
 			} else { 
 		        if (match.getAuthorshipStringEditDistance()>= match.getAuthorComparator().getSimilarityThreshold()) {
 		        	addToComment("Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance());
-				   curationStatus = CurationComment.CURATED;
+				   setCurationStatus(CurationComment.CURATED);
 		        } else { 
 				   // too weak a match to report
 				   id = null;
@@ -248,10 +249,10 @@ public class IPNIService extends SciNameServiceParent {
 		    			addToComment("The scientific name and authorship are correct.");
 		    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT) || match.getAuthorshipStringEditDistance()==1d) { 
 		    				addToComment("The scientific name and authorship are correct.  " + match.getMatchDescription());
-		    				curationStatus = CurationComment.CORRECT;
+		    				setCurationStatus(CurationComment.CORRECT);
 		    			} else { 
 		    				addToComment("Scientific name authorship corrected.  " + match.getMatchDescription() + "  Similarity=" + match.getAuthorshipStringEditDistance());
-		    				curationStatus = CurationComment.CURATED;
+		    				setCurationStatus(CurationComment.CURATED);
 		    			}
 		    			if (match.getMatchDescription().equals(NameComparison.MATCH_EXACT)) {
 		    				done = true;
@@ -395,8 +396,7 @@ public class IPNIService extends SciNameServiceParent {
 		boolean result = false;
 		validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 		validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
-		comment = new StringBuffer();
-		curationStatus = CurationComment.UNABLE_CURATED;
+		setCurationStatus(CurationComment.UNABLE_CURATED);
         
 		String scientificName = toCheck.getOriginalScientificName();
 		String author = toCheck.getOriginalAuthorship();
@@ -405,7 +405,7 @@ public class IPNIService extends SciNameServiceParent {
         if(useCache && sciNameCache.containsKey(key)){
             SciNameCacheValue hitValue = (SciNameCacheValue) sciNameCache.get(key);
             addToComment(hitValue.getComment());
-            curationStatus = hitValue.getStatus();
+            setCurationStatus(hitValue.getStatus());
             addToServiceName(hitValue.getSource());
             this.validatedNameUsage.setAuthorship(hitValue.getAuthor());
             this.validatedNameUsage.setScientificName(hitValue.getTaxon());
@@ -425,12 +425,12 @@ public class IPNIService extends SciNameServiceParent {
 				    source = "IPNI";
 				    result = true;
 				    logger.debug(id);
-				    logger.debug(curationStatus.toString());
+				    logger.debug(getCurationStatus().toString());
 					addToComment("Found name in IPNI.");
 				} else {
 					addToComment("Didn't find name in IPNI.");
 				    logger.debug(id);
-				    logger.debug(curationStatus.toString());
+				    logger.debug(getCurationStatus().toString());
 					//access the GNI and try to get the name that is in the lexical group and from IPNI
 					Vector<String> resolvedNameInfo = resolveIPNINameInLexicalGroupFromGNI(scientificName);
 					
@@ -452,7 +452,7 @@ public class IPNIService extends SciNameServiceParent {
 							//correct the wrong scientific name or author by searching in both IPNI and GNI
 							IPNIlsid = constructIPNILSID(id); 
 							addToComment("Updated the scientific name (including authorship) with value found in GNI which is from IPNI and in the same lexicalgroup as the original term.  This is likely to represent an alternative form of the authorship than the authorship provided.");
-							curationStatus = CurationComment.CURATED;
+							setCurationStatus(CurationComment.CURATED);
 							source = "IPNI/GNI";
 							result = true;
 							
@@ -467,7 +467,7 @@ public class IPNIService extends SciNameServiceParent {
 				
 			} catch (Exception ex){
 				addToComment(ex.getMessage());
-				curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+				setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
 			}
 			if (!result) { 
 				addToComment("No match found in IPNI with failover to GNI.");

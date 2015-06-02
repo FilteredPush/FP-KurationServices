@@ -9,6 +9,7 @@ import org.filteredpush.kuration.interfaces.IStringValidationService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
+import org.filteredpush.kuration.util.SpecimenRecord;
 
 /**
  * @author mole
@@ -86,7 +87,7 @@ public class GeodeticDatumValidationService extends BaseCurationService implemen
 	@Override
 	public void validateString(String aString) {
 		init();
-		this.addInputValue("geodeticDatum", aString);
+		this.addInputValue(SpecimenRecord.dwc_geodeticDatum, aString);
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 
 			if (this.useEPSGCodes) { 
