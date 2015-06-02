@@ -20,22 +20,50 @@ import java.net.URLConnection;
 import java.util.*;
 import java.awt.geom.Path2D;
 
-public class GeoLocate2 implements IGeoRefValidationService {
+/**
+ * 
+ * 
+ * Current version is GeoLocate3
+ * 
+ * @see GeoLocate3
+ * 
+ * @author Tianhong Song
+ *
+ */
+@Deprecated 
+public class GeoLocate2 extends BaseCurationService implements IGeoRefValidationService {
 
     private boolean useCache;
     private Cache cache;
+
+	private File cacheFile = null;
+
+	private double correctedLatitude;
+	private double correctedLongitude;
+//	private boolean isCoordinatesFound;
+    private List<List> log = new LinkedList<List>();
 	
+	private HashMap<String, String> cachedCoordinates;
+	private Vector<String> newFoundCoordinates;
+	private static final String ColumnDelimiterInCacheFile = "\t";
+	
+	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
+    //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
+	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";    
+    
 	/*
 	 * If latitude or longitude is null, it means such information is missing in the original records
 	 * 
 	 * @see org.kepler.actor.SpecimenQC.IGeoRefValidationService#validateGeoRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	public void validateGeoRef(String country, String stateProvince, String county, String locality, String latitude, String longitude, double certainty){
-		curationStatus = CurationComment.UNABLE_CURATED;
+		setCurationStatus(CurationComment.UNABLE_CURATED);
 		correctedLatitude = -1;
 		correctedLongitude = -1;
-		comment = "";
-        serviceName = "decimalLatitude:" + latitude + "#decimalLongitude:" + longitude + "#";
+		// TODO: Fix overloaded service name
+        addToServiceName("decimalLatitude:" + latitude + "#decimalLongitude:" + longitude + "#");
+        addInputValue("decimalLatitude", latitude);
+        addInputValue("decimalLongitude",longitude);
         log = new LinkedList<List>();
 
 		try {
@@ -52,11 +80,11 @@ public class GeoLocate2 implements IGeoRefValidationService {
 				if(coordinatesInfo == null || coordinatesInfo.size()<2){
                     //todo: very ad-hoc way for now, need to handle all the combinations of the twoo missings
                     if(latitude == null || longitude == null){
-                        comment = comment + " | The original coordinates are missing.";
+                        addToComment("The original coordinates are missing.");
                     }
-					curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-					comment = " | Can't find coordinates by searching for locality in GeoLocate service.";
-                    serviceName = serviceName + " | GeoLocate";
+					setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+					addToComment("Can't find coordinates by searching for locality in GeoLocate service.");
+                    addToServiceName("GeoLocate");
                     return;
 				}else{
 					foundLat = coordinatesInfo.get(0);
@@ -77,10 +105,10 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
 			if(latitude == null || longitude == null){
 				//The coordinates in the original records is missing
-				curationStatus = CurationComment.CURATED;				
+				setCurationStatus(CurationComment.CURATED);				
 				correctedLatitude = foundLat;
 				correctedLongitude = foundLng;
-				comment = comment + " | Insert the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are missing.";
+				addToComment("Insert the coordinates by using cached data or "+getServiceName()+"service since the original coordinates are missing.");
 			}else {
                 //calculate the distance from the returned point and original point in the record
                 //If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
@@ -96,23 +124,23 @@ public class GeoLocate2 implements IGeoRefValidationService {
                         double temp = originalLat;
                         originalLat = originalLng;
                         originalLng = temp;
-                        curationStatus = CurationComment.CURATED;
-                        comment = comment + " | The original latitude is out of range. Transposing longitude and latitude. ";
+                        setCurationStatus(CurationComment.CURATED);
+                        addToComment("The original latitude is out of range. Transposing longitude and latitude. ");
                     } else {
                         if (originalLng > 180 || originalLng < -180) {
-                            curationStatus = CurationComment.UNABLE_CURATED;
-                            comment = comment + " | Both original latitude \"" + originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ";
+                            setCurationStatus(CurationComment.UNABLE_CURATED);
+                            addToComment("Both original latitude \"" + originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ");
                             return;
                         } else {
-                            curationStatus = CurationComment.UNABLE_CURATED;
-                            comment = comment + " | The original latitude \"" + originalLat + "\" is out of range. ";
+                            setCurationStatus(CurationComment.UNABLE_CURATED);
+                            addToComment("The original latitude \"" + originalLat + "\" is out of range. ");
                             return;
                         }
                     }
                 } else {
                     if (originalLng > 180 || originalLng < -180) {
-                        curationStatus = CurationComment.UNABLE_CURATED;
-                        comment = " | The original longitude \"" + originalLng + "\" is out of range. ";
+                        setCurationStatus(CurationComment.UNABLE_CURATED);
+                        addToComment("The original longitude \"" + originalLng + "\" is out of range. ");
                         return;
                     }
                 }
@@ -165,12 +193,12 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
                     //check the result
                     if (swapInPolygon) {
-                        curationStatus = CurationComment.CURATED;
-                        comment = comment + " | sign changed coordinates are on the Earth's surface. ";
-                        serviceName = serviceName + " | Land data from Natural Earth";
+                        setCurationStatus(CurationComment.CURATED);
+                        addToComment("sign changed coordinates are on the Earth's surface. ");
+                        addToServiceName("Land data from Natural Earth");
                     } else {
-                        curationStatus = CurationComment.UNABLE_CURATED;
-                        comment = " | Can't transpose/sign change coordinates to place them on the Earth's surface.";
+                        setCurationStatus(CurationComment.UNABLE_CURATED);
+                        addToComment("Can't transpose/sign change coordinates to place them on the Earth's surface.");
                         return;
                     }
                 }
@@ -211,14 +239,14 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
                     Set<Path2D> boundary = boundaries.get(country);
                     if (boundary == null) {
-                        curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-                        comment = " | Can't find country: " + country + " in country name list";
-                        serviceName = serviceName + " | Country boundary data from GeoCommunity";
+                        setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+                        addToComment("Can't find country: " + country + " in country name list");
+                        addToServiceName("Country boundary data from GeoCommunity");
                     } else {
                         boolean originalInBoundary = testInPolygon(boundary, originalLng, originalLat);
                         //If not in polygon, try some swapping
                         if (!originalInBoundary) {
-                            comment = comment + " | Coordinates not inside country. ";
+                            addToComment("Coordinates not inside country. ");
                             originalLng = 0 - originalLng;
                             boolean swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
                             if (!swapInBoundary) {
@@ -249,20 +277,20 @@ public class GeoLocate2 implements IGeoRefValidationService {
                             }
 
                             if (swapInBoundary) {
-                                curationStatus = CurationComment.CURATED;
-                                comment = comment + " | transposed/sign changed coordinates to place inside country.";
-                                serviceName = serviceName + " | Country boundary data from GeoCommunity";
+                                setCurationStatus(CurationComment.CURATED);
+                                addToComment("transposed/sign changed coordinates to place inside country.");
+                                addToServiceName("Country boundary data from GeoCommunity");
                             } else {
-                                curationStatus = CurationComment.UNABLE_CURATED;
-                                comment = comment + " | Can't transpose/sign change coordinates to place inside country. ";
+                                setCurationStatus(CurationComment.UNABLE_CURATED);
+                                addToComment("Can't transpose/sign change coordinates to place inside country. ");
                                 return;
                             }
                         }
                     }
                 }else{
-                    comment = comment + " | country name is empty";
+                    addToComment("country name is empty");
                 }
-                //System.out.println("curationStatus = " + curationStatus);
+                //System.out.println("setCurationStatus(" + curationStatus);
                 //System.out.println("comment = " + comment);
 
                 //System.out.println("originalLng = " + originalLng);
@@ -273,23 +301,23 @@ public class GeoLocate2 implements IGeoRefValidationService {
 
                 //finally, check whether it's close to GeoLocate referecne or not
                 double distance = GEOUtil.getDistanceKm(foundLat, foundLng, originalLat, originalLng);
-                serviceName = serviceName + " | GeoLocate";
+                addToServiceName("GeoLocate");
                 if(distance>Double.valueOf(certainty)){
                     //use the found coordinates
-                    curationStatus = CurationComment.UNABLE_CURATED;
-                    comment = comment+ " | Coordinates are not near georeference of locality from geolocate with certainty: " + certainty;
+                    setCurationStatus(CurationComment.UNABLE_CURATED);
+                    addToComment("Coordinates are not near georeference of locality from geolocate with certainty: " + certainty);
                 }else{
                     //use the original coordinates
-                    if (curationStatus == CurationComment.CURATED){
-                        comment = comment + " | Transposed/sign changed coordinates are near georeference of locality from Geolocate.";
+                    if (getCurationStatus() == CurationComment.CURATED){
+                        addToComment("Transposed/sign changed coordinates are near georeference of locality from Geolocate.");
                         correctedLatitude = originalLat;
                         correctedLongitude = originalLng;
                     }
                     else {
-                        curationStatus = CurationComment.CORRECT;
+                        setCurationStatus(CurationComment.CORRECT);
                         correctedLatitude = originalLat;
                         correctedLongitude = originalLng;
-                        comment = comment + " | Original coordinates are near georeference of locality from Geolocate with certainty: " + certainty;
+                        addToComment("Original coordinates are near georeference of locality from Geolocate with certainty: " + certainty);
                     }
                 }
                 //end insertion
@@ -297,8 +325,8 @@ public class GeoLocate2 implements IGeoRefValidationService {
 			}
 
 		} catch (CurationException e) {
-			curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-			comment = comment + " | " + e.getMessage();
+			setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+			addToComment("" + e.getMessage());
 			return;
 		}
 	}	
@@ -315,14 +343,6 @@ public class GeoLocate2 implements IGeoRefValidationService {
 		return correctedLongitude;
 	}	
 	
-	public String getComment(){
-		return comment;
-	}
-		
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
-
 	public void flushCacheFile() throws CurationException {
 		if(cacheFile == null){
 			return;
@@ -367,10 +387,6 @@ public class GeoLocate2 implements IGeoRefValidationService {
         this.useCache = true;
 	}
 
-    public String getServiceName(){
-		return serviceName;
-	}
-	
 	private void initializeCacheFile(String fileStr) throws CurationException {
 		cacheFile = new File(fileStr);
 		
@@ -492,10 +508,10 @@ public class GeoLocate2 implements IGeoRefValidationService {
         Document document = null;
         long starttime = System.currentTimeMillis();
 
-        if(country == null) comment = comment +  " | country is missing in the orignial record";
-        if(stateProvince == null) comment = comment +  " | stateProvince is missing in the orignial record";
-        if(county == null) comment = comment +  " | county is missing in the orignial record";
-        if(locality == null) comment = comment +  " | locality is missing in the orignial record";
+        if(country == null) addToComment("country is missing in the orignial record");
+        if(stateProvince == null) addToComment("stateProvince is missing in the orignial record");
+        if(county == null) addToComment("county is missing in the orignial record");
+        if(locality == null) addToComment("locality is missing in the orignial record");
 
         List<String> skey = new ArrayList<String>(5);
         skey.add(country);
@@ -598,29 +614,6 @@ public class GeoLocate2 implements IGeoRefValidationService {
 	}
 
 	
-	private File cacheFile = null;
 
-	private CurationStatus curationStatus;
-	private double correctedLatitude;
-	private double correctedLongitude;
-	private String comment = "";	
-//	private boolean isCoordinatesFound;
-    private List<List> log = new LinkedList<List>();
 	
-	private HashMap<String, String> cachedCoordinates;
-	private Vector<String> newFoundCoordinates;
-	private static final String ColumnDelimiterInCacheFile = "\t";
-	
-	private String serviceName = "";
-	
-	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
-    //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
-	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";
-	
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
-	}
 }
