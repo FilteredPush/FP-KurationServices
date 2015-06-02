@@ -10,5 +10,7 @@ public interface ICurationService {
 	public String getComment();		
 	public void addToComment(String comment);
 	public CurationStatus getCurationStatus();
+	public void setCurationStatus(CurationStatus newStatus);
+	public void addToServiceName(String serviceName);
 	public String getServiceName();	
 }

@@ -15,14 +15,24 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
-public class FNAFloweringTimeService implements IFloweringTimeValidationService {
+public class FNAFloweringTimeService extends BaseCurationService implements IFloweringTimeValidationService {
 
     private boolean useCache;
     private String FNAFilePath = "/home/tianhong/Downloads/phenology.xml";
+    
+	private File cacheFile = null;
+
+	private Vector<String> correctedFloweringTime;
+	
+	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
+	private static final String ColumnDelimiterInCacheFile = "\t";
+	
+	private final String serviceName = "Authoritative Data from FNA";
 
     public void setCacheFile(String file) throws CurationException {
         useCache = true;
@@ -32,24 +42,26 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
         importFNAData();
 	}
 
-	public void validateFloweringTime(String scientificName, Vector<String> months) {
+	public void validateFloweringTime(String scientificName, String eventDate, String reproductiveState, String country, String kingdom) {
+		// TODO: fix to compare provided eventDate and reproductiveState with data from FNA
+		
+	    Vector<String> months = new Vector<String>();
 		Vector<String> foundFloweringTime = null;
 		if(authoritativeFloweringTimeMap != null && authoritativeFloweringTimeMap.containsKey(scientificName.toLowerCase())){
 			foundFloweringTime = authoritativeFloweringTimeMap.get(scientificName.toLowerCase()); 
 		}
 		
 		if(foundFloweringTime == null){
-			curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-			comment = "Can't find the flowering time of the "+scientificName+" in the current availabel phenoloty data from FNA.";
+			setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+			addToComment("Can't find the flowering time of the "+scientificName+" in the current available phenology data from FNA.");
 			correctedFloweringTime = null;
 		}else{
 			if(months==null || !months.containsAll(foundFloweringTime) || !foundFloweringTime.containsAll(months) ){
-				curationStatus = CurationComment.CURATED;
-				comment= "Update flowering time by using authoritative data from FNA";
-				correctedFloweringTime = foundFloweringTime; 
+				setCurationStatus(CurationComment.UNABLE_CURATED);
+				addToComment("Provided event date and flowering state is inconsistent with known flowering times for species according to FNA.");
 			}else{
-				curationStatus = CurationComment.CORRECT;
-				comment= "The flowering time is correct according to the authoritative data from FNA";
+				setCurationStatus(CurationComment.CORRECT);
+				addToComment("The event date and flowering state is consistent with authoritative data from FNA");
 				correctedFloweringTime = months; 				
 			}
 		}
@@ -59,13 +71,6 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
 		return correctedFloweringTime;
 	}
 	
-	public String getComment(){
-		return comment;
-	}
-		
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
 
 	public void flushCacheFile() throws CurationException {
 	}
@@ -185,21 +190,6 @@ public class FNAFloweringTimeService implements IFloweringTimeValidationService 
         }
     }
 	
-	private File cacheFile = null;
 
-	private CurationStatus curationStatus;
-	private Vector<String> correctedFloweringTime;
-	private String comment = "";
 	
-	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
-	private static final String ColumnDelimiterInCacheFile = "\t";
-	
-	private final String serviceName = "Authoritative Data from FNA";
-	
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
-	}
 }

@@ -43,24 +43,25 @@ import java.util.*;
  * Validate Scientific Names against GBIF's Checklist Bank web services, with 
  * a failover to validation against the GNI.
  * 
+ * Older version, use SciNameServiceParent instead. 
+ * 
  * @author Tianhong Song
  * @author Paul J. Morris
  *
  */
-public class AdvancedSciNameService implements IAdvancedScientificNameValidationService {
+@Deprecated 
+public class AdvancedSciNameService extends BaseCurationService implements IAdvancedScientificNameValidationService {
 
-    private boolean useCache = false;
+   private boolean useCache = false;
    private File cacheFile = null;
    private HashMap<String, HashMap<String,String>> cachedScientificName;
    private Vector<String> newFoundScientificName;
    private static final String ColumnDelimiterInCacheFile = "\t";
-    private static final String GBIF_SERVICE = "http://api.gbif.org/v0.9";
+   private static final String GBIF_SERVICE = "http://api.gbif.org/v0.9";
 
-   private CurationStatus curationStatus;
    private String validatedScientificName = null;
    private String validatedAuthor = null;
    private String GBIF_name_GUID = null;
-   private String comment = "";
 
    private String foundKingdom = null;
    private String foundPhylum = null;
@@ -68,6 +69,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
    private String foundOrder = null;
    private String foundFamily = null;
 
+   private JSONParser parser;
 
 
    // private String IPNISourceId = null;
@@ -96,17 +98,14 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
    // Use instead: http://api.gbif.org/dev
    // Documented at http://dev.gbif.org/wiki/display/POR/Webservice+API
 
-   private  String serviceName;
-
-   private JSONParser parser;
-
    /**
     * Default no-argument constructor.
     */
    public AdvancedSciNameService(){
+	   super();
 	   parser = new JSONParser();
    }
-
+   
    public void validateScientificName(String scientificName, String author){
 	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
    }
@@ -114,9 +113,8 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
    //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
    public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
        GBIF_name_GUID = null;
-       comment = "";
-       serviceName = "";
-       curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+       init();
+       setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
 
        //try to find information from the cached file
        //if failed, then access GBIF service, or if that fails, GNI service
@@ -129,7 +127,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
            String expAuthor = cachedScientificNameInfo.get("author");
            if(expAuthor.equals("")){
                //can't be found in either GBIF or GNI
-               comment = "Failed to find scientific name in either GBIF and GNI.";
+               addToComment("Failed to find scientific name in either GBIF and GNI.");
                // Assumes that the cache is recent.
                // Alternately, could retry the services here.
                // validateScientificNameAgainstServices(scientificName, author);
@@ -137,21 +135,21 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                validatedScientificName = scientificNameToValidate;
                validatedAuthor = authorToValidate;
                GBIF_name_GUID = constructGBIFGUID(cachedScientificNameInfo.get("id"));
-               comment = "The scientific name and authorship are correct.";
-               curationStatus = CurationComment.CORRECT;
+               addToComment("The scientific name and authorship are correct.");
+               setCurationStatus(CurationComment.CORRECT);
            }else{
                validatedScientificName = scientificNameToValidate;
                validatedAuthor = expAuthor;
                GBIF_name_GUID = constructGBIFGUID(cachedScientificNameInfo.get("id"));
-               comment = "Updated the scientific name (including authorship) with term found in GNI which is from GBIF and in the same lexical group as the original term.";
-               curationStatus = CurationComment.CURATED;
+               addToComment("Updated the scientific name (including authorship) with term found in GNI which is from GBIF and in the same lexical group as the original term.");
+               setCurationStatus(CurationComment.CURATED);
            }
        }else{
            //try to find it in GBIF service failing over to check against GNI
            //validateScientificNameAgainstServices(scientificNameToValidate, authorToValidate, key, rank, kingdom, phylum, tclass);
 
           // validatedAuthor = authorToValidate;
-           curationStatus = CurationComment.CORRECT;
+    	   setCurationStatus(CurationComment.CORRECT);
            // start with consistency check
            String consistentName = checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
            // second check misspelling
@@ -195,13 +193,13 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                 //validatedAuthor = pn.getAuthorship();
             } else{
                 //validatedAuthor = null;
-                curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + "| scientificName is inconsistent with atomic fields";
+            	setCurationStatus(CurationComment.UNABLE_CURATED);
+                addToComment("scientificName is inconsistent with atomic fields");
                 return null;
             }
 
         }else{
-            comment = comment + "| can't construct sciName from atomic fields";
+            addToComment("can't construct sciName from atomic fields");
             return scientificName;
         }
     }
@@ -233,7 +231,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 
 
     private String checkMisspelling (String name){
-        serviceName = serviceName + " | Global Name Resolver";
+        addToServiceName("Global Name Resolver");
         StringBuilder result = new StringBuilder();
         URL url;
         try {
@@ -265,17 +263,17 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
             JSONArray jresults = (JSONArray)jone.get("results");
             //if there is no possible correction, return now
             if (jresults == null){
-                curationStatus = CurationComment.UNABLE_CURATED;
-                //comment = comment + " | the name is misspelled and cannot be corrected.";
-                comment = comment + " | the provided name cannot be found in Global Name Resolver";
+            	setCurationStatus(CurationComment.UNABLE_CURATED);
+                //addToComment("the name is misspelled and cannot be corrected.";
+                addToComment("the provided name cannot be found in Global Name Resolver");
                 return null;
             }
             last = (JSONObject)jresults.get(0);
             //System.out.println("last = " + last.toString());
 
         } catch (ParseException e) {
-            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-            comment = comment + " | cannot get result from global name resolver due to error";
+            setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+            addToComment("cannot get result from global name resolver due to error " + e.getMessage());
             return null;
         }
         double score = Double.parseDouble(getValFromKey(last,"score"));
@@ -297,13 +295,13 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
         if (type > 2){
             if (score > 0.9){
                 //System.out.println("The provided name: \"" + name + "\" is misspelled, changed to \"" + resolvedName + "\".");
-                comment = comment + " | The provided name: " + name + " is misspelled, changed to " + resolvedName;
+                addToComment("The provided name: " + name + " is misspelled, changed to " + resolvedName);
             }
             else {
                 //System.out.println("The provided name: \"" + name + "\" has spelling issue, changed to \"" + resolvedName + "\" for now.");
                 //System.out.println("The provided name: \"" + name + "\" has spelling issue and it cannot be curated");
-                curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + " | The provided name: " + name + " has spelling issue and it cannot be curated";
+                setCurationStatus(CurationComment.UNABLE_CURATED);
+                addToComment("The provided name: " + name + " has spelling issue and it cannot be curated");
                 return null;
             }
         }
@@ -348,8 +346,8 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
            // Was there a result?
            if(!hasResult){
                // no match was found
-               comment = comment + " | result is empty or homonyms cannot be solved after querying Checklistbank, accessing GNI...";
-               serviceName = serviceName + " | Global Name Index";
+               addToComment("result is empty or homonyms cannot be solved after querying Checklistbank, accessing GNI...");
+               addToServiceName("Global Name Index");
                // access the GNI and try to get the name that is in the lexical group and from IPNI
                Vector<String> resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNI(scientificNameToValidate);
 
@@ -357,8 +355,8 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 
                if(resolvedNameInfo == null || resolvedNameInfo.size()==0){
                    //failed to find it in GNI
-                   curationStatus = CurationComment.UNABLE_CURATED;
-                   comment = comment + " | Can't find the scientific name and authorship by searching in IPNI and the lexical group from IPNI in GNI.";
+                   setCurationStatus(CurationComment.UNABLE_CURATED);
+                   addToComment("Can't find the scientific name and authorship by searching in IPNI and the lexical group from IPNI in GNI.");
                }else{
                    //find it in GNI
                    String resolvedScientificName = resolvedNameInfo.get(0);
@@ -368,15 +366,15 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                    boolean hasResult2 = checklistBankNameSearch(resolvedScientificName, resolvedScientificNameAuthorship, rank, kingdom, phylum, tclass, order, family, datasetKey);
                    if(!hasResult2){
                        //failed to find the name got from GNI in the IPNI
-                       curationStatus = CurationComment.UNABLE_CURATED;
-                       comment = comment + " | Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.";
+                       setCurationStatus(CurationComment.UNABLE_CURATED);
+                       addToComment("Found name which is in the same lexical group as the searched scientific name and from IPNI but failed to find this name really in IPNI.");
                    }else{
                        //correct the wrong scientific name or author by searching in both IPNI and GNI
                        validatedScientificName = resolvedScientificName;
                        validatedAuthor = resolvedScientificNameAuthorship;
                        //GBIF_name_GUID = constructGBIFGUID(id);
-                       comment = comment + " | Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.";
-                       curationStatus = CurationComment.CURATED;
+                       addToComment("Updated the scientific name (including authorship) with term found in GNI which is from IPNI and in the same lexicalgroup as the original term.");
+                       setCurationStatus(CurationComment.CURATED);
                        source = "IPNI/GNI";
                    }
                }
@@ -386,7 +384,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                /*GBIF_name_GUID = id;   // which is the GBIF name ID, not an IPNI LSID in this case.
                if (validatedAuthor.trim().toLowerCase().equals(authorToValidate.trim().toLowerCase())) {
             	   comment = "The scientific name and authorship are correct.";
-            	   curationStatus = CurationComment.CORRECT;
+            	   setCurationStatus(CurationComment.CORRECT;
                } else {
 				   comment = "A correction to the authorship has been proposed.";
             	   try {
@@ -395,7 +393,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 					   }
 				   } catch (EncoderException e) {
 				   }
-            	   curationStatus = CurationComment.CURATED;
+            	   setCurationStatus(CurationComment.CURATED;
                }
 
                System.out.println("Matched in advanced sciNameValidator");
@@ -435,14 +433,10 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                newFoundScientificName.add(source);
            }
         }catch(CurationException ex){
-           comment = comment + " | " + ex.getMessage();
-           curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+           addToComment("" + ex.getMessage());
+           setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
            return;
         }
-   }
-
-   public CurationStatus getCurationStatus(){
-       return curationStatus;
    }
 
    public String getCorrectedScientificName(){
@@ -455,10 +449,6 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 
    public String getLSID(){
        return GBIF_name_GUID;
-   }
-
-   public String getComment() {
-       return comment;
    }
 
    public void setCacheFile(String file) throws CurationException{
@@ -502,10 +492,6 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
         cachedScientificName = new HashMap<String,HashMap<String,String>>();
        newFoundScientificName = new Vector<String>();
     }
-
-    public String getServiceName() {
-       return serviceName;
-   }
 
    private void initializeCacheFile(String fileStr) throws CurationException {
        cacheFile = new File(fileStr);
@@ -582,7 +568,7 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
     */
    private boolean checklistBankNameSearch(String taxon, String author, String rank, String kingdom, String phylum, String tclass, String order, String family, String datasetKey) throws CurationException{
 
-       serviceName = serviceName + " | GBIFChecklistBank";
+       addToServiceName("GBIFChecklistBank");
        //todo: add dataset selection code
        //taxon = "Amaranthus retroflexus";
 
@@ -601,8 +587,8 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 
        if (nameUsageSet.size() < 1){
            //System.out.println("No match");
-           curationStatus=CurationComment.UNABLE_DETERMINE_VALIDITY;
-           comment = "| Can't determine validity due to empty results";
+           setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+           addToComment("Can't determine validity due to empty results");
            return false;
        }
        else{
@@ -624,14 +610,14 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                                //todo check whether the match is senior or junior synonyms?
                                validatedScientificName = nameBits.get(0);
                                validatedAuthor = nameBits.get(1);
-                               curationStatus = CurationComment.CURATED;
-                               comment = comment + " | found synonyms and synonyms have been resolved";
+                               setCurationStatus(CurationComment.CURATED);
+                               addToComment("found synonyms and synonyms have been resolved");
                            }else{
                                throw new CurationException("");
                            }
                        }catch (CurationException e){
-                           comment = comment + " | found synonyms but can't parse accepted name";
-                           curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+                           addToComment("found synonyms but can't parse accepted name");
+                           setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
                            return false;
                        }
 
@@ -645,22 +631,22 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
                    System.out.println("author = " + author);
                    System.out.println("validatedAuthor = " + validatedAuthor);
                    System.out.println("validatedScientificName = " + validatedScientificName);
-                   System.out.println("curationStatus = " + curationStatus);
+                   System.out.println("setCurationStatus(" + getCurationStatus());
 
                    if (validatedAuthor.trim().equals(author) && validatedScientificName.trim().equals(taxon)){
-                       curationStatus = CurationComment.CORRECT;
-                       comment = comment + " | The original SciName and Authorship are valid after checking with GBIF checklist bank";
+                       setCurationStatus(CurationComment.CORRECT);
+                       addToComment("The original SciName and Authorship are valid after checking with GBIF checklist bank");
                    }else{
                        validatedScientificName = name.getCanonicalName();
                        validatedAuthor = name.getAuthorship();
-                       curationStatus = CurationComment.CURATED;
-                       comment = comment + " | Curated by searching GBIF checklist bank API";
+                       setCurationStatus(CurationComment.CURATED);
+                       addToComment("Curated by searching GBIF checklist bank API");
                    }
                }
                return true;
            }
-           /*curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-           comment = comment + " | no result in authoritative list";
+           /*setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY;
+           addToComment("no result in authoritative list";
            System.out.println("no result in authoritative list");
            return false;
            */
@@ -877,19 +863,19 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
             //after numarate all the names, check whether solved or not
             //still not unique
             if (originalSet.size() - deletingNameSet.size() > 1){
-                curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + " | homonyms detected but cannot be resolved";
+                setCurationStatus(CurationComment.UNABLE_CURATED);
+                addToComment("homonyms detected but cannot be resolved");
                 return null;
             }else{   //already unique
-                //curationStatus = CurationComment.CURATED;
-                comment = comment + " | homonyms resolved ";
+                //setCurationStatus(CurationComment.CURATED;
+                addToComment("homonyms resolved ");
                 //System.out.println("deletingNameSet.size() = " + deletingNameSet.size());
                 //System.out.println("originalSet.size() = " + originalSet.size());
                 originalSet.removeAll(deletingNameSet); //remove all the badNames
                 //System.out.println("originalSet.size() = " + originalSet.size());
                 if (originalSet.size() == 0){
-                    curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-                    comment = comment + " | homonyms detected but none of the results matches the record";
+                    setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+                    addToComment("homonyms detected but none of the results matches the record");
                     return null;
                 }
                 return originalSet;
@@ -904,13 +890,6 @@ public class AdvancedSciNameService implements IAdvancedScientificNameValidation
 	public AuthorNameComparator getAuthorNameComparator(String authorship,
 			String kingdom) {
 		return AuthorNameComparator.authorNameComparatorFactory(authorship, kingdom);
-	}
-
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
 	}
 
 

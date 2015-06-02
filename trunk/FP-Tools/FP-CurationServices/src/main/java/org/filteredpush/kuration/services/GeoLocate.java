@@ -21,12 +21,19 @@ import org.dom4j.io.SAXReader;
 import org.filteredpush.kuration.util.GEOUtil;
 
 /**
+ * Early version of georeference validation using the GeoLocate service.
+ * 
+ * Current version is GeoLocate3
+ * 
+ * @see GeoLocate3
+ * 
  * Created with IntelliJ IDEA.
  * User: cobalt
  * Date: 26.04.2013
  * Time: 15:02
  * To change this template use File | Settings | File Templates.
  */
+@Deprecated 
 public class GeoLocate {
 
     class Coordinates {

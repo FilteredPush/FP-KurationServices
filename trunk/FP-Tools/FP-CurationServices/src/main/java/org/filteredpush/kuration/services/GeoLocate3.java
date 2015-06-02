@@ -22,7 +22,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
 
-public class GeoLocate3 implements IGeoRefValidationService {
+public class GeoLocate3 extends BaseCurationService implements IGeoRefValidationService {
 	
 	private static final Log logger = LogFactory.getLog(GeoLocate3.class);
 
@@ -679,14 +679,5 @@ public class GeoLocate3 implements IGeoRefValidationService {
         log.add(l);
         return coordinatesInfo;
 	}
-
 	
-
-	
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
-	}
 }

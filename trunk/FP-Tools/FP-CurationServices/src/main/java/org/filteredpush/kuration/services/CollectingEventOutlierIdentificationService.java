@@ -20,13 +20,42 @@ package org.filteredpush.kuration.services;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import org.filteredpush.kuration.interfaces.ICollectingEventIdentificationService;
-import org.filteredpush.kuration.util.*;
+import org.filteredpush.kuration.util.CurationComment;
+import org.filteredpush.kuration.util.CurationException;
+import org.filteredpush.kuration.util.GEOUtil;
+import org.filteredpush.kuration.util.SpecimenRecord;
+import org.filteredpush.kuration.util.SpecimenRecordTypeConf;
 
-public class CollectingEventOutlierIdentificationService implements ICollectingEventIdentificationService {
+public class CollectingEventOutlierIdentificationService extends BaseCurationService implements ICollectingEventIdentificationService {
 
+	private String CollectorLabel;
+    private String yearCollectedLabel;
+    private String monthCollectedLabel;
+    private String dayCollectedLabel;
+    private String latitudeLabel;
+    private String longitudeLabel;  
+	
+    private LinkedList<SpecimenRecord> noneOutlier = new LinkedList<SpecimenRecord>();
+    private LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>> outlierLocalComparatorMap = new LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>>();
+    private LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>> outlierRemoteComparatorMap = new LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>>();
+    
+    private final int temporalDistanceThreshold = 7; //in day
+    private final int travelDistanceThreshold = 1000; //in km/day
+    private final int outlierDenyRecordNumberFromFP = 10; 
+    private final int day = 86400000;    
+	
+	private final String serviceName = "Collecting Event Outlier Identification Service";
+	
 	public void identifyOutlier(LinkedHashMap<String, TreeSet<SpecimenRecord>> inputDataMap, boolean doRemoteComparison) {
 		noneOutlier.clear();
 		outlierLocalComparatorMap.clear();
@@ -64,20 +93,20 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 			}
 			
 			if(outlierLocalComparatorMap.size()>0 || outlierRemoteComparatorMap.size()>0){
-				curationStatus = CurationComment.UNABLE_CURATED;
+				setCurationStatus(CurationComment.UNABLE_CURATED);
 				if(doRemoteComparison){
-					comment = "It's an outlier of collecting events of a collector by comparing to the data in the dataset.";
+					addToComment("Record is an outlier of collecting events of a collector by comparing to the data in the dataset.");
 				}else{
-					comment = "It's an outlier of collecting events of a collector by comparing to both data in this dataset and data queried from Filtered-Push network.";
+					addToComment("Record is an outlier of collecting events of a collector by comparing to both data in this dataset and data queried from Filtered-Push network.");
 				}
 			}else{
-				curationStatus = CurationComment.CORRECT;
-				comment = "There's no collecting event outlier.";
+				setCurationStatus(CurationComment.CORRECT);
+				addToComment("Collecting event does not appear to be an outlier.");
 			}
 			
 		}catch(CurationException ex){
-			comment = ex.getMessage();
-			curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+			addToComment(ex.getMessage());
+			setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
 			return;
 		}		
 	}	
@@ -97,15 +126,6 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 	public void setCacheFile(String file) throws CurationException {
 	}	
 	
-	public String getComment(){
-		return comment;
-	}
-	
-	//can't return UNABLE_CURATED;
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
-
 	public void flushCacheFile() throws CurationException {
 	}
 
@@ -372,31 +392,6 @@ public class CollectingEventOutlierIdentificationService implements ICollectingE
 		}		
 	}	
 	
-	private String CollectorLabel;
-    private String yearCollectedLabel;
-    private String monthCollectedLabel;
-    private String dayCollectedLabel;
-    private String latitudeLabel;
-    private String longitudeLabel;  
-	
-	private CurationStatus curationStatus;
-	private String comment = "";
 
-    private LinkedList<SpecimenRecord> noneOutlier = new LinkedList<SpecimenRecord>();
-    private LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>> outlierLocalComparatorMap = new LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>>();
-    private LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>> outlierRemoteComparatorMap = new LinkedHashMap<SpecimenRecord,LinkedList<SpecimenRecord>>();
-    
-    private final int temporalDistanceThreshold = 7; //in day
-    private final int travelDistanceThreshold = 1000; //in km/day
-    private final int outlierDenyRecordNumberFromFP = 10; 
-    private final int day = 86400000;    
 	
-	private final String serviceName = "Collecting Event Outlier Identification Service";
-	
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
-	}
 }

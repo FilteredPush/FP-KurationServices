@@ -37,7 +37,7 @@ import java.util.*;
  * @author mole
  *
  */
-public class InternalDateValidationService implements IInternalDateValidationService {
+public class InternalDateValidationService extends BaseCurationService implements IInternalDateValidationService {
 	
 	private static final Log logger = LogFactory.getLog(InternalDateValidationService.class);
 
@@ -49,32 +49,32 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     private boolean UsingSolr = true;
     private Double scoreThredhold = 3.0;
 
-	private CurationStatus curationStatus;
-	private String comment = "";
     private String correctEventDate = "";
 	
 	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	
-	private String serviceName = "";    
+	public InternalDateValidationService() { 
+		super();
+		initDate();
+	}
 	
-	private void init() { 
-        comment = "";
-        serviceName = "";
+	private void initDate() { 
         correctEventDate = null;
 	}
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
-		init();
-        curationStatus = CurationComment.CORRECT;
-        serviceName = "eventDate:" + eventDate + "#";
+		initDate();
+        correctEventDate = null;
+		setCurationStatus(CurationComment.CORRECT);
+        addToServiceName("eventDate:" + eventDate + "#");
+        this.addInputValue("eventDate", eventDate);
 
-        // TODO: Assess if eventDate is a range
         if (eventDate!=null && (eventDate.length()==4 || eventDate.length()==7 )) {
         	Interval interval = extractInterval(eventDate);
         	eventDate = interval.getStart().toString("yyyy-MM-dd") + "/" + interval.getEnd().toString("yyyy-MM-dd");
-            curationStatus = CurationComment.CURATED;
-            comment = comment + " | expanded event date to a date range";
+        	setCurationStatus(CurationComment.CURATED);
+            addToComment("expanded event date to a date range");
         }
         
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
@@ -87,7 +87,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 if(eventDateCache.containsKey(collector)){
                     CacheValue hitValue = eventDateCache.get(collector);
                     comment += hitValue.getComment();
-                    curationStatus = hitValue.getStatus();
+                    setCurationStatus(hitValue.getStatus();
                     serviceName = hitValue.getSource();
                     //System.out.println("count  = " + count++);
                     //System.out.println(collector);
@@ -97,7 +97,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             */
 
             if (collector == null || collector.equals("")){
-                comment = comment + " | collector name is not available";
+                addToComment("collector name is not available");
             }else{
             	Boolean inAuthorLife = null;
             	if (isRange(eventDate)) { 
@@ -113,7 +113,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     if (inAuthorLife==null) { 
                         inAuthorLife = checkWithAuthorHarvard(consesEventDate, collector);
                     }
-                    //if(inAuthorLife) curationStatus = CurationComment.CORRECT;
+                    //if(inAuthorLife) setCurationStatus(CurationComment.CORRECT;
                 }
                else{
                     inAuthorLife = checkWithAuthorHarvard(consesEventDate, collector);
@@ -155,16 +155,16 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 		    	   DateMidnight startDate = new DateMidnight(eventInterval.getStart()); 
 		    	   if (eventInterval.getStart().isBefore(lifeSpan.getStart())) { 
 		    		   // Propose truncation
-                       curationStatus = CurationComment.CURATED;
-                       comment = comment + " | eventDate partially overlaps and starts before the life span of the collector, proposing truncation ";
+		    		   setCurationStatus(CurationComment.CURATED);
+                       addToComment("eventDate partially overlaps and starts before the life span of the collector, proposing truncation ");
                        correctionProposed = true;
                        correctEventDate = lifeSpan.getStart().plusYears(10).toString("yyyy-MM-dd") + "/" + eventInterval.getEnd().toString("yyyy-MM-dd");
 		    	       startDate = new DateMidnight(lifeSpan.getStart().plusYears(10)); 
 		    	   }
 		    	   if (eventInterval.getEnd().isAfter(lifeSpan.getEnd())) { 
 		    		   // Propose truncation
-                       curationStatus = CurationComment.CURATED;
-                       comment = comment + " | eventDate partially overlaps and ends after the life span of the collector, proposing truncation ";
+		    		   setCurationStatus(CurationComment.CURATED);
+                       addToComment("eventDate partially overlaps and ends after the life span of the collector, proposing truncation ");
                        correctionProposed = true;
                        DateTime endDay = lifeSpan.getEnd();
                        if (lifeSpan.getEnd().getDayOfYear()==1 && lifeSpan.getEnd().getMonthOfYear()==1) {
@@ -193,21 +193,21 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 		if (result!=null) { 
 		   if (result) { 
 			   if (!correctionProposed) { 
-			       if (!curationStatus.equals(CurationComment.Filled_in)) { 
-                       curationStatus = CurationComment.CORRECT;
+			       if (!getCurationStatus().equals(CurationComment.Filled_in)) { 
+			    	   setCurationStatus(CurationComment.CORRECT);
 			       } 
-                   comment = comment + " | eventDate falls inside the life span of the collector " + lifeYears;
-                   logger.debug(comment);
+                   addToComment("eventDate falls inside the life span of the collector " + lifeYears);
+                   logger.debug(getComment());
 			   }
 		   } else { 
-              curationStatus = CurationComment.UNABLE_CURATED;
-              comment = comment + " | eventDate " + eventString +" falls outside the life span of the collector " + collector + " " + lifeYears;
-              logger.debug(comment);
+			   setCurationStatus(CurationComment.UNABLE_CURATED);
+              addToComment("eventDate " + eventString +" falls outside the life span of the collector " + collector + " " + lifeYears);
+              logger.debug(getComment());
 		   }
 		} else { 
 		   // no match or problem getting a match
 		   // Since collector data is sparse, don't assert invalidity based on not being able to find a collector.
-           comment = comment + " | Unable to lookup a lifespan for the collector " + collector;
+           addToComment("Unable to lookup a lifespan for the collector " + collector);
 		}
 		return result;
 	}
@@ -222,18 +222,11 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         importFromCache();
     }
 
+    
 	public String getCorrectedDate() {
 		return correctEventDate;
 	}
 	
-	public String getComment(){
-		return comment;
-	}
-		
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
-
 	public void flushCacheFile() throws CurationException {
 	}
 
@@ -246,10 +239,6 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         this.useCache = use;
         authoritativeFloweringTimeMap = new HashMap<String,Vector<String>>();
     }
-
-    public String getServiceName(){
-		return serviceName;
-	}
 
 	private void initializeCacheFile(String fileStr) throws CurationException {
 		cacheFile = new File(fileStr);
@@ -327,15 +316,15 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         	   DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
         	   DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
         	   if (startDate.isAfter(endDate)) { 
-                   comment = comment + " | Event date ("+eventDate+") appears to be a range, but the start date is after the end date.";
-                   curationStatus = CurationComment.UNABLE_CURATED;
+                   addToComment("Event date ("+eventDate+") appears to be a range, but the start date is after the end date.");
+                   setCurationStatus(CurationComment.UNABLE_CURATED);
                    return null;
         	   }
-               comment = comment + " | Event date ("+eventDate+") appears to be a range, treating the start date as the event date.";
+               addToComment("Event date ("+eventDate+") appears to be a range, treating the start date as the event date.");
         	   parsedEventDate = startDate;
         	   isRange = true;
         	} catch (Exception e) { 
-                 comment = comment + " | Event date ("+eventDate+") appears to be a range, but can't parse out the start and end dates.";
+                 addToComment("Event date ("+eventDate+") appears to be a range, but can't parse out the start and end dates.");
         	}
         }
         }
@@ -347,14 +336,17 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         	} catch(IllegalFieldValueException e){
         		//can't parse eventDate
         		//System.out.println("can't parse eventDate");
-        		comment = comment + " | Can't parse eventDate";
+        		addToComment("Can't parse eventDate");
         		parsedEventDate=null;
         	} catch(NullPointerException e){
         		//System.out.println("eventDate = " + eventDate);
-        		comment = comment + " | eventDate is null?";
+        		addToComment("eventDate is null?");
         	} catch(IllegalArgumentException e){
-        		if(eventDate.length() == 0) comment += " | eventDate is empty";
-        		else comment += " | not encoded format for date: " + eventDate;
+        		if(eventDate.length() == 0) { 
+        			addToComment("eventDate is empty");
+        		} else {
+        			addToComment("not encoded format for date: " + eventDate);
+        		}
         	}
         }
 
@@ -366,37 +358,37 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         }catch (NumberFormatException e) {
            // System.out.println("unable to cast date string to int = " + e);
             //System.out.println("can't construct eventDate from atomic fields: string casting error");
-            comment = comment +" | can't construct eventDate from atomic fields: string casting error";
+            addToComment("can't construct eventDate from atomic fields: string casting error");
             constructedDate = null;
         }catch (IllegalFieldValueException e) {
             //can't construct eventDate
             //System.out.println("can't construct eventDate from atomic fields: parsing error");
-            comment = comment +" | can't construct eventDate from atomic fields: parsing error";
+            addToComment("can't construct eventDate from atomic fields: parsing error");
             constructedDate = null;
         }
 
         //second, compare in different cases
         if (parsedEventDate == null && constructedDate == null && !isRange ){
-            curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-            comment = comment + " | Can't get a valid eventDate from the record";
+            setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+            addToComment("Can't get a valid eventDate from the record");
             return null;
         }else if (parsedEventDate != null && constructedDate == null){
             //System.out.println("parsedEventDate = " + parsedEventDate.toString());
             if (!parsedEventDate.toString(format).equals(eventDate) && !isRange(eventDate)) {
-                curationStatus = CurationComment.CURATED;
-                comment = comment + " | eventDate:" + eventDate + " has been formatted to ISO format: " + parsedEventDate.toString(format) +".";
+                setCurationStatus(CurationComment.CURATED);
+                addToComment("eventDate:" + eventDate + " has been formatted to ISO format: " + parsedEventDate.toString(format) +".");
                 correctEventDate=parsedEventDate.toString(format);
             }else{
             	if (isRange(eventDate)) { 
-                   comment = comment + " | eventDate is range in ISO format";
+                   addToComment("eventDate is range in ISO format");
             	} else { 
-                   comment = comment + " | eventDate is in ISO format";
+                   addToComment("eventDate is in ISO format");
             	}
             }
             //todo: status will be overwritten if inconsistent, needs to be preserved?
         }else if (parsedEventDate == null && constructedDate != null){
-            curationStatus = CurationComment.Filled_in;
-            comment = comment + " | EventDate is constructed from atomic fields";
+            setCurationStatus(CurationComment.Filled_in);
+            addToComment("EventDate is constructed from atomic fields");
             parsedEventDate = constructedDate;
             correctEventDate=parsedEventDate.toString(format);
         }else{
@@ -406,24 +398,24 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                     int startDayInt = Integer.parseInt(startDayOfYear);
                     if (constructedDate.dayOfYear().get() == startDayInt) {
                         parsedEventDate = constructedDate;
-                        curationStatus = CurationComment.CURATED;
-                        comment += " | found and solved internal inconsistency with constructed date";
+                        setCurationStatus(CurationComment.CURATED);
+                        addToComment("found and solved internal inconsistency with constructed date");
                     }else if (parsedEventDate.dayOfYear().get() != startDayInt){
-                        curationStatus = CurationComment.UNABLE_CURATED;
-                        comment = comment + " | Internal inconsistent: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.";
+                        setCurationStatus(CurationComment.UNABLE_CURATED);
+                        addToComment("Internal inconsistency: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.");
                         return null;
                     }else if((parsedEventDate.dayOfYear().get() == startDayInt)) {
-                        curationStatus = CurationComment.CORRECT;
-                        comment += " | found and solved internal inconsistency with original date";
+                        setCurationStatus(CurationComment.CORRECT);
+                        addToComment("found and solved internal inconsistency with original date");
                     }
                 }else{
-                    curationStatus = CurationComment.UNABLE_CURATED;
-                    comment = comment + " | Internal inconsistent: EventDate:" + parsedEventDate.toString(format) + " doesn't conform to constructed date:" + constructedDate;
+                    setCurationStatus(CurationComment.UNABLE_CURATED);
+                    addToComment("Internal inconsistency: EventDate:" + parsedEventDate.toString(format) + " doesn't conform to constructed date:" + constructedDate);
                     return null;
                 }
             }else{
-                curationStatus = CurationComment.CORRECT;
-                comment = comment + " | eventDate is consistent with atomic fields";
+                setCurationStatus(CurationComment.CORRECT);
+                addToComment("eventDate is consistent with atomic fields");
             }
         }
 
@@ -444,16 +436,16 @@ public class InternalDateValidationService implements IInternalDateValidationSer
             try{
                 // if (parsedEventDate.isAfter(DateMidnight.parse(modified.split(" ")[0], formatter)) ) {
                 if (parsedEventDate.isAfter(DateMidnight.parse(modified, formatter)) ) {
-                    curationStatus = CurationComment.UNABLE_CURATED;
-                    comment = comment + " | Internal inconsistent: EventDate:" + parsedEventDate.toString(format) + " occurs after modified date:" + DateMidnight.parse(modified.split(" ")[0], format) + ".";
+                    setCurationStatus(CurationComment.UNABLE_CURATED);
+                    addToComment("Internal inconsistent: EventDate:" + parsedEventDate.toString(format) + " occurs after modified date:" + DateMidnight.parse(modified.split(" ")[0], format) + ".");
                     return null;
                 } else{
-                    comment = comment + " | eventDate is consistent with modified date";
+                    addToComment("eventDate is consistent with modified date");
                 }
 
             }catch(IllegalFieldValueException e) {
                 //can't format modified date
-                comment = comment + " | cannot parse modified date";
+                addToComment("cannot parse modified date");
             }
         }
         return parsedEventDate;
@@ -469,7 +461,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     @Deprecated
     public Boolean checkWithAuthorHarvard(DateMidnight eventDate, String collector){
     	Boolean result = null;
-        serviceName += " | Harvard List of Botanists";
+        addToServiceName("Harvard List of Botanists");
         String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
         String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
@@ -488,7 +480,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     	    model = ModelFactory.createDefaultModel();
     	    model.read(url);
     	    if (model.isEmpty()) {
-                comment = comment + " | Unable to find collector " + collector + " in Harvard list of botanists.";;
+                addToComment("Unable to find collector " + collector + " in Harvard list of botanists.");
     		    return null;
     	    }
         }
@@ -529,21 +521,21 @@ public class InternalDateValidationService implements IInternalDateValidationSer
         logger.debug(year);
         if ( (birthDate != null && (year < Integer.parseInt(birthDate) + 10)) ||          //assume before 10 years old is not valid
                 (deathDate != null && (year > Integer.parseInt(deathDate))) ) {
-            curationStatus = CurationComment.UNABLE_CURATED;
-            comment = "Internal inconsistent: eventDate:" + eventDate + " doesn't lie within the life span of collector:" + collector;
-            logger.debug(comment);
+            setCurationStatus(CurationComment.UNABLE_CURATED);
+            addToComment("Internal inconsistent: eventDate:" + eventDate + " doesn't lie within the life span of collector:" + collector);
+            logger.debug(getComment());
             // found a result and there is a mismatch = false;
             result =  false;
         } else if (birthDate == null || deathDate == null){
-            //curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-            comment = comment + " | Unable to get the Life span data of collector:" + collector;
-            logger.debug(comment);
+            //setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY;
+            addToComment("Unable to get the Life span data of collector:" + collector);
+            logger.debug(getComment());
             // did not find a result = null
             result = null;
         }else{
-            curationStatus = CurationComment.CORRECT;
-            comment = comment + " | life span check is OK";
-            logger.debug(comment);
+            setCurationStatus(CurationComment.CORRECT);
+            addToComment("life span check is OK");
+            logger.debug(getComment());
             // found a result and it is consistent
             result = true;
         }
@@ -560,7 +552,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
      */
     @Deprecated
     public Boolean checkWithAuthorSolr(DateMidnight eventDate, String collector){
-        serviceName += " | Filteredpush Entomologists List";
+        addToServiceName("Filteredpush Entomologists List");
         String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
         String birthLabel = "birth";
         String deathLabel = "death";
@@ -611,8 +603,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
                 if(docs.size() == 0){
                     logger.debug("no result: " + collector);
-                    comment = comment + " | Unable to get the Life span data of collector:" + collector;
-                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
+                    addToComment("Unable to get the Life span data of collector:" + collector);
+                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                     return null;
                 }
 
@@ -646,8 +638,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
             if(lifeSpan.size() == 0){
                 logger.debug("no valid result: " + collector);
-                comment = comment + " | Unable to get the valid life span data of collector:" + collector;
-                if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
+                addToComment("Unable to get the valid life span data of collector:" + collector);
+                if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                 return null;
             }else{
                 logger.debug("has result: " + collector);
@@ -681,16 +673,16 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 logger.debug(liesIn);
 
                 if(liesIn){
-                    comment += " | eventDate "  + eventDate.getYear() + " lies within the life span (" + birth + "-" + death + ") of collector: " + collector + " (" + birth + " - " + death + ").";
-                    logger.debug(comment);
-                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
+                    addToComment("eventDate "  + eventDate.getYear() + " lies within the life span (" + birth + "-" + death + ") of collector: " + collector + " (" + birth + " - " + death + ").");
+                    logger.debug(getComment());
+                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                     return true;
 
                 } else{
-                    comment += " | eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector: " + collector;
-                    logger.debug(comment);
-                    curationStatus = CurationComment.UNABLE_CURATED;
-                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
+                    addToComment("eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector: " + collector);
+                    logger.debug(getComment());
+                    setCurationStatus(CurationComment.UNABLE_CURATED);
+                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                     return false;
                 }
             }
@@ -811,7 +803,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
      */
     public Interval lookUpHarvardBotanist(String collector) { 
     	Interval result = null;
-    	serviceName += " | Harvard List of Botanists";
+    	addToServiceName("Harvard List of Botanists");
     	String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
     	String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
@@ -847,7 +839,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     	       model.read(url);
             }
     	    if (model.isEmpty()) {
-                comment = comment + " | Unable to find collector " + collector + " in Harvard list of botanists.";;
+                addToComment("Unable to find collector " + collector + " in Harvard list of botanists.");
     		    return null;
     	    }
     	}
@@ -890,10 +882,10 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     			// If a birth date is given, but no death date, assume botanist is living.
     			endDate = new DateMidnight();
     		}
-            comment = comment + "  | Found " + collector + "("+startDate +"-"+endDate+") in botanists list.";
+            addToComment("Found " + collector + "("+startDate +"-"+endDate+") in Harvard botanists list.");
     		result = new Interval(startDate, endDate);
     	}  else  {
-            comment = comment + " | Unable to get life span data of collector:" + collector;
+            addToComment("Unable to get life span data of collector:" + collector);
     	}
 
     	return result;
@@ -901,7 +893,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
     
     public Interval lookupEntomologist(String collector) { 
     	Interval result = null;
-    	 serviceName += " | FilteredPush Entomologists List";
+    	 addToServiceName("FilteredPush Entomologists List");
          String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
          String birthLabel = "birth";
          String deathLabel = "death";
@@ -919,11 +911,11 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
          if(collector.contains("[") || collector.contains("]") || collector.contains("(") || collector.contains(")") || collector.contains("&") || collector.contains(":")){
              logger.debug("excluded name:" + collector);
-             comment = comment + " | Skipping lookup for collector:" + collector;
+             addToComment("Skipping lookup for collector:" + collector);
          } else if(!collector.contains(" ")){
              //TODO: need to handle one component only
              logger.debug("one name:" + collector);
-             comment = comment + " | Skipping lookup for collector:" + collector;
+             addToComment("Skipping lookup for collector:" + collector);
          } else {
              ModifiableSolrParams params = null;
              try {
@@ -961,8 +953,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
                  if(docs.size() == 0){
                      logger.debug("no result: " + collector);
-                     comment = comment + " | Unable to get the Life span data of collector:" + collector;
-                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
+                     addToComment("Unable to get the Life span data of collector:" + collector);
+                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                      return null;
                  }
 
@@ -995,8 +987,8 @@ public class InternalDateValidationService implements IInternalDateValidationSer
 
              if(lifeSpan.size() == 0){
                  logger.debug("no valid result: " + collector);
-                 comment = comment + " | Unable to get the valid life span data of collector:" + collector;
-                 if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
+                 addToComment("Unable to get the valid life span data of collector:" + collector);
+                 if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                  return null;
              }else{
                  logger.debug("has result: " + collector);
@@ -1021,7 +1013,7 @@ public class InternalDateValidationService implements IInternalDateValidationSer
                 	 String startDate = Integer.toString(birth);
                 	 String endDate = Integer.toString(death);
                 	 if (death>birth) { 
-                		 comment = comment + "  | Found " + collector + "("+startDate +"-"+endDate+") in entomologists list.";
+                		 addToComment("  | Found " + collector + "("+startDate +"-"+endDate+") in SCAN entomologists list.");
                 	     result = new Interval(InternalDateValidationService.extractDate(startDate), InternalDateValidationService.extractDate(endDate));
                 	 } else { 
                 		 logger.debug("Can't construct interval from " + startDate  +"-" + endDate );
@@ -1032,10 +1024,4 @@ public class InternalDateValidationService implements IInternalDateValidationSer
          return result;
     }
     
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
-	}
 }

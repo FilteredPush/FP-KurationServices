@@ -14,20 +14,15 @@ import org.filteredpush.kuration.util.CurationStatus;
  * @author mole
  *
  */
-public class BasisOfRecordValidationService implements IStringValidationService {
+public class BasisOfRecordValidationService extends BaseCurationService implements IStringValidationService {
 
-	StringBuilder comment;
-	
-	private CurationStatus curationStatus;
-	
 	private String correctedValue;
 	
 	public BasisOfRecordValidationService() { 
-		init();
+		super();
 	}
 	
 	protected void init() { 
-		comment = new StringBuilder();
 		correctedValue = "";
 	}
 	
@@ -68,84 +63,47 @@ public class BasisOfRecordValidationService implements IStringValidationService 
 	}
 
 	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#getComment()
-	 */
-	@Override
-	public String getComment() {
-		return comment.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#addToComment(java.lang.String)
-	 */
-	@Override
-	public void addToComment(String aComment) {
-		if (comment.length()==0) { 
-			comment.append(aComment);
-		} else { 
-			comment.append(" | ").append(aComment);
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#getCurationStatus()
-	 */
-	@Override
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#getServiceName()
-	 */
-	@Override
-	public String getServiceName() {
-		return "BasisOfRecordValidator";
-	}
-
-	/* (non-Javadoc)
 	 * @see org.filteredpush.kuration.interfaces.IStringValidationService#validateString(java.lang.String)
 	 */
 	@Override
 	public void validateString(String aString) {
 		init();
-		curationStatus = CurationComment.UNABLE_CURATED;
+		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 
-			if (aString.equals("MaterialSample")) { curationStatus = CurationComment.CORRECT; } 
-			if (aString.equals("LivingSpecimen")) { curationStatus = CurationComment.CORRECT; } 
-			if (aString.equals("PreservedSpecimen")) { curationStatus = CurationComment.CORRECT; } 
-			if (aString.equals("FossilSpecimen")) { curationStatus = CurationComment.CORRECT; } 
-			if (aString.equals("HumanObservation")) { curationStatus = CurationComment.CORRECT; } 
-			if (aString.equals("MachineObservation")) { curationStatus = CurationComment.CORRECT; } 
-			if (aString.equals("Taxon")) { curationStatus = CurationComment.CORRECT; } 
-			if (!curationStatus.toString().equals(CurationComment.CORRECT.toString())) { 
+			if (aString.equals("MaterialSample")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (aString.equals("LivingSpecimen")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (aString.equals("PreservedSpecimen")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (aString.equals("FossilSpecimen")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (aString.equals("HumanObservation")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (aString.equals("MachineObservation")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (aString.equals("Taxon")) { setCurationStatus(CurationComment.CORRECT); } 
+			if (getCurationStatus().toString().equals(CurationComment.CORRECT.toString())) { 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("materialsample")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "MaterialSample";
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("livingspecimen")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "LivingSpecimen";
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("preservedspecimen")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "PreservedSpecimen";
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("fossilspecimen")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "FossilSpecimen";
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("humanobservation")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "HumanObservation";
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("machineobservation")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "MachineObservation";
 			    } 
 			    if (aString.trim().toLowerCase().equals("taxon")) { 
-			    	curationStatus = CurationComment.CURATED;
+			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "Taxon";
 			    } 
 			}

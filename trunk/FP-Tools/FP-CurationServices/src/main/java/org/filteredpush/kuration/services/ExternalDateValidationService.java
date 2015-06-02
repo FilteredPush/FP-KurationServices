@@ -1,6 +1,10 @@
 package org.filteredpush.kuration.services;
 
-import com.mongodb.*;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
 import com.mongodb.util.JSON;
 
 import org.apache.solr.client.solrj.SolrQuery;
@@ -18,9 +22,18 @@ import org.joda.time.IllegalFieldValueException;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 
 //TODO: cache mechanism is not finished
 //TODO: services have changed location
@@ -32,10 +45,31 @@ import java.util.*;
  * @author Tianhong Song
  *
  */
-public class ExternalDateValidationService implements IExternalDateValidationService {
+public class ExternalDateValidationService extends BaseCurationService implements IExternalDateValidationService {
 
     private boolean useCache;
+	private File cacheFile = null;
 
+    private String _mongodbHost = "fp1.acis.ufl.edu";
+    private String _mongodbDB = "db";
+    private String _mongodbCollection = "Occurrence";
+    //private String _mongodbQuery = "{year:\"1898\"}";
+    private DBCursor cursor = null;
+    private int totalRecords = 0;
+    private boolean useSolr = false;
+
+    // the range of date interval for querying reference record
+    // assume the record occurs 7 days after/before the eventDate, no point to use as reference
+    private int referenceEventDateRange = 7;
+
+    private final int temporalDistanceThreshold = 7; //in day
+    private final int travelDistanceThreshold = 1000; //in km/day
+    private String correctEventDate;
+	
+	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
+	private static final String ColumnDelimiterInCacheFile = "\t";
+	
+	private final String serviceName = "Harvard List of Botanists";     
 
     public void validateDate(DateMidnight eventDate, String collector, String latitude, String longitude) {
         HashSet<HashMap<String, String>> resultSet;
@@ -60,14 +94,6 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
     }
 
 	
-	public String getComment(){
-		return comment;
-	}
-		
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
-
 	public void flushCacheFile() throws CurationException {
 	}
 
@@ -247,44 +273,14 @@ public class ExternalDateValidationService implements IExternalDateValidationSer
             }
         }
         if(isOutlier){
-            curationStatus = CurationComment.UNABLE_CURATED;
-            comment = "This record is a spatial outlier since the location is far away from locations of reference records within " + temporalDistanceThreshold + " days of " + eventDate.toString(format);
+            setCurationStatus(CurationComment.UNABLE_CURATED);
+            addToComment("This record is a spatial outlier since the location is far away from locations of reference records within " + temporalDistanceThreshold + " days of " + eventDate.toString(format));
         }else{
-            curationStatus = CurationComment.CORRECT;
-            comment = "This record is a spatial outlier since the location is far away from locations of reference records within " + temporalDistanceThreshold + " days of " + eventDate.toString(format);
+            setCurationStatus(CurationComment.CORRECT);
+            addToComment("This record is a spatial outlier since the location is far away from locations of reference records within " + temporalDistanceThreshold + " days of " + eventDate.toString(format));
             //todo: add other two status here
         }
     }
 
-	private File cacheFile = null;
-
-    private String _mongodbHost = "fp1.acis.ufl.edu";
-    private String _mongodbDB = "db";
-    private String _mongodbCollection = "Occurrence";
-    //private String _mongodbQuery = "{year:\"1898\"}";
-    private DBCursor cursor = null;
-    private int totalRecords = 0;
-    private boolean useSolr = false;
-
-    // the range of date interval for querying reference record
-    // assume the record occurs 7 days after/before the eventDate, no point to use as reference
-    private int referenceEventDateRange = 7;
-
-    private final int temporalDistanceThreshold = 7; //in day
-    private final int travelDistanceThreshold = 1000; //in km/day
-	private CurationStatus curationStatus;
-	private String comment = "";
-    private String correctEventDate;
 	
-	private HashMap<String,Vector<String>> authoritativeFloweringTimeMap = null; 
-	private static final String ColumnDelimiterInCacheFile = "\t";
-	
-	private final String serviceName = "Harvard List of Botanists"; 
-	
-	@Override
-	public void addToComment(String comment) {
-		if (comment!=null) { 
-		   this.comment += " | " + comment;
-		}
-	}
 }

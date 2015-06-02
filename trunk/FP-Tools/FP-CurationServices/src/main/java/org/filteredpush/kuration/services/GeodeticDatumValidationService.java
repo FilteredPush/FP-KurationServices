@@ -14,28 +14,25 @@ import org.filteredpush.kuration.util.CurationStatus;
  * @author mole
  *
  */
-public class GeodeticDatumValidationService implements IStringValidationService {
+public class GeodeticDatumValidationService extends BaseCurationService implements IStringValidationService {
 
-	StringBuilder comment;
-	
-	private CurationStatus curationStatus;
-	
 	private String correctedValue;
 	
 	private boolean useEPSGCodes;
 	
-	public GeodeticDatumValidationService() { 
-		init();
+	public GeodeticDatumValidationService() {
+		super();
+		initDS();
 		useEPSGCodes = false;
 	}
 	
-	public GeodeticDatumValidationService(boolean useEPSGCodes) { 
-		init();
+	public GeodeticDatumValidationService(boolean useEPSGCodes) {
+		super();
+		initDS();
 		this.useEPSGCodes = useEPSGCodes;
 	}	
 	
-	protected void init() { 
-		comment = new StringBuilder();
+	protected void initDS() { 
 		correctedValue = "";
 	}
 	
@@ -76,35 +73,6 @@ public class GeodeticDatumValidationService implements IStringValidationService 
 	}
 
 	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#getComment()
-	 */
-	@Override
-	public String getComment() {
-		return comment.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#addToComment(java.lang.String)
-	 */
-	@Override
-	public void addToComment(String aComment) {
-		if (comment.length()==0) { 
-			comment.append(aComment);
-		} else { 
-			comment.append(" | ").append(aComment);
-		}
-
-	}
-
-	/* (non-Javadoc)
-	 * @see org.filteredpush.kuration.interfaces.ICurationService#getCurationStatus()
-	 */
-	@Override
-	public CurationStatus getCurationStatus() {
-		return curationStatus;
-	}
-
-	/* (non-Javadoc)
 	 * @see org.filteredpush.kuration.interfaces.ICurationService#getServiceName()
 	 */
 	@Override
@@ -118,36 +86,40 @@ public class GeodeticDatumValidationService implements IStringValidationService 
 	@Override
 	public void validateString(String aString) {
 		init();
-		curationStatus = CurationComment.UNABLE_CURATED;
+		this.addInputValue("geodeticDatum", aString);
+		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 
 			if (this.useEPSGCodes) { 
-			   if (aString.equals("epsg:4326")) { curationStatus = CurationComment.CORRECT; } 
-			   if (!curationStatus.toString().equals(CurationComment.CORRECT.toString())) { 
+			   if (aString.equals("epsg:4326")) { setCurationStatus(CurationComment.CORRECT); } 
+			   if (!getCurationStatus().toString().equals(CurationComment.CORRECT.toString())) { 
 			       if (aString.trim().toLowerCase().replaceAll(" ", "").equals("wgs84")) { 
-			      	  curationStatus = CurationComment.CURATED;
+			      	  setCurationStatus(CurationComment.CURATED);
 			    	  correctedValue = "epsg:4326";
 			       }
 			       if (aString.trim().toLowerCase().replaceAll(" ", "").equals("nad83")) { 
-			      	  curationStatus = CurationComment.CURATED;
+			      	  setCurationStatus(CurationComment.CURATED);
 			    	  correctedValue = "epsg:4269";
 			       }
 			       if (aString.trim().toLowerCase().replaceAll(" ", "").equals("nad27")) { 
-			      	  curationStatus = CurationComment.CURATED;
+			      	  setCurationStatus(CurationComment.CURATED);
 			    	  correctedValue = "epsg:4267";
 			       }
 			   } 
 			} else {
-			   if (aString.equals("WGS84")) { curationStatus = CurationComment.CORRECT; } 
-			   if (aString.equals("WGS72")) { curationStatus = CurationComment.CORRECT; } 
-			   if (aString.equals("NAD83")) { curationStatus = CurationComment.CORRECT; } 
-			   if (aString.equals("NAD27")) { curationStatus = CurationComment.CORRECT; } 
-			   if (!curationStatus.toString().equals(CurationComment.CORRECT.toString())) { 
+			   if (aString.equals("WGS84")) { setCurationStatus(CurationComment.CORRECT); } 
+			   if (aString.equals("WGS72")) { setCurationStatus(CurationComment.CORRECT); } 
+			   if (aString.equals("NAD83")) { setCurationStatus(CurationComment.CORRECT); } 
+			   if (aString.equals("NAD27")) { setCurationStatus(CurationComment.CORRECT); } 
+			   if (!getCurationStatus().toString().equals(CurationComment.CORRECT.toString())) { 
 			       if (aString.trim().toLowerCase().replaceAll(" ", "").equals("wgs84")) { 
-			      	  curationStatus = CurationComment.CURATED;
+			      	  setCurationStatus(CurationComment.CURATED);
 			    	  correctedValue = "WGS84";
 			       }
 			   } 
 			}
+		}
+		if (getCorrectedValue().length()>0) { 
+			this.addCuratedValue("geodeticDatum", getCorrectedValue());
 		}
 	}
 
