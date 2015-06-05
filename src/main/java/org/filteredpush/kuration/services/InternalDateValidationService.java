@@ -41,9 +41,9 @@ public class InternalDateValidationService extends BaseCurationService implement
 	
 	private static final Log logger = LogFactory.getLog(InternalDateValidationService.class);
 
-    private static boolean useCache = false;  //TODO: need to to fix cache
+    private static boolean useCache = true;
     private static int count = 0;
-    HashMap<String, CacheValue> eventDateCache = new HashMap<String, CacheValue>();
+    HashMap<String, Interval> eventDateCache = new HashMap<String, Interval>();
     
 	private File cacheFile = null;
     private boolean UsingSolr = true;
@@ -80,21 +80,6 @@ public class InternalDateValidationService extends BaseCurationService implement
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
         	logger.debug(consesEventDate.toString("yyyy-MM-dd"));
-            // insert cache check functionality, put after consistency check to maximize hit rate
-
-            /*
-            if(useCache){
-                if(eventDateCache.containsKey(collector)){
-                    CacheValue hitValue = eventDateCache.get(collector);
-                    comment += hitValue.getComment();
-                    setCurationStatus(hitValue.getStatus();
-                    serviceName = hitValue.getSource();
-                    //System.out.println("count  = " + count++);
-                    //System.out.println(collector);
-                    return;
-                }
-            }
-            */
 
             if (collector == null || collector.equals("")){
                 addToComment("collector name is not available");
@@ -139,8 +124,15 @@ public class InternalDateValidationService extends BaseCurationService implement
 		    Interval eventInterval = InternalDateValidationService.extractInterval(eventString);
 		    if (eventInterval!=null) { 
 		    	// TODO: Check if collecting event date was before collector was 10 years old.
-		       Interval lifeSpan = this.lookUpHarvardBotanist(collector);
-		       if (lifeSpan!=null) { 
+		       Interval lifeSpan;
+                if(useCache && eventDateCache.containsKey(collector)){
+                    lifeSpan = eventDateCache.get(collector);
+                }else{
+                    lifeSpan = this.lookUpHarvardBotanist(collector);
+                    if(useCache) eventDateCache.put(collector, lifeSpan);
+                }
+
+		       if (lifeSpan!=null) {
 		    	   result = lifeSpan.overlaps(eventInterval);
 		    	   lifeYears = Integer.toString(lifeSpan.getStart().getYear()) + "-" + Integer.toString(lifeSpan.getEnd().getYear()); 
 		       } 
@@ -178,7 +170,15 @@ public class InternalDateValidationService extends BaseCurationService implement
 		} else { 
 			DateMidnight eventDate = InternalDateValidationService.extractDate(eventString);
 			if (eventDate!=null) { 
-				Interval lifeSpan = this.lookUpHarvardBotanist(collector);
+				Interval lifeSpan;
+
+                if(useCache && eventDateCache.containsKey(collector)){
+                    lifeSpan = eventDateCache.get(collector);
+                }else{
+                    lifeSpan = this.lookUpHarvardBotanist(collector);
+                    if(useCache) eventDateCache.put(collector, lifeSpan);
+                }
+
 			    if (lifeSpan!=null) { 
 			    	   result = lifeSpan.contains(eventDate);
 			    } 
@@ -603,8 +603,9 @@ public class InternalDateValidationService extends BaseCurationService implement
 
                 if(docs.size() == 0){
                     logger.debug("no result: " + collector);
+                   // if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     addToComment("Unable to get the Life span data of collector:" + collector);
-                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
+
                     return null;
                 }
 
@@ -638,8 +639,9 @@ public class InternalDateValidationService extends BaseCurationService implement
 
             if(lifeSpan.size() == 0){
                 logger.debug("no valid result: " + collector);
+                //if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                 addToComment("Unable to get the valid life span data of collector:" + collector);
-                if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
+
                 return null;
             }else{
                 logger.debug("has result: " + collector);
@@ -673,16 +675,19 @@ public class InternalDateValidationService extends BaseCurationService implement
                 logger.debug(liesIn);
 
                 if(liesIn){
+                    //if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     addToComment("eventDate "  + eventDate.getYear() + " lies within the life span (" + birth + "-" + death + ") of collector: " + collector + " (" + birth + " - " + death + ").");
                     logger.debug(getComment());
-                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
+
                     return true;
 
                 } else{
+
+                    //if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                     addToComment("eventDate "  + eventDate.getYear() + " lies outside of the life span (" + birth + "-" + death + ") of collector: " + collector);
                     logger.debug(getComment());
                     setCurationStatus(CurationComment.UNABLE_CURATED);
-                    if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
+
                     return false;
                 }
             }
@@ -953,8 +958,8 @@ public class InternalDateValidationService extends BaseCurationService implement
 
                  if(docs.size() == 0){
                      logger.debug("no result: " + collector);
+                     //if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                      addToComment("Unable to get the Life span data of collector:" + collector);
-                     if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                      return null;
                  }
 
@@ -987,8 +992,8 @@ public class InternalDateValidationService extends BaseCurationService implement
 
              if(lifeSpan.size() == 0){
                  logger.debug("no valid result: " + collector);
+                // if(useCache) eventDateCache.put(collector, new CacheValue().setComment(comment).setSource(serviceName).setStatus(curationStatus));
                  addToComment("Unable to get the valid life span data of collector:" + collector);
-                 if(useCache) eventDateCache.put(collector, new CacheValue().setComment(getComment()).setSource(getServiceName()).setStatus(getCurationStatus()));
                  return null;
              }else{
                  logger.debug("has result: " + collector);

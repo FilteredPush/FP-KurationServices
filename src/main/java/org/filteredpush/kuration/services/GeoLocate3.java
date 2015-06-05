@@ -59,8 +59,6 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 		correctedLatitude = -1;
 		correctedLongitude = -1;
 		comment = "";
-		// overloaded for extraction into "WAS" values by MongoSummaryWriter
-        serviceName = "decimalLatitude:" + latitude + "#decimalLongitude:" + longitude + "#";
         log = new LinkedList<List>();
 
         //first search for reference coordinates
