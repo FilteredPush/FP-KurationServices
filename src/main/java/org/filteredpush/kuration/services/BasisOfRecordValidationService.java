@@ -25,6 +25,7 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	}
 	
 	protected void initBR() { 
+		initBase();
 		correctedValue = "";
 	}
 	
@@ -69,7 +70,6 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	 */
 	@Override
 	public void validateString(String aString) {
-		init();
 		initBR();
 		addInputValue(SpecimenRecord.dwc_basisOfRecord, aString);
 		setCurationStatus(CurationComment.UNABLE_CURATED);

@@ -57,6 +57,7 @@ public class CollectingEventOutlierIdentificationService extends BaseCurationSer
 	private final String serviceName = "Collecting Event Outlier Identification Service";
 	
 	public void identifyOutlier(LinkedHashMap<String, TreeSet<SpecimenRecord>> inputDataMap, boolean doRemoteComparison) {
+		initBase();
 		noneOutlier.clear();
 		outlierLocalComparatorMap.clear();
 		outlierRemoteComparatorMap.clear();

@@ -43,6 +43,8 @@ public class FNAFloweringTimeService extends BaseCurationService implements IFlo
 	}
 
 	public void validateFloweringTime(String scientificName, String eventDate, String reproductiveState, String country, String kingdom) {
+		initBase();
+		
 		// TODO: fix to compare provided eventDate and reproductiveState with data from FNA
 		
 	    Vector<String> months = new Vector<String>();

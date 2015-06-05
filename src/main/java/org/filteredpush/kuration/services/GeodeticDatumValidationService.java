@@ -34,6 +34,7 @@ public class GeodeticDatumValidationService extends BaseCurationService implemen
 	}	
 	
 	protected void initDS() { 
+		initBase();
 		correctedValue = "";
 	}
 	
@@ -86,7 +87,7 @@ public class GeodeticDatumValidationService extends BaseCurationService implemen
 	 */
 	@Override
 	public void validateString(String aString) {
-		init();
+		initDS();
 		this.addInputValue(SpecimenRecord.dwc_geodeticDatum, aString);
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 
