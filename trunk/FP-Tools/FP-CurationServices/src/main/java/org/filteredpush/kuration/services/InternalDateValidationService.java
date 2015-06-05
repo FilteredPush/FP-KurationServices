@@ -60,6 +60,7 @@ public class InternalDateValidationService extends BaseCurationService implement
 	}
 	
 	private void initDate() { 
+		initBase();
         correctEventDate = null;
 	}
 

@@ -113,7 +113,7 @@ public class AdvancedSciNameService extends BaseCurationService implements IAdva
    //public void validateScientificName(String scientificNameToValidate, String authorToValidate, String rank, String kingdom, String phylum, String tclass, String genus, String subgenus, String verbatimTaxonRank, String infraspecificEpithe){
    public void validateScientificName(String scientificNameToValidate, String authorToValidate,String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
        GBIF_name_GUID = null;
-       init();
+       initBase();
        setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
 
        //try to find information from the cached file

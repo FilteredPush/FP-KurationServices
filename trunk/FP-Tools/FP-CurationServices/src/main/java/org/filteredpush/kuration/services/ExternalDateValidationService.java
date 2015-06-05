@@ -72,6 +72,7 @@ public class ExternalDateValidationService extends BaseCurationService implement
 	private final String serviceName = "Harvard List of Botanists";     
 
     public void validateDate(DateMidnight eventDate, String collector, String latitude, String longitude) {
+    	initBase();
         HashSet<HashMap<String, String>> resultSet;
         // can switch between querying mongoDB or Solr index
         if (useSolr){

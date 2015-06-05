@@ -62,6 +62,7 @@ public class NewGeoLocate extends BaseCurationService implements IGeoRefValidati
 	 * @see org.kepler.actor.SpecimenQC.IGeoRefValidationService#validateGeoRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	public void validateGeoRef(String country, String stateProvince, String county, String locality, String latitude, String longitude, double certainty){
+		initBase();
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		correctedLatitude = -1;
 		correctedLongitude = -1;

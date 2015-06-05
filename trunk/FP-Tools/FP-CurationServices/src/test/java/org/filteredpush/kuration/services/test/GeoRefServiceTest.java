@@ -5,6 +5,7 @@ import org.filteredpush.kuration.services.GeoLocate3;
 import org.filteredpush.kuration.util.CurationComment;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -25,7 +26,8 @@ public class GeoRefServiceTest {
     public void signChangeTest(){
         //geoRefValidationServiceService.validateGeoRef("USA", "Arizona", "", "0.25 mi. N of Pigeon Springs", "33.714026", "111.337804", 200.0);
         geoRefValidationServiceService.validateGeoRef("USA", "Arizona", "", "1 mi. S of Portal", "31.899097", "109.14083", 200.0);
-        assertTrue(geoRefValidationServiceService.getCorrectedLongitude() == -109.14083);
+        assertEquals(-109.14083, geoRefValidationServiceService.getCorrectedLongitude(), .0001d);
+        assertEquals(31.899097, geoRefValidationServiceService.getCorrectedLatitude(), .0001d);
         assertTrue(geoRefValidationServiceService.getCurationStatus().equals(CurationComment.CURATED));
     }
 
