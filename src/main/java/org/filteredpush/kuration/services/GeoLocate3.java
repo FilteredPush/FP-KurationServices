@@ -16,7 +16,10 @@ import org.nocrala.tools.gis.data.esri.shapefile.shape.AbstractShape;
 import org.nocrala.tools.gis.data.esri.shapefile.shape.PointData;
 import org.nocrala.tools.gis.data.esri.shapefile.shape.shapes.PolygonShape;
 
+import edu.tulane.museum.www.webservices.GeolocatesvcLocator;
+import edu.tulane.museum.www.webservices.GeolocatesvcSoap;
 import edu.tulane.museum.www.webservices.GeolocatesvcSoapProxy;
+import edu.tulane.museum.www.webservices.Georef_Result;
 import edu.tulane.museum.www.webservices.Georef_Result_Set;
 
 import java.awt.geom.Path2D;
@@ -25,6 +28,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.rmi.RemoteException;
 import java.util.*;
+
+import javax.xml.rpc.ServiceException;
 
 public class GeoLocate3 extends BaseCurationService implements IGeoRefValidationService {
 	
@@ -55,6 +60,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 	 * @see org.kepler.actor.SpecimenQC.IGeoRefValidationService#validateGeoRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	public void validateGeoRef(String country, String stateProvince, String county, String locality, String latitude, String longitude, double thresholdDistanceKm){
+		logger.debug("Geolocate3.validateGeoref("+country+","+stateProvince+","+county+","+locality+")");
 		initBase();
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		correctedLatitude = -1;
@@ -75,13 +81,14 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             GeolocationResult fromCache = new GeolocationResult(cachedValue.getLat(), cachedValue.getLng(),0,0,"");
             potentialMatches = new ArrayList<GeolocationResult>();
             potentialMatches.add(fromCache);
+		    logger.debug("Geolocate3.validateGeoref found in cache " + fromCache.getLatitude() + " " + fromCache.getLongitude());
             //System.out.println("geocount = " + count++);
             //System.out.println("key = " + key);
         } else {
 
         	
             try {
-        	    potentialMatches = queryGeoLocateMulti(country, stateProvince, county, locality);
+        	    potentialMatches = queryGeoLocateMulti(country, stateProvince, county, locality, latitude, longitude);
             } catch (CurationException e) {
                 setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
                 addToComment(e.getMessage());
@@ -360,6 +367,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             }
 
         }
+		logger.debug("Geolocate3.validateGeoref done " + getCurationStatus());
 	}
 
 
@@ -368,6 +376,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         if(!coordinatesCache.containsKey(key)){
             CacheValue newValue = new GeoRefCacheValue(Lat, Lng);
             coordinatesCache.put(key, newValue);
+            logger.debug("adding georeference to cache " + key + " " + ((GeoRefCacheValue)newValue).getLat() + " "+ ((GeoRefCacheValue)newValue).getLat());
         }
 
     }
@@ -591,17 +600,19 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
      * @param stateProvince
      * @param county
      * @param locality
+     * @param latitude for distance comparison in log
+     * @param longitude for distance comparison in log
      * @return
      * @throws CurationException
      */
-	private List<GeolocationResult> queryGeoLocateMulti(String country, String stateProvince, String county, String locality) throws CurationException {
+	private List<GeolocationResult> queryGeoLocateMulti(String country, String stateProvince, String county, String locality, String latitude, String longitude) throws CurationException {
         addToServiceName("GeoLocate");
         long starttime = System.currentTimeMillis();
         List<GeolocationResult> result = new ArrayList<GeolocationResult>();
         
         GeolocatesvcSoapProxy geolocateService = new GeolocatesvcSoapProxy();
         
-        // test for georef2 at: http://www.museum.tulane.edu/webservices/geolocatesvcv2/geolocatesvc.asmx?op=Georef2
+        // Test page for georef2 at: http://www.museum.tulane.edu/webservices/geolocatesvcv2/geolocatesvc.asmx?op=Georef2
         
         boolean hwyX = false;   // look for road/river crossing
         if (locality.toLowerCase().matches("bridge")) { 
@@ -623,6 +634,17 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 			results = geolocateService.georef2(country, stateProvince, county, locality, hwyX, findWaterbody, restrictToLowestAdm, doUncert, doPoly, displacePoly, polyAsLinkID, languageKey);
             int numResults = results.getNumResults();
             this.addToComment(" found " + numResults + " possible georeferences with Geolocate engine:" + results.getEngineVersion());
+            for (int i=0; i<numResults; i++) { 
+            	Georef_Result res = results.getResultSet(i);
+            	try {
+            	   double lat2 = Double.parseDouble(latitude);
+            	   double lon2 = Double.parseDouble(longitude);
+              	   long distance = GEOUtil.calcDistanceHaversineMeters(res.getWGS84Coordinate().getLatitude(), res.getWGS84Coordinate().getLongitude(), lat2, lon2)/100;
+            	   addToComment(res.getParsePattern() + " score:" + res.getScore() + " "+ res.getWGS84Coordinate().getLatitude() + " " + res.getWGS84Coordinate().getLongitude() + " km:" + distance);
+            	} catch (NumberFormatException e) {             	
+            	   addToComment(res.getParsePattern() + " score:" + res.getScore() + " "+ res.getWGS84Coordinate().getLatitude() + " " + res.getWGS84Coordinate().getLongitude());
+            	}
+            }
             result = GeolocationResult.constructFromGeolocateResultSet(results);
 		} catch (RemoteException e) {
 			logger.debug(e.getMessage());
