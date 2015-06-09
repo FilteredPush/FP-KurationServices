@@ -18,6 +18,7 @@ import org.filteredpush.kuration.util.CacheValue;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
+import org.filteredpush.kuration.util.DateUtils;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
 import org.joda.time.IllegalFieldValueException;
@@ -70,9 +71,17 @@ public class InternalDateValidationService extends BaseCurationService implement
 		setCurationStatus(CurationComment.CORRECT);
         addToServiceName("eventDate:" + eventDate + "#");
         this.addInputValue("eventDate", eventDate);
+        
+        if (eventDate==null || eventDate.trim().length()==0) {
+        	eventDate = DateUtils.createEventDateFromParts(verbatimEventDate, startDayOfYear, year, month, day);
+        	if (eventDate!=null && eventDate.trim().length() >0) { 
+        		setCurationStatus(CurationComment.Filled_in);
+        		addToComment("Constructed event date from atomic parts");
+        	}
+        }
 
         if (eventDate!=null && (eventDate.length()==4 || eventDate.length()==7 )) {
-        	Interval interval = extractInterval(eventDate);
+        	Interval interval = DateUtils.extractInterval(eventDate);
         	eventDate = interval.getStart().toString("yyyy-MM-dd") + "/" + interval.getEnd().toString("yyyy-MM-dd");
         	setCurationStatus(CurationComment.CURATED);
             addToComment("expanded event date to a date range");
@@ -86,7 +95,7 @@ public class InternalDateValidationService extends BaseCurationService implement
                 addToComment("collector name is not available");
             }else{
             	Boolean inAuthorLife = null;
-            	if (isRange(eventDate)) { 
+            	if (DateUtils.isRange(eventDate)) { 
             	   inAuthorLife = checkAgentAuthorities(eventDate, collector);
             	} else { 
             	   inAuthorLife = checkAgentAuthorities(consesEventDate.toString("yyyy-MM-dd"), collector);
@@ -121,8 +130,8 @@ public class InternalDateValidationService extends BaseCurationService implement
 		Boolean result = null;
 		Boolean correctionProposed = false;
 	    String lifeYears = "";
-		if (isRange(eventString)) { 
-		    Interval eventInterval = InternalDateValidationService.extractInterval(eventString);
+		if (DateUtils.isRange(eventString)) { 
+		    Interval eventInterval = DateUtils.extractInterval(eventString);
 		    if (eventInterval!=null) { 
 		    	// TODO: Check if collecting event date was before collector was 10 years old.
 		       Interval lifeSpan;
@@ -169,7 +178,7 @@ public class InternalDateValidationService extends BaseCurationService implement
 		       }
 		    }
 		} else { 
-			DateMidnight eventDate = InternalDateValidationService.extractDate(eventString);
+			DateMidnight eventDate = DateUtils.extractDate(eventString);
 			if (eventDate!=null) { 
 				Interval lifeSpan;
 
@@ -375,12 +384,12 @@ public class InternalDateValidationService extends BaseCurationService implement
             return null;
         }else if (parsedEventDate != null && constructedDate == null){
             //System.out.println("parsedEventDate = " + parsedEventDate.toString());
-            if (!parsedEventDate.toString(format).equals(eventDate) && !isRange(eventDate)) {
+            if (!parsedEventDate.toString(format).equals(eventDate) && !DateUtils.isRange(eventDate)) {
                 setCurationStatus(CurationComment.CURATED);
                 addToComment("eventDate:" + eventDate + " has been formatted to ISO format: " + parsedEventDate.toString(format) +".");
                 correctEventDate=parsedEventDate.toString(format);
             }else{
-            	if (isRange(eventDate)) { 
+            	if (DateUtils.isRange(eventDate)) { 
                    addToComment("eventDate is range in ISO format");
             	} else { 
                    addToComment("eventDate is in ISO format");
@@ -694,7 +703,8 @@ public class InternalDateValidationService extends BaseCurationService implement
             }
         }
     }
-	
+
+
     /**
      * Given a string that may be a date or a date range, extract an interval of
      * time from that date range.
@@ -702,6 +712,7 @@ public class InternalDateValidationService extends BaseCurationService implement
      * @param eventDate
      * @return
      */
+/*    
     public static Interval extractInterval(String eventDate) {
     	Interval result = null;
     	DateTimeParser[] parsers = { 
@@ -742,13 +753,14 @@ public class InternalDateValidationService extends BaseCurationService implement
     	}
     	return result;
     }
-    
+*/    
     /**
      * Extract a joda date from an event date.
      * 
      * @param eventDate
      * @return
      */
+/*    
     public static DateMidnight extractDate(String eventDate) {
     	DateMidnight result = null;
     	DateTimeParser[] parsers = { 
@@ -766,39 +778,42 @@ public class InternalDateValidationService extends BaseCurationService implement
     		}
     	return result;
     }    
-    
+*/    
     /**
      * Test to see if a string appears to represent a date range.
      * 
      * @param eventDate to check
      * @return true if a date range, false otherwise.
      */
+/*    
     public static boolean isRange(String eventDate) { 
     	boolean isRange = false;
-    	String[] dateBits = eventDate.split("/");
-    	if (dateBits!=null && dateBits.length==2) { 
-    		//probably a range.
-    		DateTimeParser[] parsers = { 
-                    DateTimeFormat.forPattern("yyyy-MM").getParser(),
-                    DateTimeFormat.forPattern("yyyy").getParser(),
-    				ISODateTimeFormat.date().getParser() 
-    		};
-    		DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-    		try { 
-    			// must be at least a 4 digit year.
-    			if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
-    			   DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
-    			   DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
-    			   // both start date and end date must parse as dates.
-    			   isRange = true;
+    	if (eventDate!=null) { 
+    		String[] dateBits = eventDate.split("/");
+    		if (dateBits!=null && dateBits.length==2) { 
+    			//probably a range.
+    			DateTimeParser[] parsers = { 
+    					DateTimeFormat.forPattern("yyyy-MM").getParser(),
+    					DateTimeFormat.forPattern("yyyy").getParser(),
+    					ISODateTimeFormat.date().getParser() 
+    			};
+    			DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+    			try { 
+    				// must be at least a 4 digit year.
+    				if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
+    					DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
+    					DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
+    					// both start date and end date must parse as dates.
+    					isRange = true;
+    				}
+    			} catch (Exception e) { 
+    				// not a date range
     			}
-    		} catch (Exception e) { 
-    			// not a date range
     		}
     	}
     	return isRange;
     }
-    
+*/    
     /**
      * Look up birth and death dates for a botanist in the Harvard list of botanists.
      * Uses now as the end of the interval if a birth date is given but no death date is 
@@ -881,9 +896,9 @@ public class InternalDateValidationService extends BaseCurationService implement
     	}
     	if (birthDate!=null) { 
     		DateMidnight endDate;
-    		DateMidnight startDate = extractDate(birthDate);
+    		DateMidnight startDate = DateUtils.extractDate(birthDate);
     		if (deathDate!=null) { 
-    			endDate = extractDate(deathDate);
+    			endDate = DateUtils.extractDate(deathDate);
     		} else { 
     			// If a birth date is given, but no death date, assume botanist is living.
     			endDate = new DateMidnight();
@@ -1020,7 +1035,7 @@ public class InternalDateValidationService extends BaseCurationService implement
                 	 String endDate = Integer.toString(death);
                 	 if (death>birth) { 
                 		 addToComment("  | Found " + collector + "("+startDate +"-"+endDate+") in SCAN entomologists list.");
-                	     result = new Interval(InternalDateValidationService.extractDate(startDate), InternalDateValidationService.extractDate(endDate));
+                	     result = new Interval(DateUtils.extractDate(startDate), DateUtils.extractDate(endDate));
                 	 } else { 
                 		 logger.debug("Can't construct interval from " + startDate  +"-" + endDate );
                 	 }
