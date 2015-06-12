@@ -1,17 +1,25 @@
 package org.filteredpush.kuration.util;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+
+import org.gbif.dwc.record.DarwinCoreRecord;
+import org.gbif.dwc.record.StarRecord;
+import org.gbif.dwc.terms.Term;
 
 /**
  * Created with IntelliJ IDEA.
  * User: cobalt
  * Date: 26.04.2013
  * Time: 16:57
- * To change this template use File | Settings | File Templates.
+ * 
+ * TODO: replace with DarwinCoreRecord
  */
 public class SpecimenRecord extends HashMap<String,String> {
 
+	private static final long serialVersionUID = 8044353774894573869L;
+	
 	// TODO: Make lists of these so that MongoSummaryWriter can iterate and doesn't need to hard code them.
     public static final String SciName_Comment_Label = "scinComment";
     public static final String SciName_Status_Label = "scinStatus";
@@ -45,6 +53,20 @@ public class SpecimenRecord extends HashMap<String,String> {
         super();
     }
 
+    /**
+     * Create a SpecimenRecord instance from the core of a StarRecord.
+     * 
+     * @param dwcrecord from which to extract a map of core term names and values.
+     */
+    public SpecimenRecord(StarRecord dwcrecord) { 
+    	super();
+    	Iterator<Term> i = dwcrecord.core().terms().iterator();
+    	while (i.hasNext()) { 
+    		Term t = i.next();
+    		this.put(t.simpleName(), dwcrecord.core().value(t));
+    	}
+    }
+    
     public SpecimenRecord(Map<? extends String, ? extends String> map) {
         super(map);
     }

@@ -71,6 +71,11 @@
             <version>2.4</version>
         </dependency>
         <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwca-reader</artifactId>
+            <version>1.21</version>
+        </dependency>           
+        <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>2.11.1</version>
