@@ -31,6 +31,9 @@ import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.interfaces.INewScientificNameValidationService;
 import org.filteredpush.kuration.services.BaseCurationService;
 import org.filteredpush.kuration.util.*;
+import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.nameparser.NameParser;
+import org.gbif.nameparser.UnparsableException;
 
 
 /**
@@ -133,6 +136,19 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
        
        // Default response, unable to determine validity.  
        setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+       
+       // (1a) Check for hybrid
+       NameParser parser = new NameParser();
+       try {
+		   ParsedName parse = parser.parse(scientificNameToValidate);
+	   } catch (UnparsableException e) {
+		   if (e.getMessage().contains("Name of type HYBRID unparsable")) { 
+			   String[] bits = scientificNameToValidate.split(" × ");
+			   if (bits.length==2) { 
+				   // TODO: Here we could check each of the parts.
+			   }
+		   }
+	   }
        
        // (2) perform internal consistency check
        HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);

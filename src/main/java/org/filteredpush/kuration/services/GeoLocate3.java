@@ -615,11 +615,11 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         // Test page for georef2 at: http://www.museum.tulane.edu/webservices/geolocatesvcv2/geolocatesvc.asmx?op=Georef2
         
         boolean hwyX = false;   // look for road/river crossing
-        if (locality.toLowerCase().matches("bridge")) { 
+        if (locality!=null && locality.toLowerCase().matches("bridge")) { 
         	hwyX = true;
         }
         boolean findWaterbody = false;  // find waterbodies
-        if (locality.toLowerCase().matches("(lake|pond|sea|ocean)")) { 
+        if (locality!=null && locality.toLowerCase().matches("(lake|pond|sea|ocean)")) { 
         	findWaterbody = true;
         }
         boolean restrictToLowestAdm = true;  

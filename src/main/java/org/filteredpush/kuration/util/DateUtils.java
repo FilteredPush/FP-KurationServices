@@ -51,6 +51,12 @@ public class DateUtils {
 	public static String createEventDateFromParts(String verbatimEventDate, String startDayOfYear, String year, String month, String day) {
 		String result = null;
 		// TODO: Add support for extraction/comparison with verbatim event date and day of year.
+		if (year!=null && year.matches("[0-9]{4}") && (month==null || month.trim().length()==0) &&( day==null || day.trim().length()==0 )) {  
+		    result = year;
+		}
+		if (year!=null && year.matches("[0-9]{4}") && month!=null && month.matches("[0-9]{1,2}") &&( day==null || day.trim().length()==0 )) {  
+		    result = year + "-" + month;
+		}
 		if (year!=null && year.matches("[0-9]{4}") && month!=null && month.matches("[0-9]{1,2}") && day!=null && day.matches("[0-9]{1,2}")) {  
 		    result = year + "-" + month + "-" + day;
 		}
