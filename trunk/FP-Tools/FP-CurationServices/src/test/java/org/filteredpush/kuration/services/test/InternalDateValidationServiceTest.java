@@ -41,14 +41,19 @@ public class InternalDateValidationServiceTest {
         assertEquals(null,internalDateValidationService.getCorrectedDate());
         assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.UNABLE_CURATED));
     }
+    @Test
     public void shortTest(){
         internalDateValidationService.validateDate("1948","","","1948","","","2012-09-26 02:54:34","A.C. Cole");
         assertEquals("1948-01-01/1948-12-31",internalDateValidationService.getCorrectedDate());
         assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.CORRECT));
         
         internalDateValidationService.validateDate("1929-09","","","","","","","J. F. Rock");
-        assertEquals("1948-01-01/1948-12-31",internalDateValidationService.getCorrectedDate());
+        assertEquals("1929-09-01/1929-09-30",internalDateValidationService.getCorrectedDate());
         assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.CORRECT));
+        
+        internalDateValidationService.validateDate("","","","1896","","","","J. F. Rock");
+        assertEquals("1896-01-01/1896-12-31",internalDateValidationService.getCorrectedDate());
+        assertEquals(CurationComment.Filled_in, internalDateValidationService.getCurationStatus());
     }    
     @Test
     public void constructFromAtomicTest(){

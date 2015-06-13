@@ -67,6 +67,7 @@ public class InternalDateValidationService extends BaseCurationService implement
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
 		initDate();
+		boolean gotFilledIn  = false;  
         correctEventDate = null;
 		setCurationStatus(CurationComment.CORRECT);
         addToServiceName("eventDate:" + eventDate + "#");
@@ -76,13 +77,16 @@ public class InternalDateValidationService extends BaseCurationService implement
         	eventDate = DateUtils.createEventDateFromParts(verbatimEventDate, startDayOfYear, year, month, day);
         	if (eventDate!=null && eventDate.trim().length() >0) { 
         		setCurationStatus(CurationComment.Filled_in);
+        		correctEventDate = eventDate;
         		addToComment("Constructed event date from atomic parts");
+        		gotFilledIn = true;
         	}
         }
 
         if (eventDate!=null && (eventDate.length()==4 || eventDate.length()==7 )) {
         	Interval interval = DateUtils.extractInterval(eventDate);
         	eventDate = interval.getStart().toString("yyyy-MM-dd") + "/" + interval.getEnd().toString("yyyy-MM-dd");
+        	correctEventDate = eventDate;
         	setCurationStatus(CurationComment.CURATED);
             addToComment("expanded event date to a date range");
         }
@@ -99,6 +103,9 @@ public class InternalDateValidationService extends BaseCurationService implement
             	   inAuthorLife = checkAgentAuthorities(eventDate, collector);
             	} else { 
             	   inAuthorLife = checkAgentAuthorities(consesEventDate.toString("yyyy-MM-dd"), collector);
+            	}
+            	if (gotFilledIn) { 
+            		this.setCurationStatus(CurationComment.Filled_in);
             	}
             	/*
                 // can switch between using old Harvard list or new Solr dataset
