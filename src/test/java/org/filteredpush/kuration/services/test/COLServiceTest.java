@@ -24,10 +24,11 @@ public class COLServiceTest {
     public void validNameTest(){
         scientificNameService.validateScientificName("Eucerceris canaliculata", "(Say, 1823)");
         //assertTrue(scientificNameService.getCorrectedScientificName().equals("Eucerceris canaliculata"));
+        logger.debug(scientificNameService.getComment());
         logger.debug(scientificNameService.getCurationStatus());
         logger.debug(scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getCorrectedAuthor());
-        assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CORRECT));
+        assertEquals(CurationComment.CORRECT.toString(),scientificNameService.getCurationStatus().toString());
     } 
     
     @Test
@@ -43,7 +44,7 @@ public class COLServiceTest {
     @Test
     public void validNameWithAuthTest(){
         scientificNameService.validateScientificName("Eucerceris canaliculata (Say, 1823)", "(Say, 1823)");
-        assertTrue(scientificNameService.getCorrectedScientificName().equals("Eucerceris canaliculata"));
+        assertEquals("Eucerceris canaliculata", scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getCurationStatus());
         logger.debug(scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getCorrectedAuthor());
