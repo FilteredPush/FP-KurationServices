@@ -112,27 +112,29 @@ public class COLService extends SciNameServiceParent {
         	Iterator<Node> i = results.iterator();
         	while (i.hasNext()) { 
         		Node aResult = i.next();
-        		Node rankNode = aResult.selectSingleNode("/rank");
+        		Node rankNode = aResult.selectSingleNode("/results/result/rank");
         	    String rank = ""; 
         	    if (rankNode!=null) { 
-        	    	rank = aResult.selectSingleNode("/rank").getText();
+        	    	rank = aResult.selectSingleNode("/results/result/rank").getText();
         	    }
+        	    logger.debug(rank);
         	    if (rank.equals("Species") || rank.equals("Infraspecies")) {
         			if (
-        				  aResult.selectSingleNode("/name_status").getText().contains("accepted name") ||
-        				  aResult.selectSingleNode("/name_status").getText().contains("provisionally accepted name")
+        				  aResult.selectSingleNode("/results/result/name_status").getText().contains("accepted name") ||
+        				  aResult.selectSingleNode("/results/result/name_status").getText().contains("provisionally accepted name")
         			   ) 
         			{ 
-        			    String authorship = aResult.selectSingleNode("/author").getText();
+        			    String authorship = aResult.selectSingleNode("/results/result/author").getText();
         			    AuthorNameComparator comparator = this.getAuthorNameComparator(authorship, "");
-        			    NameComparison comparison = comparator.compare(toCheck.getAuthorship(), authorship);
+        			    NameComparison comparison = comparator.compare(author, authorship);
+        			    logger.debug(comparison.getMatchType());
         			    if (comparison.getMatchType().equals(NameComparison.MATCH_EXACT)) { 
-            				validatedNameUsage.setScientificName(aResult.selectSingleNode("/name").getText());
-            				validatedNameUsage.setAcceptedName(aResult.selectSingleNode("/name").getText());
-            				validatedNameUsage.setAcceptedAuthorship(aResult.selectSingleNode("/author").getText());
+            				validatedNameUsage.setScientificName(aResult.selectSingleNode("/results/result/name").getText());
+            				validatedNameUsage.setAcceptedName(aResult.selectSingleNode("/results/result/name").getText());
+            				validatedNameUsage.setAcceptedAuthorship(aResult.selectSingleNode("/results/result/author").getText());
             				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
             				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
-            				validatedNameUsage.setAuthorship(aResult.selectSingleNode("/author").getText());
+            				validatedNameUsage.setAuthorship(aResult.selectSingleNode("/results/result/author").getText());
             	            addToComment("Found accepted name " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +" in Catalog of Life service.");
             				result = true;	
         			    }

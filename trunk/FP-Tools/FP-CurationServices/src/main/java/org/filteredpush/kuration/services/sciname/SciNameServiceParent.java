@@ -158,6 +158,7 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 
        // (3) try to find the name in the supported service.
        boolean matched = nameSearchAgainstServices(toCheck);
+       logger.debug(matched);
        
        // (3a) try harder for authorship if needed
        if (matched && validatedNameUsage.getAuthorship().length()==0) {

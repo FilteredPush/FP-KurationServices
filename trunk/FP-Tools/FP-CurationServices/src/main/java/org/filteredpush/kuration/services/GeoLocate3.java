@@ -108,17 +108,38 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 
         //start validation
         if(latitude == null || longitude == null){
-        	// TODO: Check and extrapolate if only one of latitude or longitude is present. 
-            //The coordinates in the original records is missing
-        	if (potentialMatches.size()>0 && potentialMatches.get(0).getConfidence()>80 && latitude==null && longitude ==null) { 
-        		setCurationStatus(CurationComment.Filled_in);
-        		correctedLatitude = potentialMatches.get(0).getLatitude();
-        		correctedLongitude = potentialMatches.get(0).getLongitude();
-        		// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
-        		addToComment("Added a georeference using cached data or "+getServiceName()+"service since the original coordinates are missing and geolocate had a confident match. ");
+        	if (potentialMatches.size()>0 && potentialMatches.get(0).getConfidence()>80 ) { 
+        		if (latitude!=null && longitude==null) { 
+        			// Try to fill in the longitude
+        			if (GeolocationResult.isLocationNearAResult(Double.valueOf(latitude), potentialMatches.get(0).getLongitude(), potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
+        				// if latitude plus longitude from best match is near a match, propose the longitude from the best match.
+        			    setCurationStatus(CurationComment.Filled_in);
+        				correctedLongitude = potentialMatches.get(0).getLongitude();
+        				// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
+        				addToComment("Added a longitude from "+getServiceName()+" as longitude was missing and geolocate had a confident match near the original line of latitude. ");
+        			}
+        		}
+        		if (latitude!=null && longitude==null) { 
+        			// Try to fill in the longitude
+        			if (GeolocationResult.isLocationNearAResult(potentialMatches.get(0).getLatitude(), Double.valueOf(longitude), potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
+        				// if latitude plus longitude from best match is near a match, propose the longitude from the best match.
+        			    setCurationStatus(CurationComment.Filled_in);
+        				correctedLatitude = potentialMatches.get(0).getLatitude();
+        				// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
+        				addToComment("Added a latitude from "+getServiceName()+" as latitude was missing and geolocate had a confident match near the original line of longitude. ");
+        			}
+        		}
+        		//Both coordinates in the original record are missing
+        		if (latitude==null && longitude ==null) { 
+        			setCurationStatus(CurationComment.Filled_in);
+        			correctedLatitude = potentialMatches.get(0).getLatitude();
+        			correctedLongitude = potentialMatches.get(0).getLongitude();
+        			// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
+        			addToComment("Added a georeference using cached data or "+getServiceName()+"service since the original coordinates are missing and geolocate had a confident match. ");
+        		}
         	} else { 
         		setCurationStatus(CurationComment.UNABLE_CURATED);
-        		addToComment("No latitude and longitude provided, and geolocate didn't return a good match.");
+        		addToComment("No latitude and/or longitude provided, and geolocate didn't return a good match.");
         	}
         }else {
             //calculate the distance from the returned point and original point in the record
@@ -674,6 +695,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
      * 
      * @throws CurationException
      */
+	@Deprecated 
 	private Vector<Double> queryGeoLocateBest(String country, String stateProvince, String county, String locality) throws CurationException {
         addToServiceName("GeoLocate");
         long starttime = System.currentTimeMillis();
@@ -706,9 +728,8 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         return coordinatesInfo;
 	}
 
+	@Deprecated 
 	private Document getXmlFromGeolocate(String country, String stateProvince, String county, String locality) throws CurationException { 
-		
-		// TODO: Use generated artifacts from SOAP service instead.
         Reader stream = null;
         Document document = null;
 
