@@ -3,7 +3,8 @@
  */
 package org.filteredpush.kuration.services.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,6 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
+ * Unit tests for the GBIF service wrapper.
+ * 
  * @author mole
  *
  */
@@ -59,4 +62,37 @@ public class GBIFServiceTest {
         assertEquals(CurationComment.UNABLE_CURATED.toString(), service.getCurationStatus().toString());
     }	
 
+    @Test 
+    public void hemihomonymTest() { 
+    	// animal 
+    	service.validateScientificName("Agathis montana","Shestakov, 1932");
+        logger.debug(service.getComment());
+        logger.debug(service.getCurationStatus());
+        logger.debug(service.getCorrectedScientificName());
+        logger.debug(service.getCorrectedAuthor());
+        assertEquals(CurationComment.CORRECT.toString(),service.getCurationStatus().toString());
+        // plant 
+    	service.validateScientificName("Agathis montana","de Laub");
+        logger.debug(service.getComment());
+        logger.debug(service.getCurationStatus());
+        logger.debug(service.getCorrectedScientificName());
+        logger.debug(service.getCorrectedAuthor());
+        assertEquals(CurationComment.CORRECT.toString(),service.getCurationStatus().toString());
+        // Need author to disambiguate
+    	service.validateScientificName("Agathis montana","");
+        logger.debug(service.getComment());
+        logger.debug(service.getCurationStatus());
+        logger.debug(service.getCorrectedScientificName());
+        logger.debug(service.getCorrectedAuthor());
+        assertEquals(CurationComment.UNABLE_DETERMINE_VALIDITY.toString(),service.getCurationStatus().toString());
+        
+        // should be able to correct author
+    	service.validateScientificName("Asterina gibbosa","Pennant, 1777");
+        logger.debug(service.getComment());
+        logger.debug(service.getCurationStatus());
+        logger.debug(service.getCorrectedScientificName());
+        assertEquals("(Pennant, 1777)",service.getCorrectedAuthor());
+        assertEquals(CurationComment.CURATED.toString(),service.getCurationStatus().toString());
+    }    
+    
 }

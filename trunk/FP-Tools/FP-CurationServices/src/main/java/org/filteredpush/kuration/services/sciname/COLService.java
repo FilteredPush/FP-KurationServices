@@ -1,5 +1,5 @@
 /** 
- * CollectingEventOutlierIdentificationService.java 
+ * COLService.java 
  * 
  * Copyright 2015 President and Fellows of Harvard College
  *
@@ -32,10 +32,16 @@ import org.filteredpush.kuration.util.SciNameCacheValue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
+/**
+ * Validation of scientific names against the catalog of life web service.
+ * 
+ * @author mole
+ *
+ */
 public class COLService extends SciNameServiceParent {
 	
 	private static final Log logger = LogFactory.getLog(COLService.class);
@@ -92,6 +98,7 @@ public class COLService extends SciNameServiceParent {
         try {
             url = new URL(Url + "?name=" + name.replace(" ", "%20") + "&format=xml&response=full");
             //System.out.println("url = " + url.toString());
+            logger.debug(url.toString());
             document = reader.read(url);
         } catch (DocumentException e) {
         	addToComment("Failed to get information on " + name + " by parsing the response from Catalog of Life service: "+e.getMessage());
@@ -107,39 +114,91 @@ public class COLService extends SciNameServiceParent {
         if (matches < 1) {
         	addToComment("Cannot find matches in Catalog of Life service");
         } else if (matches > 1) {
-        	addToComment("More than one (" + matches +") match in Catalog of Life service, may be homonym or hemihomonym.");
+        	// logger.debug(document.asXML());
+        	// Causes of multiple results: Homonyms, hemihomonyms, search on species returning species plus subspecies records.
+        	// addToComment("More than one (" + matches +") match in Catalog of Life service, may be homonym or hemihomonym.");
         	List<Node> results = document.selectNodes("/results/result");
+        	List<Node> filteredResults = new ArrayList<Node>();
         	Iterator<Node> i = results.iterator();
         	while (i.hasNext()) { 
         		Node aResult = i.next();
-        		Node rankNode = aResult.selectSingleNode("/results/result/rank");
+        		// logger.debug(aResult.asXML());
+        		String foundName = aResult.selectSingleNode("name").getText();
+        		if (foundName.trim().equals(toCheck.getOriginalScientificName().trim())) { 
+        			logger.debug("Including " + foundName + " = " + toCheck.getOriginalScientificName());
+        			filteredResults.add(aResult);
+        		} else { 
+        			logger.debug("Excluding: " +foundName + " <> " + toCheck.getOriginalScientificName() );
+        		}
+        	} 
+        	if (filteredResults.size()==0) { 
+        	    addToComment("More than one (" + matches +") match in Catalog of Life service, filtered to zero with exact match on scientific name.");
+        		logger.error("Had more than one match in COL, filtered to zero");
+        	}
+        	if (filteredResults.size()>1) { 
+        	   addToComment("More than one (" + filteredResults.size() +") match in Catalog of Life service, may be homonym or hemihomonym.");
+        	   logger.debug(this.getComment());
+        	}
+        	i = filteredResults.iterator();
+        	while (i.hasNext()) { 
+        		Node aResult = i.next();
+        		Node rankNode = aResult.selectSingleNode("rank");
         	    String rank = ""; 
         	    if (rankNode!=null) { 
-        	    	rank = aResult.selectSingleNode("/results/result/rank").getText();
+        	    	rank = aResult.selectSingleNode("rank").getText();
         	    }
         	    logger.debug(rank);
         	    if (rank.equals("Species") || rank.equals("Infraspecies")) {
         			if (
-        				  aResult.selectSingleNode("/results/result/name_status").getText().contains("accepted name") ||
-        				  aResult.selectSingleNode("/results/result/name_status").getText().contains("provisionally accepted name")
+        				  aResult.selectSingleNode("name_status").getText().contains("accepted name") ||
+        				  aResult.selectSingleNode("name_status").getText().contains("provisionally accepted name")
         			   ) 
         			{ 
-        			    String authorship = aResult.selectSingleNode("/results/result/author").getText();
+        			    String authorship = aResult.selectSingleNode("author").getText();
         			    AuthorNameComparator comparator = this.getAuthorNameComparator(authorship, "");
         			    NameComparison comparison = comparator.compare(author, authorship);
         			    logger.debug(comparison.getMatchType());
         			    if (comparison.getMatchType().equals(NameComparison.MATCH_EXACT)) { 
-            				validatedNameUsage.setScientificName(aResult.selectSingleNode("/results/result/name").getText());
-            				validatedNameUsage.setAcceptedName(aResult.selectSingleNode("/results/result/name").getText());
-            				validatedNameUsage.setAcceptedAuthorship(aResult.selectSingleNode("/results/result/author").getText());
+            				validatedNameUsage.setScientificName(aResult.selectSingleNode("name").getText());
+            				validatedNameUsage.setAcceptedName(aResult.selectSingleNode("name").getText());
+            				validatedNameUsage.setAcceptedAuthorship(aResult.selectSingleNode("author").getText());
             				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
             				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
-            				validatedNameUsage.setAuthorship(aResult.selectSingleNode("/results/result/author").getText());
+            				validatedNameUsage.setAuthorship(aResult.selectSingleNode("author").getText());
             	            addToComment("Found accepted name " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +" in Catalog of Life service.");
             				result = true;	
+        			    } else if (author.trim().length()==0) { 
+        			    	addToComment("Could be: " + aResult.selectSingleNode("name").getText() + " " + authorship ); 
+        			    } else if (comparison.getMatchType().equals(NameComparison.MATCH_PARENTHESIESDIFFER)) { 
+            				validatedNameUsage.setScientificName(aResult.selectSingleNode("name").getText());
+            				validatedNameUsage.setAcceptedName(aResult.selectSingleNode("name").getText());
+            				validatedNameUsage.setAcceptedAuthorship(aResult.selectSingleNode("author").getText());
+            				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
+            				validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
+            				validatedNameUsage.setAuthorship(aResult.selectSingleNode("author").getText());
+            	            addToComment("Found accepted name differing only in parenthesies " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() +" in Catalog of Life service.");
+            				result = true;        			    	
         			    }
         			} else {
+        				List<Node> classification = aResult.selectNodes("classification/taxon");
+        				Iterator<Node> ic = classification.iterator();
+        				boolean gotKingdom = false;
+        				String kingdom = "";
+        				while (ic.hasNext() && !gotKingdom) { 
+        					Node taxon = ic.next();
+        					//logger.debug(taxon.asXML());
+        					String cRank = taxon.selectSingleNode("classification/taxon/rank").getText();
+        					if (cRank!=null && cRank.equals("Kingdom")) {
+        						kingdom = taxon.selectSingleNode("classification/taxon/name").getText();
+        					}
+        				}
+        				if (gotKingdom) { 
+        				if (toCheck.getKingdom()!=null && toCheck.getKingdom().equals(kingdom)) { 
+        					// same kingdom
+        					logger.debug(toCheck.getKingdom());
+        				}
         				//TODO: Make list of homonyms, pick best match.
+        				}
         			}
         	    }
         	}

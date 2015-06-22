@@ -23,13 +23,46 @@ public class COLServiceTest {
     @Test
     public void validNameTest(){
         scientificNameService.validateScientificName("Eucerceris canaliculata", "(Say, 1823)");
-        //assertTrue(scientificNameService.getCorrectedScientificName().equals("Eucerceris canaliculata"));
+        assertEquals("Eucerceris canaliculata", scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getComment());
         logger.debug(scientificNameService.getCurationStatus());
         logger.debug(scientificNameService.getCorrectedScientificName());
         logger.debug(scientificNameService.getCorrectedAuthor());
         assertEquals(CurationComment.CORRECT.toString(),scientificNameService.getCurationStatus().toString());
     } 
+    
+    @Test 
+    public void hemihomonymTest() { 
+    	// animal 
+    	scientificNameService.validateScientificName("Agathis montana","Shestakov, 1932");
+        logger.debug(scientificNameService.getComment());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
+        assertEquals(CurationComment.CORRECT.toString(),scientificNameService.getCurationStatus().toString());
+        // plant 
+    	scientificNameService.validateScientificName("Agathis montana","de Laub");
+        logger.debug(scientificNameService.getComment());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
+        assertEquals(CurationComment.CORRECT.toString(),scientificNameService.getCurationStatus().toString());
+        // Need author to disambiguate
+    	scientificNameService.validateScientificName("Agathis montana","");
+        logger.debug(scientificNameService.getComment());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
+        assertEquals(CurationComment.UNABLE_DETERMINE_VALIDITY.toString(),scientificNameService.getCurationStatus().toString());
+        
+        // should be able to correct author
+    	scientificNameService.validateScientificName("Asterina gibbosa","Pennant, 1777");
+        logger.debug(scientificNameService.getComment());
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        assertEquals("(Pennant, 1777)",scientificNameService.getCorrectedAuthor());
+        assertEquals(CurationComment.CURATED.toString(),scientificNameService.getCurationStatus().toString());
+    }
     
     @Test
     public void addAuthorCuratedTest() { 
