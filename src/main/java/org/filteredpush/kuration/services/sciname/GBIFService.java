@@ -369,6 +369,17 @@ public class GBIFService extends SciNameServiceParent {
 					}
 				}
 				if (!exactMatch) {
+					if (matches.size()>1 && toCheck.getOriginalAuthorship().trim().length()==0) { 
+						// There are multiple matches in GBIF, and we don't have an authorship string to 
+						// disambiguate amongst them.
+			            addToComment("Multiple results found in " + targetDataSetName + ".  A homonym or hemihomonym could exist, and authorship was not provided.");
+					    Iterator<NameUsage> im = matches.iterator();
+					    while (im.hasNext()) {
+							NameUsage current = im.next();
+					    	addToComment(current.getScientificName() + " " + current.getAuthorship());
+					    }
+					    result = false;
+					} else { 
 					// If we didn't find an exact match on scientific name and authorship in the list, pick the 
 					// closest authorship and list all of the potential matches.  
 					Iterator<NameUsage> im = matches.iterator();
@@ -392,6 +403,7 @@ public class GBIFService extends SciNameServiceParent {
 						validatedNameUsage.setAuthorshipStringEditDistance(toCheck.getAuthorComparator().calulateSimilarityOfAuthor(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()));
 			            addToComment("Plausible match in multiple results found in " + targetDataSetName + ".  The result could incorrectly be a homonym of the desired name. " + validatedNameUsage.getScientificName() + " " + validatedNameUsage.getAuthorship() + " " + validatedNameUsage.getMatchDescription());
 						result = true;
+					}
 					}
 				}
 			}

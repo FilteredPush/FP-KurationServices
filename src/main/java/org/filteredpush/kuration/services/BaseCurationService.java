@@ -3,12 +3,18 @@ package org.filteredpush.kuration.services;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.interfaces.ICurationService;
+import org.filteredpush.kuration.services.sciname.COLService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationStatus;
 
 public abstract class BaseCurationService implements ICurationService {
 
+	private static final Log logger = LogFactory.getLog(BaseCurationService.class);
+
+	
 	/**
 	 * Comments added during curation.
 	 */
@@ -69,6 +75,7 @@ public abstract class BaseCurationService implements ICurationService {
 
 	@Override
 	public void addToComment(String comment) {
+		logger.debug(comment);
 	    if (comment!=null && comment.length()>0) {
 	    	if (comments.length()>0) { 
                 comments.append(SEPARATOR).append(comment);
