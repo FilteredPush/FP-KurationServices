@@ -81,34 +81,41 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 			if (aString.equals("HumanObservation")) { setCurationStatus(CurationComment.CORRECT); } 
 			if (aString.equals("MachineObservation")) { setCurationStatus(CurationComment.CORRECT); } 
 			if (aString.equals("Taxon")) { setCurationStatus(CurationComment.CORRECT); } 
-			if (getCurationStatus().toString().equals(CurationComment.CORRECT.toString())) { 
+			if (!getCurationStatus().toString().equals(CurationComment.CORRECT.toString())) {
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("materialsample")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "MaterialSample";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("livingspecimen")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "LivingSpecimen";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("preservedspecimen")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "PreservedSpecimen";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("fossilspecimen")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "FossilSpecimen";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("humanobservation")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "HumanObservation";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			    if (aString.trim().toLowerCase().replaceAll(" ", "").equals("machineobservation")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "MachineObservation";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			    if (aString.trim().toLowerCase().equals("taxon")) { 
 			    	setCurationStatus(CurationComment.CURATED);
 			    	correctedValue = "Taxon";
+				    addToComment("Correcting capitalization and spacing to conform with controlled vocabulary.");
 			    } 
 			}
 		}
