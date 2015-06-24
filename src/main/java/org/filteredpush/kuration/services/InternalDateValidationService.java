@@ -71,7 +71,13 @@ public class InternalDateValidationService extends BaseCurationService implement
         correctEventDate = null;
 		setCurationStatus(CurationComment.CORRECT);
         addToServiceName("eventDate:" + eventDate + "#");
+        addToServiceName("year:" + year + "#");
+        addToServiceName("month:" + month + "#");
+        addToServiceName("day:" + day + "#");
         this.addInputValue("eventDate", eventDate);
+        this.addInputValue("year", year);
+        this.addInputValue("month", month);
+        this.addInputValue("day", day);
         
         if (eventDate==null || eventDate.trim().length()==0) {
         	eventDate = DateUtils.createEventDateFromParts(verbatimEventDate, startDayOfYear, year, month, day);
@@ -90,6 +96,7 @@ public class InternalDateValidationService extends BaseCurationService implement
         	setCurationStatus(CurationComment.CURATED);
             addToComment("expanded event date to a date range");
         }
+        
         
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){
@@ -410,20 +417,23 @@ public class InternalDateValidationService extends BaseCurationService implement
             correctEventDate=parsedEventDate.toString(format);
         }else{
             //if two dates don't conform, use startDayOfYear to distinguish
-            if(!parsedEventDate.isEqual(constructedDate)){
+            if(!parsedEventDate.isEqual(constructedDate) && constructedDate!=null){
                 if(startDayOfYear != null){
                     int startDayInt = Integer.parseInt(startDayOfYear);
-                    if (constructedDate.dayOfYear().get() == startDayInt) {
-                        parsedEventDate = constructedDate;
-                        setCurationStatus(CurationComment.CURATED);
-                        addToComment("found and solved internal inconsistency with constructed date");
-                    }else if (parsedEventDate.dayOfYear().get() != startDayInt){
-                        setCurationStatus(CurationComment.UNABLE_CURATED);
-                        addToComment("Internal inconsistency: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.");
-                        return null;
-                    }else if((parsedEventDate.dayOfYear().get() == startDayInt)) {
-                        setCurationStatus(CurationComment.CORRECT);
-                        addToComment("found and solved internal inconsistency with original date");
+                    if (startDayInt > 0) { 
+                    	if (constructedDate.dayOfYear().get() == startDayInt) {
+                    		parsedEventDate = constructedDate;
+                    		setCurationStatus(CurationComment.CURATED);
+                    		addToComment("found and solved internal inconsistency with constructed date");
+                            correctEventDate=parsedEventDate.toString(format);
+                    	}else if (parsedEventDate.dayOfYear().get() != startDayInt){
+                    		setCurationStatus(CurationComment.UNABLE_CURATED);
+                    		addToComment("Internal inconsistency: startDayOfYear:" + startDayInt + " and eventDate:" + parsedEventDate.toString(format) + " don't conform.");
+                    		return null;
+                    	}else if((parsedEventDate.dayOfYear().get() == startDayInt)) {
+                    		setCurationStatus(CurationComment.CORRECT);
+                    		addToComment("found and solved internal inconsistency with original date");
+                    	}
                     }
                 }else{
                     setCurationStatus(CurationComment.UNABLE_CURATED);
