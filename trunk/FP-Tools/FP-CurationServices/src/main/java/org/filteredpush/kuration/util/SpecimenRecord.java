@@ -63,7 +63,11 @@ public class SpecimenRecord extends HashMap<String,String> {
     	Iterator<Term> i = dwcrecord.core().terms().iterator();
     	while (i.hasNext()) { 
     		Term t = i.next();
-    		this.put(t.simpleName(), dwcrecord.core().value(t));
+    		if (dwcrecord.core().value(t)==null) { 
+    		    this.put(t.simpleName(), "");
+    		} else {
+    		     this.put(t.simpleName(), dwcrecord.core().value(t));
+    		}
     	}
     }
     
