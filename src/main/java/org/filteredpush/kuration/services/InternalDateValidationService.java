@@ -76,7 +76,7 @@ public class InternalDateValidationService extends BaseCurationService implement
         if (eventDate==null || eventDate.trim().length()==0) {
         	eventDate = DateUtils.createEventDateFromParts(verbatimEventDate, startDayOfYear, year, month, day);
         	if (eventDate!=null && eventDate.trim().length() >0) { 
-        		setCurationStatus(CurationComment.Filled_in);
+        		setCurationStatus(CurationComment.FILLED_IN);
         		correctEventDate = eventDate;
         		addToComment("Constructed event date from atomic parts");
         		gotFilledIn = true;
@@ -105,7 +105,7 @@ public class InternalDateValidationService extends BaseCurationService implement
             	   inAuthorLife = checkAgentAuthorities(consesEventDate.toString("yyyy-MM-dd"), collector);
             	}
             	if (gotFilledIn) { 
-            		this.setCurationStatus(CurationComment.Filled_in);
+            		this.setCurationStatus(CurationComment.FILLED_IN);
             	}
             	/*
                 // can switch between using old Harvard list or new Solr dataset
@@ -210,7 +210,7 @@ public class InternalDateValidationService extends BaseCurationService implement
 		if (result!=null) { 
 		   if (result) { 
 			   if (!correctionProposed) { 
-			       if (!getCurationStatus().equals(CurationComment.Filled_in)) { 
+			       if (!getCurationStatus().equals(CurationComment.FILLED_IN)) { 
 			    	   setCurationStatus(CurationComment.CORRECT);
 			       } 
                    addToComment("eventDate falls inside the life span of the collector " + lifeYears);
@@ -404,7 +404,7 @@ public class InternalDateValidationService extends BaseCurationService implement
             }
             //todo: status will be overwritten if inconsistent, needs to be preserved?
         }else if (parsedEventDate == null && constructedDate != null){
-            setCurationStatus(CurationComment.Filled_in);
+            setCurationStatus(CurationComment.FILLED_IN);
             addToComment("EventDate is constructed from atomic fields");
             parsedEventDate = constructedDate;
             correctEventDate=parsedEventDate.toString(format);

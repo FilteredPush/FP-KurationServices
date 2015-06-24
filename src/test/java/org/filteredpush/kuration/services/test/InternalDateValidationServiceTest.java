@@ -53,13 +53,13 @@ public class InternalDateValidationServiceTest {
         
         internalDateValidationService.validateDate("","","","1896","","","","J. F. Rock");
         assertEquals("1896-01-01/1896-12-31",internalDateValidationService.getCorrectedDate());
-        assertEquals(CurationComment.Filled_in, internalDateValidationService.getCurationStatus());
+        assertEquals(CurationComment.FILLED_IN, internalDateValidationService.getCurationStatus());
     }    
     @Test
     public void constructFromAtomicTest(){
         internalDateValidationService.validateDate("0000-00-00","","237","1948","7","27","2012-09-26 02:54:34","A.C. Cole");
         assertTrue(internalDateValidationService.getCorrectedDate().equals("1948-07-27"));
-        assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.Filled_in));
+        assertTrue(internalDateValidationService.getCurationStatus().equals(CurationComment.FILLED_IN));
     }
     @Test
     public void noDateTest(){
