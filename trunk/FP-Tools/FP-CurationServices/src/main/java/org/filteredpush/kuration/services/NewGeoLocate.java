@@ -101,7 +101,7 @@ public class NewGeoLocate extends BaseCurationService implements IGeoRefValidati
 
 			if(latitude == null || longitude == null){
 				//The coordinates in the original records is missing
-				setCurationStatus(CurationComment.Filled_in);
+				setCurationStatus(CurationComment.FILLED_IN);
 				correctedLatitude = foundLat;
 				correctedLongitude = foundLng;
 				addToComment("Inserted the coordinates by using cached data or "+getServiceName()+" service since the original coordinates are missing.");

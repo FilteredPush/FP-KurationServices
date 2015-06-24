@@ -14,7 +14,7 @@ public class CurationComment {
 	
 	public static CurationStatus CORRECT = new CurationStatus("Valid     ");
 	public static CurationStatus CURATED = new CurationStatus("Curated   ");
-    public static CurationStatus Filled_in = new CurationStatus("Filled in ");
+    public static CurationStatus FILLED_IN = new CurationStatus("Filled in ");
 	public static CurationStatus UNABLE_CURATED = new CurationStatus("NotCurated");
 	public static CurationStatus UNABLE_DETERMINE_VALIDITY = new CurationStatus("!Validated");
 

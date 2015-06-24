@@ -113,7 +113,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         			// Try to fill in the longitude
         			if (GeolocationResult.isLocationNearAResult(Double.valueOf(latitude), potentialMatches.get(0).getLongitude(), potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
         				// if latitude plus longitude from best match is near a match, propose the longitude from the best match.
-        			    setCurationStatus(CurationComment.Filled_in);
+        			    setCurationStatus(CurationComment.FILLED_IN);
         				correctedLongitude = potentialMatches.get(0).getLongitude();
         				// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
         				addToComment("Added a longitude from "+getServiceName()+" as longitude was missing and geolocate had a confident match near the original line of latitude. ");
@@ -123,7 +123,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         			// Try to fill in the longitude
         			if (GeolocationResult.isLocationNearAResult(potentialMatches.get(0).getLatitude(), Double.valueOf(longitude), potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
         				// if latitude plus longitude from best match is near a match, propose the longitude from the best match.
-        			    setCurationStatus(CurationComment.Filled_in);
+        			    setCurationStatus(CurationComment.FILLED_IN);
         				correctedLatitude = potentialMatches.get(0).getLatitude();
         				// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
         				addToComment("Added a latitude from "+getServiceName()+" as latitude was missing and geolocate had a confident match near the original line of longitude. ");
@@ -131,7 +131,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         		}
         		//Both coordinates in the original record are missing
         		if (latitude==null && longitude ==null) { 
-        			setCurationStatus(CurationComment.Filled_in);
+        			setCurationStatus(CurationComment.FILLED_IN);
         			correctedLatitude = potentialMatches.get(0).getLatitude();
         			correctedLongitude = potentialMatches.get(0).getLongitude();
         			// TODO: If we do this, then we need to add the datum, georeference source, georeference method, etc.
