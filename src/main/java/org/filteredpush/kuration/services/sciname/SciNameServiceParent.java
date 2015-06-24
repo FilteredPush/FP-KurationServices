@@ -290,6 +290,25 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
        }
        //System.err.println("serviceend#"+_id + "#" + System.currentTimeMillis());
        
+       if (getCurationStatus().toString().equals(CurationComment.CURATED.toString()) && authorToValidate!=null) { 
+    	   // Sanity check on authorship strings with particular meanings
+    	   
+           // If we've asserted a change of "auct." to an author or "auct. non {author}" to "{author}" we shouldn't
+           // but should pass on the original value (and mark the name as suspect, as it can't be tied to a
+    	   // nomenclatural act.
+    	   if (authorToValidate.equals("auct.") && !this.getCorrectedAuthor().equals(authorToValidate)) { 
+    		   addToComment("Retaining original authorship string 'auct.' = of authors, meaning not intended as in the sense of " + this.getCorrectedAuthor());
+    		   setCurationStatus(CurationComment.UNABLE_CURATED);
+    		   validatedNameUsage.setAuthorship(authorToValidate);
+    	   }
+    	   if (authorToValidate.equals("auct. non " + this.getCorrectedAuthor())) { 
+    		   addToComment("Retaining original authorship string '"+ authorToValidate +"' = of authors not " + this.getCorrectedAuthor() +".");
+    		   setCurationStatus(CurationComment.UNABLE_CURATED);
+    		   validatedNameUsage.setAuthorship(authorToValidate);
+    	   }
+       }
+       
+       
        // Handle replacements in taxonomic mode
        if (this.selectedMode.equals(MODE_TAXONOMIC)) { 
     	   if (getCurationStatus().toString().equals(CurationComment.CORRECT.toString())) { 

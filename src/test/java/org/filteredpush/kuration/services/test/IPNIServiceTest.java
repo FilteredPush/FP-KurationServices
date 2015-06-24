@@ -99,5 +99,20 @@ public class IPNIServiceTest {
 		assertEquals("L.",service.getCorrectedAuthor());
 		assertEquals(scientificName,service.getCorrectedScientificName());
     }
+    
+    @Test
+    public void auctorumTest() { 
+		String scientificName = "Sisyrinchium bermudiana";
+		String author = "auct. non L.";
+		service.validateScientificName(scientificName, author);
+		logger.debug(service.getCurationStatus().toString());
+		logger.debug(service.getCorrectedScientificName());
+		logger.debug(service.getCorrectedAuthor());
+		logger.debug(service.getComment());
+		assertEquals(CurationComment.UNABLE_CURATED,service.getCurationStatus());
+		assertEquals("auct. non L.",service.getCorrectedAuthor());
+		assertEquals(scientificName,service.getCorrectedScientificName());
+    	
+    }
 
 }
