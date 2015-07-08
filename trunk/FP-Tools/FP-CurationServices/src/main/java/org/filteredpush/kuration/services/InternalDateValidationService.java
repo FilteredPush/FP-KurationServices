@@ -97,6 +97,10 @@ public class InternalDateValidationService extends BaseCurationService implement
             addToComment("expanded event date to a date range");
         }
         
+        if (eventDate==null) { 
+        	setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+        	addToComment("Unable to find a date to check.");
+        }
         
         DateMidnight consesEventDate = parseDate(eventDate, verbatimEventDate, startDayOfYear, year, month, day, modified);
         if(consesEventDate != null){

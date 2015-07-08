@@ -158,8 +158,8 @@ public class SciNameServiceUtil {
                 } else{
                     //validatedAuthor = null;
                     curationStatus = CurationComment.CURATED;
-                    comment = comment + "| scientificName is constructed from atomic fields";
-                    name = null;
+                    comment = comment + "| scientificName " + constructName +  " has been constructed from atomic fields";
+                    name = constructName;
                 }
             }else{
                 if(pn.equals(cn)){

@@ -72,6 +72,10 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	public void validateString(String aString) {
 		initBR();
 		addInputValue(SpecimenRecord.dwc_basisOfRecord, aString);
+		if (aString==null || aString.length()==0) { 
+			setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY); 
+			addToComment("Input is blank.  There is no value present to check.");
+		}
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 
 			if (aString.equals("MaterialSample")) { setCurationStatus(CurationComment.CORRECT); } 
