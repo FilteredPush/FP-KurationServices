@@ -104,24 +104,63 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 	   initBase();
        // To carry over the original sciname and author:
        // This has the appearance of an assignment to the wrong variable, but it isn't
-       // this data is extracted by MongoSummaryWriter to provide "WAS:" values
-       addToServiceName("scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#");
-       addInputValue(SpecimenRecord.dwc_scientificName, scientificNameToValidate);
-       addInputValue(SpecimenRecord.dwc_scientificNameAuthorship,authorToValidate);
-       addInputValue("genus",genus);
-       addInputValue("subgenus",subgenus);
-       // TODO: Add all input values
-       
-       addToServiceName(this.getServiceImplementationName());
+	   // this data is extracted by MongoSummaryWriter to provide "WAS:" values
+	   addToServiceName("scientificName:"+ scientificNameToValidate + "#scientificNameAuthorship:" + authorToValidate + "#");
+	   addInputValue(SpecimenRecord.dwc_scientificName, scientificNameToValidate);
+	   addInputValue(SpecimenRecord.dwc_scientificNameAuthorship,authorToValidate);
+	   addInputValue("genus",genus);
+	   addInputValue("subgenus",subgenus);
+	   addInputValue("specificEpithet",specificEpithet);
+	   addInputValue("infraSpecificEpithet",infraspecificEpithet);
+	   // TODO: Add all input values
+
+	   addToServiceName(this.getServiceImplementationName());
+
+	   if (scientificNameToValidate!=null) {
+		   scientificNameToValidate = scientificNameToValidate.trim();
+	   }
+	   if (authorToValidate!=null) { 
+		   authorToValidate = authorToValidate.trim();
+	   }
 	   
-       NameUsage toCheck = new NameUsage();
+	   // If no scientific name was provided, try to fill one in. 
+	   StringBuffer tempAssembly = new StringBuffer();
+	   if (scientificNameToValidate==null || scientificNameToValidate.length()==0) { 
+		   addToComment("No value provided for scientificName");
+		   if (genus!=null && genus.length()>0) {  
+			   tempAssembly.append(genus);
+			   if (specificEpithet!=null && specificEpithet.length()>0) { 
+				   tempAssembly.append(" ").append(specificEpithet);
+				   if (infraspecificEpithet!=null && infraspecificEpithet.length()>0) { 
+					   if (verbatimTaxonRank!=null && verbatimTaxonRank.length()>0) { 
+						   tempAssembly.append(verbatimTaxonRank).append(" ");
+					   } else { 
+						   if (taxonRank!=null && taxonRank.toLowerCase().trim().equals("variety")) { 
+							   tempAssembly.append("var. ");
+						   }
+						   if (taxonRank!=null && taxonRank.toLowerCase().trim().equals("form")) { 
+							   tempAssembly.append("f. ");
+						   }
+					   }
+					   tempAssembly.append(infraspecificEpithet);
+				   }
+			   }
+		   }
+		   if (tempAssembly.length()>0) {
+			   addToComment("Constructing a scientific name from genus plus atomic parts.  Depending on the source, this may not be the correct genus.");
+			   addToComment("Constructed: " + tempAssembly);
+			   scientificNameToValidate = tempAssembly.toString();
+		   }
+	   }
+
+	   NameUsage toCheck = new NameUsage();
 	   if (authorToValidate!=null && authorToValidate.length()>0 && scientificNameToValidate!=null && scientificNameToValidate.endsWith(authorToValidate)) { 
 		   // remove author from scientific name
 		   int endIndex = scientificNameToValidate.lastIndexOf(authorToValidate) -1;
 		   if (endIndex>-1) { 
-		       scientificNameToValidate = scientificNameToValidate.substring(0, endIndex).trim();
-		       logger.debug(scientificNameToValidate);
-               addToComment("Removed authorship from scientificName for validation, retained in scientificNameAuthorship.");
+			   scientificNameToValidate = scientificNameToValidate.substring(0, endIndex).trim();
+			   logger.debug(scientificNameToValidate);
+			   addToComment("Removed authorship from scientificName for validation, retained in scientificNameAuthorship.");
 		   }
 	   }
 	   toCheck.setOriginalScientificName(scientificNameToValidate);
@@ -132,163 +171,172 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 	   validatedNameUsage = new NameUsage(getServiceImplementationName(), getAuthorNameComparator(toCheck.getOriginalAuthorship(), kingdom),toCheck.getOriginalScientificName(),toCheck.getOriginalScientificName());
 	   validatedNameUsage.setOriginalAuthorship(authorToValidate);
 	   validatedNameUsage.setOriginalScientificName(scientificNameToValidate);
-       //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
-       
-       // Default response, unable to determine validity.  
-       setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
-       
-       // (1a) Check for hybrid
-       NameParser parser = new NameParser();
-       try {
-		   ParsedName parse = parser.parse(scientificNameToValidate);
-	   } catch (UnparsableException e) {
-		   if (e.getMessage().contains("Name of type HYBRID unparsable")) { 
-			   String[] bits = scientificNameToValidate.split(" × ");
-			   if (bits.length==2) { 
-				   // TODO: Here we could check each of the parts.
+	   //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
+
+	   // Default response, unable to determine validity.
+	   if (tempAssembly.length()>0) { 
+		   setCurationStatus(CurationComment.FILLED_IN);   
+	   } else { 
+		   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+	   }
+
+	   if (scientificNameToValidate!=null && scientificNameToValidate.length()>0) { 
+		   // If we've got something to validate.
+
+		   // (1a) Check for hybrid
+		   NameParser parser = new NameParser();
+		   try {
+			   ParsedName parse = parser.parse(scientificNameToValidate);
+		   } catch (UnparsableException e) {
+			   if (e.getMessage().contains("Name of type HYBRID unparsable")) { 
+				   String[] bits = scientificNameToValidate.split(" × ");
+				   if (bits.length==2) { 
+					   // TODO: Here we could check each of the parts.
+				   }
 			   }
 		   }
+
+		   // (2) perform internal consistency check
+		   HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
+		   // TODO: [#384] Comment and status is confusing when atomic values are null 
+		   addToComment(result1.get("comment"));
+		   setCurationStatus(new CurationStatus(result1.get("curationStatus")));
+
+		   // (3) try to find the name in the supported service.
+		   boolean matched = nameSearchAgainstServices(toCheck);
+		   logger.debug(matched);
+
+		   // (3a) try harder for authorship if needed
+		   if (matched && validatedNameUsage.getAuthorship().length()==0) {
+			   // got a match, but didn't find the authorship
+
+			   if (kingdom!=null && (kingdom.equals("Plantae") || kingdom.equals("Fungi")) && SciNameServiceUtil.isAutonym(validatedNameUsage.getScientificName()) ) { 
+				   // Skip special case, Botanical autonyms
+				   addToComment("Authorship is correctly absent, appears to be a botanical autonym.");
+			   } else { 
+				   // try GBIF checklist bank.
+				   HashMap<String, String> result3a = SciNameServiceUtil.checklistBankNameSearch(scientificNameToValidate, "", taxonRank, kingdom, phylum, tclass, order, family, GBIFService.KEY_GBIFBACKBONE);
+				   addToServiceName("GBIF CheckListBank Backbone");
+				   addToComment(result3a.get("comment"));
+				   setCurationStatus(new CurationStatus(result3a.get("curationStatus")));
+				   if(result3a.get("scientificName") != null){
+					   validatedNameUsage.setScientificName(result3a.get("scientificName"));
+					   validatedNameUsage.setAuthorship(result3a.get("author"));
+					   addToComment("Got a valid result from GBIF checklistbank Backbone");
+					   validatedNameUsage.setGuid(GBIF_GUID_Prefix + result3a.get("guid"));
+				   }
+			   }
+		   }
+
+		   // (3b) compare the authors
+		   if (matched) {
+			   if (validatedNameUsage.getAuthorComparator()==null) { 
+				   validatedNameUsage.setAuthorComparator(getAuthorNameComparator(validatedNameUsage.getOriginalAuthorship(), kingdom));
+			   }
+			   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
+			   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
+			   double authorSimilarity = comparison.getSimilarity();
+			   String match = comparison.getMatchType();
+			   logger.debug(match);
+			   if (authorSimilarity==1d && nameSimilarity==1d) {
+				   // author similarity is more forgiving than exact string match, don't correct things that aren't substantive errors.
+				   validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
+				   setCurationStatus(CurationComment.CORRECT);
+			   } else { 
+				   if (match.equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
+					   addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author.  ");
+					   setCurationStatus(CurationComment.CORRECT);
+				   } else { 
+					   validatedNameUsage.setMatchDescription(match);
+					   setCurationStatus(CurationComment.CURATED);
+				   }
+			   }
+			   validatedNameUsage.setAuthorshipStringEditDistance(authorSimilarity);     
+
+			   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
+
+			   addToComment(authorshipSimilarity);
+
+		   }
+
+		   //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());
+
+		   // (4) failover by trying alternative supporting services.
+		   if (!matched && result1.get("scientificName") != null){
+			   // (4a) Try the global names resolver.
+			   HashMap<String, String> result2 = SciNameServiceUtil.checkMisspelling(result1.get("scientificName"));
+			   addToServiceName("Global Name Resolver");
+			   addToComment(result2.get("comment"));
+			   setCurationStatus(new CurationStatus(result2.get("curationStatus")));
+
+			   //System.err.println("step2#"+_id + "#" + System.currentTimeMillis());
+			   // (4b) Try GNI and the GBIF backbone taxonomy. 
+			   if (result2.get("scientificName") != null){
+				   boolean hasResult = validateScientificNameAgainstServices(result2.get("scientificName"), authorToValidate, taxonRank, kingdom, phylum, tclass, order, family);
+				   if (hasResult){
+					   if(validatedNameUsage.getAuthorship().trim().equals("") || validatedNameUsage.getScientificName().trim().equals("")){
+						   // TODO: Handle botanical autonyms, which shouldn't have authorship.
+						   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+						   if (validatedNameUsage.getAuthorship().trim().equals("")) {  addToComment("validated author is empty"); } 
+						   if (validatedNameUsage.getScientificName().trim().equals("")) {  addToComment("validated sciName is empty"); } 
+					   }else {
+						   String validatedAuthor = validatedNameUsage.getAuthorship();
+						   String validatedScientificName = validatedNameUsage.getScientificName();
+						   if (validatedAuthor.trim().equals(authorToValidate) && validatedScientificName.trim().equals(scientificNameToValidate)) {
+							   setCurationStatus(CurationComment.CORRECT);
+							   addToComment("The original SciName and Authorship are valid");
+						   } else {
+							   setCurationStatus(CurationComment.CURATED);
+							   addToComment("The original SciName and Authorship are curated");
+						   }
+						   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
+						   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
+						   double authorSimilarity = comparison.getSimilarity();
+						   String match = comparison.getMatchType();
+						   logger.debug(match);
+						   if (authorSimilarity==1d && nameSimilarity==1d) {
+							   // author similarity is more forgiving than exact string match, don't correct things that aren't substantive errors.
+							   validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
+							   setCurationStatus(CurationComment.CORRECT);
+						   } else { 
+							   if (match.equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
+								   addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author.  ");
+								   setCurationStatus(CurationComment.CORRECT);
+							   } else if (match.equals(NameComparison.MATCH_ADDSAUTHOR)) { 
+								   logger.debug(match);
+								   logger.debug(validatedNameUsage.getAuthorship());
+								   logger.debug(validatedNameUsage.getAcceptedAuthorship());
+								   logger.debug(validatedAuthor);
+								   validatedNameUsage.setMatchDescription(match);
+								   setCurationStatus(CurationComment.CURATED);
+							   }else { 
+								   validatedNameUsage.setMatchDescription(match);
+								   setCurationStatus(CurationComment.CURATED);
+							   }
+						   }
+						   validatedNameUsage.setAuthorshipStringEditDistance(authorSimilarity);     
+
+						   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
+
+						   addToComment(authorshipSimilarity);                       
+					   }
+				   }else{
+					   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+					   addToComment("The original SciName and Authorship cannot be curated");
+				   }
+
+				   //todo: next
+			   }
+			   else{
+				   //no result, stop
+			   }
+		   }else{
+			   //System.err.println("step2not#"+_id + "#" + System.currentTimeMillis());
+			   //no result, stop
+		   }
+
 	   }
-       
-       // (2) perform internal consistency check
-       HashMap<String, String> result1 = SciNameServiceUtil.checkConsistencyToAtomicField(scientificNameToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, taxonRank, infraspecificEpithet);
-       // TODO: [#384] Comment and status is confusing when atomic values are null 
-       addToComment(result1.get("comment"));
-       setCurationStatus(new CurationStatus(result1.get("curationStatus")));
-
-       // (3) try to find the name in the supported service.
-       boolean matched = nameSearchAgainstServices(toCheck);
-       logger.debug(matched);
-       
-       // (3a) try harder for authorship if needed
-       if (matched && validatedNameUsage.getAuthorship().length()==0) {
-    	   // got a match, but didn't find the authorship
-    	   
-    	   if (kingdom!=null && (kingdom.equals("Plantae") || kingdom.equals("Fungi")) && SciNameServiceUtil.isAutonym(validatedNameUsage.getScientificName()) ) { 
-    	       // Skip special case, Botanical autonyms
-    		   addToComment("Authorship is correctly absent, appears to be a botanical autonym.");
-    	   } else { 
-    		   // try GBIF checklist bank.
-    		   HashMap<String, String> result3a = SciNameServiceUtil.checklistBankNameSearch(scientificNameToValidate, "", taxonRank, kingdom, phylum, tclass, order, family, GBIFService.KEY_GBIFBACKBONE);
-    		   addToServiceName("GBIF CheckListBank Backbone");
-               addToComment(result3a.get("comment"));
-               setCurationStatus(new CurationStatus(result3a.get("curationStatus")));
-               if(result3a.get("scientificName") != null){
-                   validatedNameUsage.setScientificName(result3a.get("scientificName"));
-                   validatedNameUsage.setAuthorship(result3a.get("author"));
-                   addToComment("Got a valid result from GBIF checklistbank Backbone");
-                   validatedNameUsage.setGuid(GBIF_GUID_Prefix + result3a.get("guid"));
-               }
-    	   }
-       }
-       
-       // (3b) compare the authors
-       if (matched) {
-    	   if (validatedNameUsage.getAuthorComparator()==null) { 
-    		   validatedNameUsage.setAuthorComparator(getAuthorNameComparator(validatedNameUsage.getOriginalAuthorship(), kingdom));
-    	   }
-    	   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
-    	   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
-    	   double authorSimilarity = comparison.getSimilarity();
-    	   String match = comparison.getMatchType();
-    	   logger.debug(match);
-    	   if (authorSimilarity==1d && nameSimilarity==1d) {
-    		   // author similarity is more forgiving than exact string match, don't correct things that aren't substantive errors.
-    		   validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
-    		   setCurationStatus(CurationComment.CORRECT);
-    	   } else { 
-               if (match.equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
-           		   addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author.  ");
-                   setCurationStatus(CurationComment.CORRECT);
-               } else { 
-    		   validatedNameUsage.setMatchDescription(match);
-    		   setCurationStatus(CurationComment.CURATED);
-               }
-    	   }
-    	   validatedNameUsage.setAuthorshipStringEditDistance(authorSimilarity);     
-
-    	   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
-
-    	   addToComment(authorshipSimilarity);
-    	   
-       }
-           
-       //System.err.println("step1#"+_id + "#" + System.currentTimeMillis());
-
-       // (4) failover by trying alternative supporting services.
-       if (!matched && result1.get("scientificName") != null){
-    	   // (4a) Try the global names resolver.
-           HashMap<String, String> result2 = SciNameServiceUtil.checkMisspelling(result1.get("scientificName"));
-           addToServiceName("Global Name Resolver");
-           addToComment(result2.get("comment"));
-           setCurationStatus(new CurationStatus(result2.get("curationStatus")));
-
-           //System.err.println("step2#"+_id + "#" + System.currentTimeMillis());
-           // (4b) Try GNI and the GBIF backbone taxonomy. 
-           if (result2.get("scientificName") != null){
-               boolean hasResult = validateScientificNameAgainstServices(result2.get("scientificName"), authorToValidate, taxonRank, kingdom, phylum, tclass, order, family);
-               if (hasResult){
-                   if(validatedNameUsage.getAuthorship().trim().equals("") || validatedNameUsage.getScientificName().trim().equals("")){
-                	   // TODO: Handle botanical autonyms, which shouldn't have authorship.
-                       setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
-                       if (validatedNameUsage.getAuthorship().trim().equals("")) {  addToComment("validated author is empty"); } 
-                       if (validatedNameUsage.getScientificName().trim().equals("")) {  addToComment("validated sciName is empty"); } 
-                   }else {
-                	   String validatedAuthor = validatedNameUsage.getAuthorship();
-                	   String validatedScientificName = validatedNameUsage.getScientificName();
-                       if (validatedAuthor.trim().equals(authorToValidate) && validatedScientificName.trim().equals(scientificNameToValidate)) {
-                           setCurationStatus(CurationComment.CORRECT);
-                           addToComment("The original SciName and Authorship are valid");
-                       } else {
-                           setCurationStatus(CurationComment.CURATED);
-                           addToComment("The original SciName and Authorship are curated");
-                       }
-                	   NameComparison comparison = validatedNameUsage.getAuthorComparator().compare(validatedNameUsage.getOriginalAuthorship(), validatedNameUsage.getAuthorship());
-                	   double nameSimilarity = ICNafpAuthorNameComparator.stringSimilarity(validatedNameUsage.getScientificName(), validatedNameUsage.getOriginalScientificName());
-                	   double authorSimilarity = comparison.getSimilarity();
-                	   String match = comparison.getMatchType();
-                	   logger.debug(match);
-                	   if (authorSimilarity==1d && nameSimilarity==1d) {
-                		   // author similarity is more forgiving than exact string match, don't correct things that aren't substantive errors.
-                		   validatedNameUsage.setMatchDescription(NameComparison.MATCH_EXACT);
-                		   setCurationStatus(CurationComment.CORRECT);
-                	   } else { 
-                		   if (match.equals(NameComparison.MATCH_SAMEBUTABBREVIATED)) { 
-           				       addToComment("The scientific name and authorship are probably correct, but with a different abbreviation for the author.  ");
-                		       setCurationStatus(CurationComment.CORRECT);
-                	       } else if (match.equals(NameComparison.MATCH_ADDSAUTHOR)) { 
-                	    	   logger.debug(match);
-                	    	   logger.debug(validatedNameUsage.getAuthorship());
-                	    	   logger.debug(validatedNameUsage.getAcceptedAuthorship());
-                	    	   logger.debug(validatedAuthor);
-                		       validatedNameUsage.setMatchDescription(match);
-                		       setCurationStatus(CurationComment.CURATED);
-                	       }else { 
-                		       validatedNameUsage.setMatchDescription(match);
-                		       setCurationStatus(CurationComment.CURATED);
-                	       }
-                	   }
-                	   validatedNameUsage.setAuthorshipStringEditDistance(authorSimilarity);     
-
-                	   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
-
-                	   addToComment(authorshipSimilarity);                       
-                   }
-               }else{
-                   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
-                   addToComment("The original SciName and Authorship cannot be curated");
-               }
-
-               //todo: next
-           }
-           else{
-               //no result, stop
-           }
-       }else{
-           //System.err.println("step2not#"+_id + "#" + System.currentTimeMillis());
-           //no result, stop
-       }
-       //System.err.println("serviceend#"+_id + "#" + System.currentTimeMillis());
+	   //System.err.println("serviceend#"+_id + "#" + System.currentTimeMillis());
        
        if (getCurationStatus().toString().equals(CurationComment.CURATED.toString()) && authorToValidate!=null) { 
     	   // Sanity check on authorship strings with particular meanings
