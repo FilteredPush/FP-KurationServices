@@ -107,13 +107,21 @@ public class GBIFServiceTest {
     	String infraspecificEpithet = "";
     	String taxonRank = "Species";
     	String kingdom = "Animalia";
-    	service.validateScientificName(scientificNameToValidate, authorToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, infraspecificEpithet, taxonRank, kingdom, "", "", "", "");
+    	service.validateScientificName(scientificNameToValidate, authorToValidate, genus, subgenus, specificEpithet, verbatimTaxonRank, infraspecificEpithet, taxonRank, kingdom, "", "", "", "", "");
         assertEquals(name, service.getCorrectedScientificName());
         assertEquals(authorToValidate, service.getCorrectedAuthor());
         logger.debug(service.getCurationStatus());
         logger.debug(service.getCorrectedScientificName());
         logger.debug(service.getCorrectedAuthor());
-        assertEquals(CurationComment.CORRECT.toString(), service.getCurationStatus().toString());
+        assertEquals(CurationComment.FILLED_IN.toString(), service.getCurationStatus().toString());
+    	service.validateScientificName(scientificNameToValidate, authorToValidate, "", subgenus, specificEpithet, verbatimTaxonRank, infraspecificEpithet, taxonRank, kingdom, "", "", "", "", genus);
+        assertEquals(name, service.getCorrectedScientificName());
+        assertEquals(authorToValidate, service.getCorrectedAuthor());
+        logger.debug(service.getCurationStatus());
+        logger.debug(service.getCorrectedScientificName());
+        logger.debug(service.getCorrectedAuthor());
+        assertEquals(CurationComment.CORRECT.toString(), service.getCurationStatus().toString());        
+        
         
         service.validateScientificName("", "");
         assertEquals(CurationComment.UNABLE_DETERMINE_VALIDITY, service.getCurationStatus());
