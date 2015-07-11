@@ -90,14 +90,37 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 		}
 	}    
     
-   public void validateScientificName(String scientificName, String author){
-	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "");
+    /**
+     * Convenience method for validating scientific names on minimal information.
+     * 
+     * @param scientificNameToValidate
+     * @param authorToValidate
+     * 
+     */
+	public void validateScientificName(String scientificName, String author){
+	   validateScientificName(scientificName, author, "", "", "", "", "", "", "", "", "", "", "","");
    }
 
    /**
+    * Validate a scientific name, make results of the validation available from other methods of this
+    * class.
     * 
+    * @param scientificNameToValidate
+    * @param authorToValidate
+    * @param genus
+    * @param subgenus
+    * @param specificEpithet
+    * @param verbatimTaxonRank
+    * @param infraspecificEpithet
+    * @param taxonRank
+    * @param kingdom
+    * @param phylum
+    * @param tclass
+    * @param order
+    * @param family
+    * @param genericEpithet not yet available as a DarwinCore term.
     */
-   public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family) {
+   public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family, String genericEpithet) {
 
 	   // (1) set up initial conditions 
 	   
@@ -127,8 +150,9 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 	   StringBuffer tempAssembly = new StringBuffer();
 	   if (scientificNameToValidate==null || scientificNameToValidate.length()==0) { 
 		   addToComment("No value provided for scientificName");
-		   if (genus!=null && genus.length()>0) {  
-			   tempAssembly.append(genus);
+		   if (genericEpithet!=null && genericEpithet.trim().length()>0) { 
+			   // If we've been given something we know is a parse of the generic part of the scientific name.
+			   tempAssembly.append(genericEpithet);
 			   if (specificEpithet!=null && specificEpithet.length()>0) { 
 				   tempAssembly.append(" ").append(specificEpithet);
 				   if (infraspecificEpithet!=null && infraspecificEpithet.length()>0) { 
@@ -144,12 +168,39 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 					   }
 					   tempAssembly.append(infraspecificEpithet);
 				   }
+
 			   }
-		   }
-		   if (tempAssembly.length()>0) {
-			   addToComment("Constructing a scientific name from genus plus atomic parts.  Depending on the source, this may not be the correct genus.");
-			   addToComment("Constructed: " + tempAssembly);
-			   scientificNameToValidate = tempAssembly.toString();
+			   if (tempAssembly.length()>0) {
+				   addToComment("Constructing a scientific name from atomic parts.");
+				   addToComment("Constructed: " + tempAssembly);
+				   scientificNameToValidate = tempAssembly.toString();
+			   }			   
+		   } else { 
+			   // if we've been given a genus, which may be a parse or may be a current placement
+			   if (genus!=null && genus.length()>0) {  
+				   tempAssembly.append(genus);
+				   if (specificEpithet!=null && specificEpithet.length()>0) { 
+					   tempAssembly.append(" ").append(specificEpithet);
+					   if (infraspecificEpithet!=null && infraspecificEpithet.length()>0) { 
+						   if (verbatimTaxonRank!=null && verbatimTaxonRank.length()>0) { 
+							   tempAssembly.append(verbatimTaxonRank).append(" ");
+						   } else { 
+							   if (taxonRank!=null && taxonRank.toLowerCase().trim().equals("variety")) { 
+								   tempAssembly.append("var. ");
+							   }
+							   if (taxonRank!=null && taxonRank.toLowerCase().trim().equals("form")) { 
+								   tempAssembly.append("f. ");
+							   }
+						   }
+						   tempAssembly.append(infraspecificEpithet);
+					   }
+				   }
+			   }
+			   if (tempAssembly.length()>0) {
+				   addToComment("Constructing a scientific name from genus plus atomic parts.  Depending on the source, this may not be the correct genus.");
+				   addToComment("Constructed: " + tempAssembly);
+				   scientificNameToValidate = tempAssembly.toString();
+			   }
 		   }
 	   }
 
@@ -174,8 +225,10 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 	   //System.err.println("servicestart#"+_id + "#" + System.currentTimeMillis());
 
 	   // Default response, unable to determine validity.
+	   boolean wasFilledIn = false;
 	   if (tempAssembly.length()>0) { 
-		   setCurationStatus(CurationComment.FILLED_IN);   
+		   setCurationStatus(CurationComment.FILLED_IN);
+		   wasFilledIn = true;
 	   } else { 
 		   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
 	   }
@@ -374,6 +427,16 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
     	   this.addCuratedValue(SpecimenRecord.dwc_scientificName, this.getCorrectedScientificName());
     	   addCuratedValue(SpecimenRecord.dwc_scientificNameAuthorship, this.getCorrectedAuthor());
     	   // TODO: Add other fields
+       }
+       
+       if (getCurationStatus().equals(CurationComment.CORRECT) && wasFilledIn && (genericEpithet==null || genericEpithet.trim().length()==0)) { 
+    	   // If we filled in a value and it was correct, we could change the state to assert that we filled it in.
+    	   // It is important that we assert filled in rather than correct here, as we are probably in this state 
+    	   // because the scientificName has been populated from genus+specificEpithet+rank+infraspecificEpithet, 
+    	   // and dwc:genus is defined as current generic placement, and not defined as the genus parsed from 
+    	   // the scientificName.  If a genericEpithet term becomes available, and we assemble scientificName from
+    	   // that instead of dwc:genus, then we can assert correct instead here.
+    	   this.setCurationStatus(CurationComment.FILLED_IN);
        }
    }
 
