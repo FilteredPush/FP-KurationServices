@@ -41,6 +41,7 @@ public class IPNIServiceTest {
 		try {
 			assertEquals("295763-1",service.simplePlantNameSearch(scientificName, author));
 		} catch (CurationException e) {
+			logger.error(e.getMessage());
 			fail("Unexpected exception " + e.getMessage());
 		}
 		
