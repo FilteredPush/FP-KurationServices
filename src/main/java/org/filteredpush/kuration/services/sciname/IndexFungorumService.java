@@ -98,7 +98,12 @@ public class IndexFungorumService extends SciNameServiceParent  {
 						logger.debug(mei.getChildElement(new QName("NAME_x0020_OF_x0020_FUNGUS")).getValue());
 						String name = mei.getChildElement(new QName("NAME_x0020_OF_x0020_FUNGUS")).getValue();
 						if (name.equals(taxonName)) {
-							String authorship = mei.getChildElement(new QName("AUTHORS")).getValue();
+							String authorship = null;
+							try { 
+							   authorship = mei.getChildElement(new QName("AUTHORS")).getValue();
+							} catch (NullPointerException e) { 
+								logger.error(e.getMessage());
+							}
 							if (authorship!=null && authorship.equals(toCheck.getOriginalAuthorship())) { 
 								String uuid = mei.getChildElement(new QName("UUID")).getValue();
 								String recnum = mei.getChildElement(new QName("RECORD_x0020_NUMBER")).getValue();
