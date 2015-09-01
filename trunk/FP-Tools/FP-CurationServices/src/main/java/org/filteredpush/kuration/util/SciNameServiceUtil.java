@@ -247,7 +247,7 @@ public class SciNameServiceUtil {
             //if there is no possible correction, return now
             if (jresults == null){
                 //comment = comment + " | the name is misspelled and cannot be corrected.";
-                comment = comment + " | the provided name cannot be found in Global Name Resolver";
+                comment = comment + " | the provided name cannot be found in GlobalNames Resolver";
                 resultMap.put("scientificName", null);
                 resultMap.put("curationStatus", CurationComment.UNABLE_CURATED.toString());
                 resultMap.put("comment", comment);
@@ -257,7 +257,7 @@ public class SciNameServiceUtil {
             //System.out.println("last = " + last.toString());
 
         } catch (ParseException e) {
-            comment = comment + " | cannot get result from global name resolver due to error";
+            comment = comment + " | cannot get result from GlobalNames resolver due to error";
             resultMap.put("scientificName", null);
             resultMap.put("curationStatus", CurationComment.UNABLE_DETERMINE_VALIDITY.toString());
             resultMap.put("comment", comment);
@@ -289,11 +289,11 @@ public class SciNameServiceUtil {
                 //System.out.println("The provided name: \"" + name + "\" has spelling issue, changed to \"" + resolvedName + "\" for now.");
                 //System.out.println("The provided name: \"" + name + "\" has spelling issue and it cannot be curated");
                 curationStatus = CurationComment.UNABLE_CURATED;
-                comment = comment + " | The provided name: " + name + " cannot be found in Global Name Resolver";
+                comment = comment + " | The provided name: " + name + " cannot be found in GlobalNames Resolver";
                 resolvedName = null;
             }
         }else{
-            comment = comment + " | The provided name: " + name + " is valid after checking misspelling";
+            comment = comment + " | The provided name: " + name + " has a match in the GlobalNames Resolver";
             curationStatus = CurationComment.CORRECT;
         }
 
