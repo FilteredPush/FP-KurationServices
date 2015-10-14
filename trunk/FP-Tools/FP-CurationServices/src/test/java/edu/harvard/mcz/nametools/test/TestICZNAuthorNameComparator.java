@@ -2,8 +2,13 @@ package edu.harvard.mcz.nametools.test;
 
 import static org.junit.Assert.*;
 
+import java.util.Date;
+
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.ibm.icu.util.Calendar;
 
 import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.ICZNAuthorNameComparator;
@@ -69,17 +74,37 @@ public class TestICZNAuthorNameComparator {
 
 	@Test
 	public void testCalculateHasYear() {
-		assertTrue(ICZNAuthorNameComparator.calculateHasYear("Smith, 1882"));
-		assertTrue(ICZNAuthorNameComparator.calculateHasYear("(Smith, 1882)"));
-		assertTrue(ICZNAuthorNameComparator.calculateHasYear("1882"));
-		
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear("Smith"));
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear("Smith, 188"));
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear("(Smith, 188)"));
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear("188"));
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear("188414314"));
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear(Integer.toString(Integer.MAX_VALUE)));
-		assertFalse(ICZNAuthorNameComparator.calculateHasYear(Integer.toString(Integer.MIN_VALUE)));
+        // values that contain a year
+        assertTrue(ICZNAuthorNameComparator.calculateHasYear("Smith, 1882"));
+        assertTrue(ICZNAuthorNameComparator.calculateHasYear("(Smith, 1882)"));
+        assertTrue(ICZNAuthorNameComparator.calculateHasYear("1882"));
+        assertTrue(ICZNAuthorNameComparator.calculateHasYear("1000"));
+
+        // values that don't contain a year
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("Smith"));
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear(""));
+
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("18.32"));
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("18 Smith 62"));
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("Smith, 188"));
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("(Smith, 188)"));
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("188414314"));
+        
+        // out of range for meaning of year in this context
+        // (between 1000 and now).
+        int currentCentury = DateTime.now().getCenturyOfEra();
+        String nextCentury = Integer.toString(currentCentury+10).concat("00");
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear(nextCentury));
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear("999"));
+    
+        // edge cases for integers
+        String maxint = Integer.toString(Integer.MAX_VALUE);
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear(maxint));
+        String minint = Integer.toString(Integer.MIN_VALUE);
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear(minint));
+
+        // handling of null
+        assertFalse(ICZNAuthorNameComparator.calculateHasYear(null));
 	}
 
 	@Test

@@ -89,15 +89,16 @@ public abstract class AuthorNameComparator {
 	}
 	
 	/**
-	 * Test to see if an authorship string appears to contain a year.
+	 * Test to see if an authorship string appears to contain a year 
+	 * between 1000 and the current century.
 	 * 
-	 * @param authorship to test for a year.
+	 * @param authorship string to test for a year.
 	 * 
 	 * @return true if a four digit number is found.
 	 */
 	public static boolean calculateHasYear(String authorship) { 
 		boolean result = false;
-		if (authorship!=null && authorship.replaceAll("[^0-9]", "").length()==4) { 
+		if (authorship!=null && authorship.matches(".*[12][0-9]{3}.*") && authorship.replaceAll("[^0-9]","").length()==4) {
 			result = true;
 		}
 		return result;
