@@ -56,12 +56,58 @@ public class GEOUtil {
 		double long2r = Math.toRadians(lon2);
 	    double deltaLat = lat2r - lat1r;
 	    double deltaLon = long2r - long1r;
-	    double a = Math.pow((Math.sin(deltaLat/2.0d)), 2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow((Math.sin(deltaLon/2.0d)), 2);
+	    double a = Math.pow((Math.sin(deltaLat/2.0d)), 2) + Math.cos(lat1r) * Math.cos(lat2r) * Math.pow((Math.sin(deltaLon/2.0d)), 2);
 	    double c = 2.0d * Math.atan2(Math.sqrt(a), Math.sqrt(1.0d-a));
 	    long distance = Math.round(EARTH_MEAN_RADIUS_METERS * c);
 
 	    return distance;
 	}
+	
+	public static DegreeWithPrecision convertLatLongDecimal(int degrees, Integer minutes, Integer seconds) { 
+		double deg = degrees;
+		int precision = 0;
+		if (minutes==null && seconds==null) { 
+			deg = degrees;
+			precision = 0;
+		}
+		if (minutes!=null&&seconds==null) { 
+		    deg = degrees + (minutes / 60d);
+		    precision = 2;
+		}
+		if (minutes!=null&&seconds==null) { 
+		    deg = degrees + (minutes/60d) + ((seconds/60d)/60d);
+		    precision = 5;
+		}
+		return new DegreeWithPrecision(deg,precision);
+	}
+	
+	// Recognize type of string 
+	/*  D = degree
+	 *  M = minute
+	 *  S = second
+	 *  N = N/S, E/W 
+	 *  - = sign = S/W
+	 *  d = degree sign
+	 *  
+	 *  Decimal Degrees
+	 *  DD.DDDDD[d]N
+	 *  [-]DD.DDDDD[d]
+	 *  
+	 *  Decimal Minutes
+	 *  DDMM.MMN
+	 *  DDd MM.MM'N
+	 *  [-]DDd MM.MM
+	 *  
+	 *  DMS
+	 *  DD MM SS.SN
+	 *  DDdMM'SS.S"N
+	 *  [-]DD MM SS.S
+     *  [-]DDdMM'SS.S"
+	 *  DD MM SSN
+	 *  DDdMM'SS"N
+	 *  [-]DD MM SS
+     *  [-]DDdMM'SS"
+	 */
 	
 }
 

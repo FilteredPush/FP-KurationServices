@@ -8,7 +8,13 @@ import org.dom4j.DocumentException;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
 import org.filteredpush.kuration.interfaces.IGeoRefValidationService;
-import org.filteredpush.kuration.util.*;
+import org.filteredpush.kuration.util.Cache;
+import org.filteredpush.kuration.util.CacheValue;
+import org.filteredpush.kuration.util.CurationComment;
+import org.filteredpush.kuration.util.CurationException;
+import org.filteredpush.kuration.util.GEOUtil;
+import org.filteredpush.kuration.util.GeoRefCacheValue;
+import org.filteredpush.kuration.util.GeolocationResult;
 import org.nocrala.tools.gis.data.esri.shapefile.ShapeFileReader;
 import org.nocrala.tools.gis.data.esri.shapefile.ValidationPreferences;
 import org.nocrala.tools.gis.data.esri.shapefile.exception.InvalidShapeFileException;
@@ -16,20 +22,33 @@ import org.nocrala.tools.gis.data.esri.shapefile.shape.AbstractShape;
 import org.nocrala.tools.gis.data.esri.shapefile.shape.PointData;
 import org.nocrala.tools.gis.data.esri.shapefile.shape.shapes.PolygonShape;
 
-import edu.tulane.museum.www.webservices.GeolocatesvcLocator;
-import edu.tulane.museum.www.webservices.GeolocatesvcSoap;
 import edu.tulane.museum.www.webservices.GeolocatesvcSoapProxy;
 import edu.tulane.museum.www.webservices.Georef_Result;
 import edu.tulane.museum.www.webservices.Georef_Result_Set;
 
 import java.awt.geom.Path2D;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.rmi.RemoteException;
-import java.util.*;
-
-import javax.xml.rpc.ServiceException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.Vector;
 
 public class GeoLocate3 extends BaseCurationService implements IGeoRefValidationService {
 	
@@ -106,7 +125,8 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         }
 				
 
-        //start validation
+        // start validation
+        // Try to fill in missing values 
         if(latitude == null || longitude == null){
         	if (potentialMatches.size()>0 && potentialMatches.get(0).getConfidence()>80 ) { 
         		if (latitude!=null && longitude==null) { 
@@ -151,15 +171,6 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             double rawLat = originalLat;
             double rawLong = originalLng;
 
-            //zero, check if it's close to a GeoLocate georeference
-            if (GeolocationResult.isLocationNearAResult(originalLat, originalLng, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
-                setCurationStatus(CurationComment.CORRECT);
-                correctedLatitude = originalLat;
-                correctedLongitude = originalLng;
-                addToComment("Original coordinates are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ");
-                return;
-            }
-
             //First, domain check, if wrong, switch
             if (originalLat > 90 || originalLat < -90) {
                 if (originalLng < 90 || originalLng > -90) {
@@ -167,30 +178,34 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                     originalLat = originalLng;
                     originalLng = temp;
                     setCurationStatus(CurationComment.CURATED);
-                    addToComment("The original latitude is out of range. Transposing longitude and latitude. ");
+                    addToComment("The original latitude is out of range.");
                 } else {
                     if (originalLng > 180 || originalLng < -180) {
                         setCurationStatus(CurationComment.UNABLE_CURATED);
                         addToComment("Both original latitude \"" + originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ");
-                        return;
                     } else {
                         setCurationStatus(CurationComment.UNABLE_CURATED);
                         addToComment("The original latitude \"" + originalLat + "\" is out of range. ");
-                        return;
                     }
                 }
             } else {
                 if (originalLng > 180 || originalLng < -180) {
                     setCurationStatus(CurationComment.UNABLE_CURATED);
                     addToComment("The original longitude \"" + originalLng + "\" is out of range. ");
+                }
+                //Both in range, check to see if provided location is close to a GeoLocate georeference for the locality
+                if (GeolocationResult.isLocationNearAResult(originalLat, originalLng, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
+                    setCurationStatus(CurationComment.CORRECT);
+                    correctedLatitude = originalLat;
+                    correctedLongitude = originalLng;
+                    addToComment("Original coordinates are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ");
                     return;
                 }
+
             }
 
 
-            //System.out.println("down to second");
             //Second, check whether it's on land
-            // TODO: Localities can be marine.  I think this is a missinterpretation of "on the earth's surface"
             // as on land rather than having a valid latitude/longitude
             Set<Path2D> setPolygon = null;
             try {
@@ -202,19 +217,31 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             	logger.error(e.getMessage());
             }
 
-            boolean originalInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+            // Very crude approach to testing for land/marine, could check continent/ocean, ocean region, etc. instead.
+            // TODO: Nearshore marine localities can also be reported as having a country, so implement a better test. 
+            boolean invertSense = false;
+            if ((country==null||country.length()==0) && (stateProvince==null||stateProvince.length()==0) && (county==null||county.length()==0)) {
+                addToComment("No country, state/province, or county provided, guessing that this is a marine locality. ");
+            	// no country provided, assume locality is marine
+            	invertSense = true;
+            } else { 
+                addToComment("A country, state/province, or county was provided, guessing that this is a non-marine locality. ");
+            }
+            boolean originalInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
             //If not in polygon, try some sign changing/swapping
             if (!originalInPolygon) {
+                addToComment("Location is not in expected land/marine setting.");
+                addToComment("Checking transpositions and sign changes of latitude/longitude.");
                 //sign changing
                 originalLng = 0 - originalLng;
-                boolean swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                boolean swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
                 if (!swapInPolygon) {
                     originalLat = 0 - originalLat;
-                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
                 }
                 if (!swapInPolygon) {
                     originalLng = 0 - originalLng;
-                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
                 }
 
                 //if it's still not in land, swap lat and lng and do the sign changing again
@@ -224,25 +251,33 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                     originalLng = temp2;
 
                     originalLng = 0 - originalLng;
-                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
                     if (!swapInPolygon) {
                         originalLat = 0 - originalLat;
-                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
                     }
                     if (!swapInPolygon) {
                         originalLng = 0 - originalLng;
-                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat);
+                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
                     }
                 }
 
                 //check the result
                 if (swapInPolygon) {
                     setCurationStatus(CurationComment.CURATED);
-                    addToComment("sign changed coordinates are on the Earth's surface. ");
+                    if (invertSense) { 
+                        addToComment("Sign changed coordinates are not on land. ");
+                    } else { 
+                        addToComment("Sign changed coordinates are on land. ");
+                    }
                     addToServiceName("Land data from Natural Earth");
                 } else {
                     setCurationStatus(CurationComment.UNABLE_CURATED);
-                    addToComment("Can't transpose/sign change coordinates to place them on the Earth's surface.");
+                    if (invertSense) { 
+                         addToComment("Can't transpose/sign change coordinates to place them in the ocean.");
+                    } else { 
+                         addToComment("Can't transpose/sign change coordinates to place them on land.");
+                    }
                     return;
                 }
             }
@@ -572,6 +607,35 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         return foundInPolygon;
     }
 
+    /**
+     * Test to see if an x/y coordinate is inside any of a set of polygons.
+     * 
+     * @param polygonSet
+     * @param Xvalue
+     * @param Yvalue
+     * @param invertSense true to invert the result, false to keep the result unchanged.
+     * 
+     * @return true if the x/y value is inside polygonSet and invertSense is false 
+     *         false if the x/y value is outside polygonSet and invertSense is false
+     *         false if the x/y value is insidePolygonSet and invertSense is true
+     *         true if the x/y value is outside polygonSet and invertSense is true
+     */
+    private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue, boolean invertSense){
+        //System.out.println("Xvalue = " + Xvalue);
+        //System.out.println("Yvalue = " + Yvalue);
+        Boolean foundInPolygon = false;
+        Iterator it = polygonSet.iterator();
+        while(it.hasNext()){
+            Path2D poly=(Path2D)it.next();
+            if (poly.contains(Xvalue, Yvalue)) {
+                //System.out.println("Found in polygon");
+                foundInPolygon = true;
+            }
+        }
+        if (invertSense) { foundInPolygon = ! foundInPolygon; } 
+        return foundInPolygon;
+    }    
+    
     private Set<Path2D> ReadLandData () throws IOException, InvalidShapeFileException {
 
         InputStream is = GeoLocate3.class.getResourceAsStream("/org.filteredpush.kuration.services/ne_10m_land.shp");
