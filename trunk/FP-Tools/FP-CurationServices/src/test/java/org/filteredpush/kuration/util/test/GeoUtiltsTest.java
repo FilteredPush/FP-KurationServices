@@ -122,6 +122,39 @@ public class GeoUtiltsTest {
         originalLng = 71.295556d;
         assertFalse(GEOUtil.isPointInPrimary("United States", "Alaska", originalLat, originalLng));        
 	}
+	
+	@Test
+	public void testNearCountry() { 
+		assertTrue(GEOUtil.isCountryKnown("United States"));
+		
+        double thresholdDistanceKmFromLand = 44.448d;  // 24 nautical miles, territorial waters plus contigouus zone.
+		
+        // Barrow, Alaska, in and near boundary of US.
+        double originalLng = -156.766389d;
+        double originalLat = 71.295556d;
+        assertTrue(GEOUtil.isPointInCountry("United States", originalLat, originalLng));
+        assertTrue(GEOUtil.isPointNearCountry("United States", originalLat, originalLng, thresholdDistanceKmFromLand));
+        
+        // slightly further north, not in, but near boundary of US.
+        originalLng = -156.766389d;
+        originalLat = 71.5d;
+        assertFalse(GEOUtil.isPointInCountry("United States", originalLat, originalLng));
+        assertTrue(GEOUtil.isPointNearCountry("United States", originalLat, originalLng, thresholdDistanceKmFromLand));
+        
+        
+        // slightly further South, in US. 
+        originalLng = -156.766389d;
+        originalLat = 70.0d;
+        assertTrue(GEOUtil.isPointInCountry("United States", originalLat, originalLng));
+        assertTrue(GEOUtil.isPointNearCountry("United States", originalLat, originalLng, thresholdDistanceKmFromLand));
+        
+        // Further north, not in, or near boundary of US.
+        originalLng = -156.766389d;
+        originalLat = 80d;
+        assertFalse(GEOUtil.isPointInCountry("United States", originalLat, originalLng));
+        assertFalse(GEOUtil.isPointNearCountry("United States", originalLat, originalLng, thresholdDistanceKmFromLand));
+        
+	}
 
 }
 

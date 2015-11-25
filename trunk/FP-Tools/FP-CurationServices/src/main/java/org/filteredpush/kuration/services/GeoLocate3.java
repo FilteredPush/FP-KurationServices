@@ -14,6 +14,7 @@ import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.GEOUtil;
 import org.filteredpush.kuration.util.GeoRefCacheValue;
+import org.filteredpush.kuration.util.GeolocationAlternative;
 import org.filteredpush.kuration.util.GeolocationResult;
 import org.nocrala.tools.gis.data.esri.shapefile.ShapeFileReader;
 import org.nocrala.tools.gis.data.esri.shapefile.ValidationPreferences;
@@ -43,6 +44,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -59,7 +61,6 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 
 	private double correctedLatitude;
 	private double correctedLongitude;
-//	private boolean isCoordinatesFound;
     private List<List> log = new LinkedList<List>();
 
     static int count = 0;
@@ -102,28 +103,32 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             //System.out.println("geocount = " + count++);
             //System.out.println("key = " + key);
         } else {
-
-        	
+        	// Look up locality in Tulane's GeoLocate service
             try {
         	    potentialMatches = queryGeoLocateMulti(country, stateProvince, county, locality, latitude, longitude);
             } catch (CurationException e) {
                 setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
                 addToComment(e.getMessage());
-                return;
             }
 
             if(potentialMatches == null || potentialMatches.size()==0){
                 setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
                 addToComment("GeoLocate service can't find coordinates of Locality. ");
-                return;
             }
-
-            // 
-            // if(useCache) addNewToCache(foundLat, foundLng, country, stateProvince, county, locality);
         }
-				
 
         // start validation
+        
+        // Make strings null if they don't contain valid lat/long values
+        if (latitude!=null && latitude.trim().length()==0) { latitude = null; } 
+        if (longitude!=null && longitude.trim().length()==0) { longitude = null; } 
+        if (latitude!=null) { 
+           try { Double.valueOf(latitude); } catch (NumberFormatException e) { latitude = null; }
+        }
+        if (longitude!=null) { 
+           try { Double.valueOf(longitude); } catch (NumberFormatException e) { longitude = null; }
+        }
+        
         // Try to fill in missing values 
         if(latitude == null || longitude == null){
         	if (potentialMatches.size()>0 && potentialMatches.get(0).getConfidence()>80 ) { 
@@ -156,258 +161,192 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         			addToComment("Added a georeference using cached data or "+getServiceName()+"service since the original coordinates are missing and geolocate had a confident match. ");
         		}
         	} else { 
-        		setCurationStatus(CurationComment.UNABLE_CURATED);
+        		setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
         		addToComment("No latitude and/or longitude provided, and geolocate didn't return a good match.");
         	}
-        }else {
+        } else {
             //calculate the distance from the returned point and original point in the record
             //If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
             //Otherwise, use the point returned from GeoLocate
         	addToComment("Latitute and longitude are both present.");
 
             double originalLat = Double.valueOf(latitude);
-            double originalLng = Double.valueOf(longitude);
+            double originalLong = Double.valueOf(longitude);
             double rawLat = originalLat;
-            double rawLong = originalLng;
+            double rawLong = originalLong;
+            
+            // Construct a list of alternatives
+            List<GeolocationAlternative> alternatives = GeolocationAlternative.constructListOfAlternatives(originalLat, originalLong); 
 
-            //First, domain check, if wrong, switch
-            if (originalLat > 90 || originalLat < -90) {
-                if (originalLng < 90 || originalLng > -90) {
-                    double temp = originalLat;
-                    originalLat = originalLng;
-                    originalLng = temp;
-                    setCurationStatus(CurationComment.CURATED);
-                    addToComment("The original latitude is out of range.");
-                } else {
-                    if (originalLng > 180 || originalLng < -180) {
-                        setCurationStatus(CurationComment.UNABLE_CURATED);
-                        addToComment("Both original latitude \"" + originalLat + "\" and longitude \"" + originalLng + "\" are out of range. ");
-                    } else {
-                        setCurationStatus(CurationComment.UNABLE_CURATED);
-                        addToComment("The original latitude \"" + originalLat + "\" is out of range. ");
-                    }
-                }
-            } else {
-                if (originalLng > 180 || originalLng < -180) {
-                    setCurationStatus(CurationComment.UNABLE_CURATED);
-                    addToComment("The original longitude \"" + originalLng + "\" is out of range. ");
-                }
+            boolean flagError = false;
+            boolean foundGoodMatch = false;
+            
+            // Check for possible error conditions
+            
+            // (1) Latitude and longitude out of range
+            if (Math.abs(originalLat)>90) { 
+                addToComment("The original latitude is out of range.");
+                flagError = true;
+            }
+            if (Math.abs(originalLong)>180) { 
+                addToComment("The original longitude is out of range.");
+                flagError = true;
+            }
+            if (!flagError) { 
         	    addToComment("Latitute is within +/-90 and longitude is within +/-180.");
-                //Both in range, check to see if provided location is close to a GeoLocate georeference for the locality
-                if (GeolocationResult.isLocationNearAResult(originalLat, originalLng, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
-                    setCurationStatus(CurationComment.CORRECT);
-                    correctedLatitude = originalLat;
-                    correctedLongitude = originalLng;
-                    addToComment("Original coordinates are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ");
-                    return;
-                }
-
             }
 
+            // Check country and stateProvince
+            if (country != null && country.length()>0) {
+            	//standardize country names
+            	if (country.toUpperCase().equals("USA")) {
+            		country = "United States";
+            	} else if (country.toUpperCase().equals("U.S.A.")) {
+            		country = "United States";
+            	} else if (country.toLowerCase().equals("united states of america")) {
+            		country = "United States";
+            	} else {
+            		country = country.toUpperCase();
+            		//System.out.println("not in !##"+country+"##");
+            	} 
 
-            //Second, check whether it's on land
-            // as on land rather than having a valid latitude/longitude
+            	// (2) Locality not inside country?
+            	if (GEOUtil.isCountryKnown(country)) {  
+            		if (!GEOUtil.isPointInCountry(country, originalLat, originalLong)) { 
+            		addToComment("Original coordinate is not inside country ("+country+").");
+            		addToServiceName("Country boundary data from Natural Earth");
+            		flagError = true;
+            		}
+            	} else { 
+                    addToComment("Can't find country: " + country + " in country name list");
+            	}
+
+            	if (stateProvince!=null && stateProvince.length()>0) { 
+            		// (3) Locality not inside primary division?
+            		if (GEOUtil.isPrimaryKnown(country, stateProvince)) { 
+            			if (!GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLong)) { 
+            			addToComment("Original coordinate is not inside primary division ("+stateProvince+").");
+            			addToServiceName("State/province boundary data from Natural Earth");
+            			flagError = true;
+            			} 
+            		} else { 
+                        addToComment("Can't find state/province: " + stateProvince + " in primaryDivision name list");
+            		}
+            	}
+            }
+
+            // Is locality marine? 
             Set<Path2D> setPolygon = null;
             try {
-                setPolygon = ReadLandData();
-                //System.out.println("read data");
+            	setPolygon = ReadLandData();
+            	//System.out.println("read data");
             } catch (IOException e) {
             	logger.error(e.getMessage());
             } catch (InvalidShapeFileException e) {
             	logger.error(e.getMessage());
             }
-/*
-            // Very crude approach to testing for land/marine, could check continent/ocean, ocean region, etc. instead.
-            // TODO: Nearshore marine localities can also be reported as having a country, so implement a better test. 
-            boolean invertSense = false;
+            boolean isMarine = false;
             if ((country==null||country.length()==0) && (stateProvince==null||stateProvince.length()==0) && (county==null||county.length()==0)) {
-                addToComment("No country, state/province, or county provided, guessing that this is a marine locality. ");
+            	addToComment("No country, state/province, or county provided, guessing that this is a marine locality. ");
             	// no country provided, assume locality is marine
-            	invertSense = true;
+            	isMarine = true;
             } else { 
-                addToComment("A country, state/province, or county was provided, guessing that this is a non-marine locality. ");
+            	addToComment("A country, state/province, or county was provided, guessing that this is a non-marine locality. ");
             }
-            boolean originalInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-            //If not in polygon, try some sign changing/swapping
-            if (!originalInPolygon) {
-                addToComment("Location is in expected land/marine setting.");
-            } else {
-                addToComment("Location is not in expected land/marine setting.");
-                addToComment("Checking transpositions and sign changes of latitude/longitude.");
-                //sign changing
-                originalLng = 0 - originalLng;
-                boolean swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-                if (!swapInPolygon) {
-                    originalLat = 0 - originalLat;
-                    swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-                }
-                if (!swapInPolygon) {
-                    originalLng = 0 - originalLng;
-                    swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-                }
+            if (!GEOUtil.isInPolygon(setPolygon, originalLong, originalLat, isMarine)) {
+            	if (isMarine) { 
+            		addToComment("Coordinate is on land for a supposedly marine locality.");
+            		flagError = true;
+            	} else { 
+            		addToComment("Coordinate is not on land for a supposedly non-marine locality.");
+            		double thresholdDistanceKmFromLand = 44.448d;  // 24 nautical miles, territorial waters plus contigouus zone.
+            		if (GEOUtil.isPointNearCountry(country, originalLat, originalLong, thresholdDistanceKmFromLand)) { 
+            			addToComment("Coordinate is within 24 nautical miles of country boundary.");
+            		} else { 
+            			flagError = true;
+            		}
+            	}
+            }            
 
-                //if it's still not in land, swap lat and lng and do the sign changing again
-                if (!swapInPolygon && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90)) {
-                    double temp2 = originalLat;
-                    originalLat = originalLng;
-                    originalLng = temp2;
-
-                    originalLng = 0 - originalLng;
-                    swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-                    if (!swapInPolygon) {
-                        originalLat = 0 - originalLat;
-                        swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-                    }
-                    if (!swapInPolygon) {
-                        originalLng = 0 - originalLng;
-                        swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
-                    }
-                }
-
-                //check the result
-                if (swapInPolygon) {
-                    setCurationStatus(CurationComment.CURATED);
-                    if (invertSense) { 
-                        addToComment("Sign changed coordinates are not on land. ");
-                    } else { 
-                        addToComment("Sign changed coordinates are on land. ");
-                    }
-                    addToServiceName("Land data from Natural Earth");
-                } else {
-                    setCurationStatus(CurationComment.UNABLE_CURATED);
-                    if (invertSense) { 
-                         addToComment("Can't transpose/sign change coordinates to place them in the ocean.");
-                    } else { 
-                         addToComment("Can't transpose/sign change coordinates to place them on land.");
-                    }
-                    return;
-                }
+            // (4) Geolocate returned some result, is original locality near that result?
+            if (potentialMatches!=null && potentialMatches.size()>0) { 
+            	if (GeolocationResult.isLocationNearAResult(originalLat, originalLong, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
+            		setCurationStatus(CurationComment.CORRECT);
+            		correctedLatitude = originalLat;
+            		correctedLongitude = originalLong;
+            		addToComment("Original coordinates are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ");
+            		flagError = false;
+            		foundGoodMatch = true;
+            	} else {
+            		addToComment("Original coordinates are not near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service. ");
+            		flagError = true;
+            	}
             }
-*/
-            //System.out.println("down to third");
-            //Third, check whether it's in the country
 
-            //standardize country names
-            //country = countryNormalization(country);
-            if (country != null) {
-                addToServiceName("Country boundary data from Natural Earth");
-                if (country.toUpperCase().equals("USA")) {
-                    country = "United States";
-                } else if (country.toUpperCase().equals("U.S.A.")) {
-                    country = "United States";
-                } else if (country.toLowerCase().equals("united states of america")) {
-                    country = "United States";
-                } else {
-                    country = country.toUpperCase();
-                    //System.out.println("not in !##"+country+"##");
-                }
 
-                if (!GEOUtil.isCountryKnown(country)) {
-                    setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
-                    addToComment("Can't find country: " + country + " in country name list");
-                } else {
-                    boolean originalInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                    if (originalInBoundary) {
-                        addToComment("Coordinates are inside country ("+ country +"). ");
-                    } else {
-                        //If not in polygon, try some swapping
-                        addToComment("Coordinates not inside country ("+country+"). ");
-                        addToComment("Checking transpositions. ");
-                        double invertLong = 0 - originalLng;
-                        double invertLat = 0 - originalLat;
-                        boolean swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                        if (swapInBoundary) { 
-                        	originalLng = invertLong;
-                        }
-                        if (!swapInBoundary) {
-                            swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            if (swapInBoundary) { 
-                        	   originalLng = invertLong;
-                        	   originalLat = invertLat;
-                            }
-                        }
-                        if (!swapInBoundary) {
-                            swapInBoundary =GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            if (swapInBoundary) { 
-                        	   originalLat = invertLat;
-                            }
-                        }
-                        if (!swapInBoundary) { 
-                        	originalLat = rawLat;
-                        	originalLng = rawLong;
-                            addToComment("Changes of sign are not inside ("+country+") ");
-                            //addToComment("Testing with ("+originalLat+") ("+originalLng+") ");
-                            //swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            //addToComment(Boolean.toString(swapInBoundary));
-                            //if (swapInBoundary) { 
-                            //	addToComment("Lat" + originalLat + " Long: " + originalLng);
-                            //}
-                        }
-                        //if it's still not in country, swap lat and lng and do the sign changing again
-                        if (!swapInBoundary) {
-                        	originalLat = rawLat;
-                        	originalLng = rawLong;
-
-                            addToComment("Testing with ("+originalLat+") ("+originalLng+") ");
-                            swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            addToComment(Boolean.toString(swapInBoundary));
-                            if (swapInBoundary) { 
-                            	addToComment("Lat" + originalLat + " Long: " + originalLng);
-                            }
-                            if (!swapInBoundary) { 
-                               originalLng = 0 - originalLng;
-                               swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            }
-                            if (!swapInBoundary) {
-                                originalLat = 0 - originalLat;
-                                swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            }
-                            if (!swapInBoundary) {
-                                originalLng = 0 - originalLng;
-                                swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
-                            }
-                        }
-                        
-                        String action = "transposed/sign changed";
-                        // If still not in country and values are small, try scaling by 10.
-                        // TODO: follow scaling check with scaling and transposition check.
-                        if (!swapInBoundary && (Math.abs(rawLat)<10 || Math.abs(rawLong)<10)) {
-                            if (!swapInBoundary && (Math.abs(rawLat)<10)) {
-                        	   swapInBoundary = GEOUtil.isPointInCountry(country, rawLat*10d, rawLong);
-                        	   if (swapInBoundary) { 
-                        		   originalLat = rawLat * 10d;
-                        		   action = "scaled";
-                        	   }
-                            }
-                            if (!swapInBoundary && (Math.abs(rawLong)<10)) {
-                        	   swapInBoundary = GEOUtil.isPointInCountry(country, rawLat, rawLong*10d);
-                        	   if (swapInBoundary) { 
-                        		   originalLng = rawLong * 10d;
-                        		   action = "scaled";
-                        	   }
-                            }
-                        }
-
-                        if (swapInBoundary) {
-                            setCurationStatus(CurationComment.CURATED);
-                            addToComment("" + action + " coordinates to place inside the provided Country (" + country + ").");
-                            
-                            if (stateProvince!=null && stateProvince.trim().length()>0 && GEOUtil.isPrimaryKnown(country, stateProvince)) { 
-                            	if (GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLng)) { 
-                            		addToComment(action + " coordinates are also inside the provided state/Province ("+stateProvince+"). ");
-                            	}
-                            }
-                            
-                        } else {
-                            setCurationStatus(CurationComment.UNABLE_CURATED);
-                            addToComment("Can't transpose/sign change/scale coordinates to place the georeference inside the provided Country (" + country + ").");
-                            return;
-                        }
-                    }
-                }
-            } else {
-                addToComment("country name is empty");
+            // Some error condition was found, see if any transposition returns a plausible locality
+            boolean matchFound = false;
+            if (flagError) {
+            	Iterator<GeolocationAlternative> i = alternatives.iterator();
+            	while (i.hasNext() && !matchFound) { 
+            		GeolocationAlternative alt = i.next();
+            		if (potentialMatches !=null && potentialMatches.size()>0) { 
+            			if (GeolocationResult.isLocationNearAResult(alt.getLatitude(), alt.getLongitude(), potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
+            				setCurationStatus(CurationComment.CURATED);
+            				correctedLatitude = alt.getLatitude();
+            				correctedLongitude = alt.getLongitude();
+            				addToComment("Modified coordinates ("+alt.getAlternative()+") are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ");
+            				matchFound = true;
+            			}            	
+            		} else {
+            			if (isMarine) {
+            				if (country!=null && GEOUtil.isCountryKnown(country)) { 
+            					double thresholdDistanceKmFromLand = 44.448d;  // 24 nautical miles, territorial waters plus contigouus zone.
+            					if (GEOUtil.isPointNearCountry(country, originalLat, originalLong, thresholdDistanceKmFromLand)) { 
+            						addToComment("Modified coordinate (" + alt.getAlternative() + ") is within 24 nautical miles of country boundary.");
+            						correctedLatitude = alt.getLatitude();
+            						correctedLongitude = alt.getLongitude();
+            						matchFound = true;
+            					}
+            				}
+            			} else { 
+            				if (GEOUtil.isCountryKnown(country) && 
+            						!GEOUtil.isPointInCountry(country, alt.getLatitude(), alt.getLongitude())) { 
+            					addToComment("Modified coordinate ("+alt.getAlternative()+") is inside country ("+country+").");
+            					if (GEOUtil.isPrimaryKnown(country, stateProvince) && 
+            							!GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLong)) { 
+            						setCurationStatus(CurationComment.CURATED);
+            						addToComment("Modified coordinate ("+alt.getAlternative()+") is inside stateProvince ("+stateProvince+").");
+            						correctedLatitude = alt.getLatitude();
+            						correctedLongitude = alt.getLongitude();
+            						matchFound = true;
+            					}
+            				}
+            			}
+            		}
+            	}
             }
+            
+            if (flagError) { 
+            	if (matchFound) { 
+            		setCurationStatus(CurationComment.CURATED);
+                    if(useCache) { 
+                    	addNewToCache(correctedLatitude, correctedLongitude, country, stateProvince, county, locality); 
+                    }
+            	} else { 
+            		setCurationStatus(CurationComment.UNABLE_CURATED);
+            	}
+            } else { 
+            	if (foundGoodMatch) { 
+            		setCurationStatus(CurationComment.CORRECT);
+                    if(useCache) { 
+                    	addNewToCache(originalLat, originalLong, country, stateProvince, county, locality); 
+                    }
+            	} else { 
+            		setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+            	}
+            }
+
             //System.out.println("setCurationStatus(" + curationStatus);
             //System.out.println("comment = " + comment);
 
@@ -416,30 +355,6 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             //System.out.println("country = " + country);
             //System.out.println("foundLng = " + foundLng);
             //System.out.println("foundLat = " + foundLat);
-
-
-            addToComment("Lat" + originalLat + " Long: " + originalLng);
-            if (!GeolocationResult.isLocationNearAResult(originalLat, originalLng, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
-                //use the found coordinates
-                setCurationStatus(CurationComment.UNABLE_CURATED);
-                addToComment("Coordinates are not near (within georeference error radius or " +  thresholdDistanceKm + " km) georeference of locality from the Geolocate service.");
-            } else {
-                //use the original coordinates
-                if (getCurationStatus() == CurationComment.CURATED) {
-                    addToComment("Transposed/sign changed coordinates are near (within georeference error radius " +  thresholdDistanceKm + " km) georeference of locality from the Geolocate service.");
-                    correctedLatitude = originalLat;
-                    correctedLongitude = originalLng;
-                    if(useCache) { 
-                    	addNewToCache(correctedLatitude, correctedLongitude, country, stateProvince, county, locality); 
-                    }
-                } else {
-                	logger.error("wrongStatus, no change, but near.");
-                    System.out.println("wrong status in GeoLocate3: no change but near");
-                    System.out.println("debugging = " + getServiceName());
-                }
-
-
-            }
 
         }
 		logger.debug("Geolocate3.validateGeoref done " + getCurationStatus());
@@ -611,54 +526,6 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
     }
     */
 
-    /*
-    private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue){
-        //System.out.println("Xvalue = " + Xvalue);
-        //System.out.println("Yvalue = " + Yvalue);
-        Boolean foundInPolygon = false;
-        Iterator it = polygonSet.iterator();
-        while(it.hasNext()){
-            Path2D poly=(Path2D)it.next();
-            if (poly.contains(Xvalue, Yvalue)) {
-                //System.out.println("Found in polygon");
-                foundInPolygon = true;
-            }
-        }
-        return foundInPolygon;
-    }
-    */
-
-    /**
-     * Test to see if an x/y coordinate is inside any of a set of polygons.
-     * 
-     * @param polygonSet
-     * @param Xvalue
-     * @param Yvalue
-     * @param invertSense true to invert the result, false to keep the result unchanged.
-     * 
-     * @return true if the x/y value is inside polygonSet and invertSense is false 
-     *         false if the x/y value is outside polygonSet and invertSense is false
-     *         false if the x/y value is insidePolygonSet and invertSense is true
-     *         true if the x/y value is outside polygonSet and invertSense is true
-     */
-    /*
-    private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue, boolean invertSense){
-        //System.out.println("Xvalue = " + Xvalue);
-        //System.out.println("Yvalue = " + Yvalue);
-        Boolean foundInPolygon = false;
-        Iterator it = polygonSet.iterator();
-        while(it.hasNext()){
-            Path2D poly=(Path2D)it.next();
-            if (poly.contains(Xvalue, Yvalue)) {
-                //System.out.println("Found in polygon");
-                foundInPolygon = true;
-            }
-        }
-        if (invertSense) { foundInPolygon = ! foundInPolygon; } 
-        return foundInPolygon;
-    }    
-    */
-    
     public Set<Path2D> ReadLandData() throws IOException, InvalidShapeFileException {
 
         InputStream is = GeoLocate3.class.getResourceAsStream("/org.filteredpush.kuration.services/ne_10m_land.shp");
