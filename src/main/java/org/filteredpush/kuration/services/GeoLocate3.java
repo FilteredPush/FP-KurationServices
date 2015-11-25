@@ -295,7 +295,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             				setCurationStatus(CurationComment.CURATED);
             				correctedLatitude = alt.getLatitude();
             				correctedLongitude = alt.getLongitude();
-            				addToComment("Modified coordinates ("+alt.getAlternative()+") are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the original coordinates. ");
+            				addToComment("Modified coordinates ("+alt.getAlternative()+") are near (within georeference error radius or " +  thresholdDistanceKm + " km) the georeference for the locality text from the Geolocate service.  Accepting the " + alt.getAlternative() + " coordinates. ");
             				matchFound = true;
             			}            	
             		} else {
