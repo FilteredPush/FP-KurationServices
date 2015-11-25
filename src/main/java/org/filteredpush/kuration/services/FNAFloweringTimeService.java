@@ -169,13 +169,13 @@ public class FNAFloweringTimeService extends BaseCurationService implements IFlo
                 String genus, species, variety;
                 genus =  species = variety = "";
                 try{
-                    genus = eElement.getElementsByTagName("genus").item(0).getTextContent();
+                    genus = eElement.getElementsByTagName("genus").item(0).getNodeValue();
                 } catch(Exception e){}
                 try{
-                    species = eElement.getElementsByTagName("species").item(0).getTextContent();
+                    species = eElement.getElementsByTagName("species").item(0).getNodeValue();
                 } catch(Exception e){}
                 try{
-                    variety = eElement.getElementsByTagName("variety").item(0).getTextContent();
+                    variety = eElement.getElementsByTagName("variety").item(0).getNodeValue();
                 } catch(Exception e){}
 
                 String sciName = genus + " " + species + " var. " + variety;
@@ -184,7 +184,7 @@ public class FNAFloweringTimeService extends BaseCurationService implements IFlo
                 Vector<String> monthVector = new Vector<String>();
                 for (int i = 0; i < flowList.getLength(); i++){
                     //System.out.println(flowList.item(i).getTextContent());
-                    monthVector.add(flowList.item(i).getTextContent().trim());
+                    monthVector.add(flowList.item(i).getNodeValue().trim());
                 }
 
                 authoritativeFloweringTimeMap.put(sciName, monthVector);

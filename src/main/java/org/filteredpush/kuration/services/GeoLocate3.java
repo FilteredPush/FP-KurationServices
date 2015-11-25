@@ -34,7 +34,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -44,7 +43,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -165,6 +163,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             //calculate the distance from the returned point and original point in the record
             //If the distance is smaller than a certainty, then use the original point --- GEOService, like GeoLocate can't parse detailed locality. In this case, the original point has higher confidence
             //Otherwise, use the point returned from GeoLocate
+        	addToComment("Latitute and longitude are both present.");
 
             double originalLat = Double.valueOf(latitude);
             double originalLng = Double.valueOf(longitude);
@@ -193,6 +192,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                     setCurationStatus(CurationComment.UNABLE_CURATED);
                     addToComment("The original longitude \"" + originalLng + "\" is out of range. ");
                 }
+        	    addToComment("Latitute is within +/-90 and longitude is within +/-180.");
                 //Both in range, check to see if provided location is close to a GeoLocate georeference for the locality
                 if (GeolocationResult.isLocationNearAResult(originalLat, originalLng, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
                     setCurationStatus(CurationComment.CORRECT);
@@ -216,7 +216,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             } catch (InvalidShapeFileException e) {
             	logger.error(e.getMessage());
             }
-
+/*
             // Very crude approach to testing for land/marine, could check continent/ocean, ocean region, etc. instead.
             // TODO: Nearshore marine localities can also be reported as having a country, so implement a better test. 
             boolean invertSense = false;
@@ -227,21 +227,23 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             } else { 
                 addToComment("A country, state/province, or county was provided, guessing that this is a non-marine locality. ");
             }
-            boolean originalInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+            boolean originalInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
             //If not in polygon, try some sign changing/swapping
             if (!originalInPolygon) {
+                addToComment("Location is in expected land/marine setting.");
+            } else {
                 addToComment("Location is not in expected land/marine setting.");
                 addToComment("Checking transpositions and sign changes of latitude/longitude.");
                 //sign changing
                 originalLng = 0 - originalLng;
-                boolean swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+                boolean swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
                 if (!swapInPolygon) {
                     originalLat = 0 - originalLat;
-                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+                    swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
                 }
                 if (!swapInPolygon) {
                     originalLng = 0 - originalLng;
-                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+                    swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
                 }
 
                 //if it's still not in land, swap lat and lng and do the sign changing again
@@ -251,14 +253,14 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                     originalLng = temp2;
 
                     originalLng = 0 - originalLng;
-                    swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+                    swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
                     if (!swapInPolygon) {
                         originalLat = 0 - originalLat;
-                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+                        swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
                     }
                     if (!swapInPolygon) {
                         originalLng = 0 - originalLng;
-                        swapInPolygon = testInPolygon(setPolygon, originalLng, originalLat, invertSense);
+                        swapInPolygon = GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense);
                     }
                 }
 
@@ -281,79 +283,88 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                     return;
                 }
             }
-
+*/
             //System.out.println("down to third");
             //Third, check whether it's in the country
-            HashMap<String, Set<Path2D>> boundaries = null;
-            try {
-
-                InputStream fileIn = GeoLocate3.class.getResourceAsStream("/org.filteredpush.kuration.services/country_boundary.ser");
-                //FileInputStream fileIn = new FileInputStream("/etc/filteredpush/descriptors/country_boundary.ser");
-                ObjectInputStream in = new ObjectInputStream(fileIn);
-                boundaries = (HashMap) in.readObject();
-                in.close();
-                fileIn.close();
-                //System.out.println("read boundary data");
-            } catch (IOException i) {
-            	logger.error(i.getMessage(),i);
-            } catch (ClassNotFoundException c) {
-                System.out.println("boundaries data not found");
-            	logger.error(c.getMessage(),c);
-            }
 
             //standardize country names
             //country = countryNormalization(country);
-            if (country != null && boundaries != null) {
-                addToServiceName("Country boundary data from GeoCommunity");
+            if (country != null) {
+                addToServiceName("Country boundary data from Natural Earth");
                 if (country.toUpperCase().equals("USA")) {
-                    country = "UNITED STATES";
+                    country = "United States";
                 } else if (country.toUpperCase().equals("U.S.A.")) {
-                    country = "UNITED STATES";
+                    country = "United States";
                 } else if (country.toLowerCase().equals("united states of america")) {
-                    country = "UNITED STATES";
+                    country = "United States";
                 } else {
                     country = country.toUpperCase();
                     //System.out.println("not in !##"+country+"##");
                 }
 
-                Set<Path2D> boundary = boundaries.get(country);
-                if (boundary == null) {
+                if (!GEOUtil.isCountryKnown(country)) {
                     setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
                     addToComment("Can't find country: " + country + " in country name list");
-
                 } else {
-                    boolean originalInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                    boolean originalInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
                     if (originalInBoundary) {
                         addToComment("Coordinates are inside country ("+ country +"). ");
                     } else {
                         //If not in polygon, try some swapping
                         addToComment("Coordinates not inside country ("+country+"). ");
-                        originalLng = 0 - originalLng;
-                        boolean swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
-                        if (!swapInBoundary) {
-                            originalLat = 0 - originalLat;
-                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                        addToComment("Checking transpositions. ");
+                        double invertLong = 0 - originalLng;
+                        double invertLat = 0 - originalLat;
+                        boolean swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
+                        if (swapInBoundary) { 
+                        	originalLng = invertLong;
                         }
                         if (!swapInBoundary) {
-                            originalLng = 0 - originalLng;
-                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                            swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
+                            if (swapInBoundary) { 
+                        	   originalLng = invertLong;
+                        	   originalLat = invertLat;
+                            }
                         }
-
+                        if (!swapInBoundary) {
+                            swapInBoundary =GEOUtil.isPointInCountry(country, originalLat, originalLng);
+                            if (swapInBoundary) { 
+                        	   originalLat = invertLat;
+                            }
+                        }
+                        if (!swapInBoundary) { 
+                        	originalLat = rawLat;
+                        	originalLng = rawLong;
+                            addToComment("Changes of sign are not inside ("+country+") ");
+                            //addToComment("Testing with ("+originalLat+") ("+originalLng+") ");
+                            //swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
+                            //addToComment(Boolean.toString(swapInBoundary));
+                            //if (swapInBoundary) { 
+                            //	addToComment("Lat" + originalLat + " Long: " + originalLng);
+                            //}
+                        }
                         //if it's still not in country, swap lat and lng and do the sign changing again
-                        if (!swapInBoundary && (originalLat < 90 && originalLat > -90) && (originalLat < 90 && originalLat > -90)) {
-                            double temp3 = originalLat;
-                            originalLat = originalLng;
-                            originalLng = temp3;
+                        if (!swapInBoundary) {
+                        	originalLat = rawLat;
+                        	originalLng = rawLong;
 
-                            originalLng = 0 - originalLng;
-                            swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                            addToComment("Testing with ("+originalLat+") ("+originalLng+") ");
+                            swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
+                            addToComment(Boolean.toString(swapInBoundary));
+                            if (swapInBoundary) { 
+                            	addToComment("Lat" + originalLat + " Long: " + originalLng);
+                            }
+                            if (!swapInBoundary) { 
+                               originalLng = 0 - originalLng;
+                               swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
+                            }
                             if (!swapInBoundary) {
                                 originalLat = 0 - originalLat;
-                                swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                                swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
                             }
                             if (!swapInBoundary) {
                                 originalLng = 0 - originalLng;
-                                swapInBoundary = testInPolygon(boundary, originalLng, originalLat);
+                                swapInBoundary = GEOUtil.isPointInCountry(country, originalLat, originalLng);
                             }
                         }
                         
@@ -362,14 +373,14 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                         // TODO: follow scaling check with scaling and transposition check.
                         if (!swapInBoundary && (Math.abs(rawLat)<10 || Math.abs(rawLong)<10)) {
                             if (!swapInBoundary && (Math.abs(rawLat)<10)) {
-                        	   swapInBoundary = testInPolygon(boundary, rawLong, rawLat*10d);
+                        	   swapInBoundary = GEOUtil.isPointInCountry(country, rawLat*10d, rawLong);
                         	   if (swapInBoundary) { 
                         		   originalLat = rawLat * 10d;
                         		   action = "scaled";
                         	   }
                             }
                             if (!swapInBoundary && (Math.abs(rawLong)<10)) {
-                        	   swapInBoundary = testInPolygon(boundary, rawLong*10d, rawLat);
+                        	   swapInBoundary = GEOUtil.isPointInCountry(country, rawLat, rawLong*10d);
                         	   if (swapInBoundary) { 
                         		   originalLng = rawLong * 10d;
                         		   action = "scaled";
@@ -380,6 +391,13 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                         if (swapInBoundary) {
                             setCurationStatus(CurationComment.CURATED);
                             addToComment("" + action + " coordinates to place inside the provided Country (" + country + ").");
+                            
+                            if (stateProvince!=null && stateProvince.trim().length()>0 && GEOUtil.isPrimaryKnown(country, stateProvince)) { 
+                            	if (GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLng)) { 
+                            		addToComment(action + " coordinates are also inside the provided state/Province ("+stateProvince+"). ");
+                            	}
+                            }
+                            
                         } else {
                             setCurationStatus(CurationComment.UNABLE_CURATED);
                             addToComment("Can't transpose/sign change/scale coordinates to place the georeference inside the provided Country (" + country + ").");
@@ -400,6 +418,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             //System.out.println("foundLat = " + foundLat);
 
 
+            addToComment("Lat" + originalLat + " Long: " + originalLng);
             if (!GeolocationResult.isLocationNearAResult(originalLat, originalLng, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
                 //use the found coordinates
                 setCurationStatus(CurationComment.UNABLE_CURATED);
@@ -592,6 +611,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
     }
     */
 
+    /*
     private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue){
         //System.out.println("Xvalue = " + Xvalue);
         //System.out.println("Yvalue = " + Yvalue);
@@ -606,6 +626,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         }
         return foundInPolygon;
     }
+    */
 
     /**
      * Test to see if an x/y coordinate is inside any of a set of polygons.
@@ -620,6 +641,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
      *         false if the x/y value is insidePolygonSet and invertSense is true
      *         true if the x/y value is outside polygonSet and invertSense is true
      */
+    /*
     private boolean testInPolygon (Set<Path2D> polygonSet, double Xvalue, double Yvalue, boolean invertSense){
         //System.out.println("Xvalue = " + Xvalue);
         //System.out.println("Yvalue = " + Yvalue);
@@ -635,8 +657,9 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         if (invertSense) { foundInPolygon = ! foundInPolygon; } 
         return foundInPolygon;
     }    
+    */
     
-    private Set<Path2D> ReadLandData () throws IOException, InvalidShapeFileException {
+    public Set<Path2D> ReadLandData() throws IOException, InvalidShapeFileException {
 
         InputStream is = GeoLocate3.class.getResourceAsStream("/org.filteredpush.kuration.services/ne_10m_land.shp");
         //FileInputStream is = null;
@@ -676,6 +699,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         is.close();
         return polygonSet;
     }
+       
 
     /**
      * Given country, stateProvince, county/Shire, and locality strings, return all matches found by geolocate for
