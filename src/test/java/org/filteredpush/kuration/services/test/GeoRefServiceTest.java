@@ -41,6 +41,6 @@ public class GeoRefServiceTest {
     @Test
     public void nullTest(){
         geoRefValidationServiceService.validateGeoRef("USA", "Arizona", "", "2.2 mi. S of Sulphide del Rey", "", "-110.862407", 200.0);
-        assertTrue(geoRefValidationServiceService.getCurationStatus().equals(CurationComment.UNABLE_DETERMINE_VALIDITY));
+        assertEquals(CurationComment.UNABLE_DETERMINE_VALIDITY, geoRefValidationServiceService.getCurationStatus());
     }
 }

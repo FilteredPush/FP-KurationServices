@@ -188,6 +188,37 @@ public class GEOUtil {
 	}
 	
 	/**
+	 * Test to see if a point is near (to a specified distance in km) or within a country.
+	 * 
+	 * @param country
+	 * @param latitude
+	 * @param longitude
+	 * @param distanceKm
+	 * 
+	 * @return true if latitude/longitude is inside or within distanceKm of any part of country.
+	 */
+	public static boolean isPointNearCountry(String country, double latitude, double longitude, double distanceKm) { 
+		boolean result = false;
+        URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_0_countries.shp");
+        FileDataStore store;
+		try {
+			store = FileDataStoreFinder.getDataStore(countryShapeFile);
+            SimpleFeatureSource featureSource = store.getFeatureSource();
+            double distanceD = distanceKm / 111d; // GeoTools ignores units, uses units of underlying projection (degrees in this case), fudge by dividing km by number of km in one degree of latitude (this will describe a wide ellipse far north or south).
+		    Filter filter = ECQL.toFilter("NAME ILIKE '"+ country +"' AND DWITHIN(the_geom, POINT(" + Double.toString(longitude) + " " + Double.toString(latitude) + "), "+ distanceD +", kilometers)");
+		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
+		    result = !collection.isEmpty();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}	
+	
+	/**
 	 * Is a given point inside a primary division (state/province) of a given country.
 	 * 
 	 * @param country
