@@ -77,7 +77,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 	 * 
 	 * @see org.kepler.actor.SpecimenQC.IGeoRefValidationService#validateGeoRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
 	 */
-	public void validateGeoRef(String country, String stateProvince, String county, String locality, String latitude, String longitude, double thresholdDistanceKm){
+	public void validateGeoRef(String country, String stateProvince, String county, String waterBody, String verbatimDepth, String locality, String latitude, String longitude, double thresholdDistanceKm){
 		logger.debug("Geolocate3.validateGeoref("+country+","+stateProvince+","+county+","+locality+")");
 		initBase();
 		setCurationStatus(CurationComment.UNABLE_CURATED);
@@ -251,7 +251,16 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             	// no country provided, assume locality is marine
             	isMarine = true;
             } else { 
-            	addToComment("A country, state/province, or county was provided, guessing that this is a non-marine locality. ");
+            	if (waterBody!=null && waterBody.trim().length()>0) { 
+            		if (waterBody.matches("(Indian|Pacific|Arctic|Atlantic|Ocean|Sea|Carribean|Mediteranian)")) { 
+            			isMarine = true;
+            	        addToComment("A water body name that appears to be an ocean or a sea was provided, guessing that this is a marine locality. ");
+            		} else { 
+            	        addToComment("A country, state/province, or county was provided with a water body that doesn't appear to be an ocean or a sea, guessing that this is a non-marine locality. ");
+            		}
+            	} else { 
+            	    addToComment("A country, state/province, or county was provided but no water body, guessing that this is a non-marine locality. ");
+            	}
             }
             if (!GEOUtil.isInPolygon(setPolygon, originalLong, originalLat, isMarine)) {
             	if (isMarine) { 
@@ -261,8 +270,9 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             		addToComment("Coordinate is not on land for a supposedly non-marine locality.");
             		double thresholdDistanceKmFromLand = 44.448d;  // 24 nautical miles, territorial waters plus contigouus zone.
             		if (GEOUtil.isPointNearCountry(country, originalLat, originalLong, thresholdDistanceKmFromLand)) { 
-            			addToComment("Coordinate is within 24 nautical miles of country boundary.");
+            			addToComment("Coordinate is within 24 nautical miles of country boundary, could be a nearshore marine locality.");
             		} else { 
+            			addToComment("Coordinate is further than 24 nautical miles of country boundary, country in error or marine within EEZ.");
             			flagError = true;
             		}
             	}

@@ -30,11 +30,11 @@ public class Geolocate3Test {
 	 */
 	@Test
 	public void testValidateGeoRef() {
-		geolocate3.validateGeoRef("United States", "Alaska", "", "Barrow", "71.295556", "-156.766389", 20d);
+		geolocate3.validateGeoRef("United States", "Alaska", "", "", "", "Barrow", "71.295556", "-156.766389", 20d);
 		System.out.println(geolocate3.getComment());
 		assertEquals("Valid",geolocate3.getCurationStatus().toString().trim());
 		// Transposed
-		geolocate3.validateGeoRef("United States", "Alaska", "", "Barrow", "-156.766389", "71.295556", 20d);
+		geolocate3.validateGeoRef("United States", "Alaska", "", "", "", "Barrow", "-156.766389", "71.295556", 20d);
 		System.out.println(geolocate3.getComment());
 		assertEquals("Curated",geolocate3.getCurationStatus().toString().trim());
 		
