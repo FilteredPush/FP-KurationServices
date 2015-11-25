@@ -13,7 +13,8 @@ import org.junit.runners.Suite.SuiteClasses;
 	WoRMSServiceTest.class,
 	GBIFServiceTest.class,
 	SciNameServiceParentTest.class,
-	IndexFungorumServiceTest.class
+	IndexFungorumServiceTest.class,
+	Geolocate3Test.class
 	})
 public class AllTests {
 

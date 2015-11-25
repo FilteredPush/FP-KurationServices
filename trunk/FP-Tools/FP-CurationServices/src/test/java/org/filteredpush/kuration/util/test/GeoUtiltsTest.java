@@ -5,8 +5,18 @@ package org.filteredpush.kuration.util.test;
 
 import static org.junit.Assert.*;
 
+import java.awt.geom.Path2D;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.util.HashMap;
+import java.util.Set;
+
+import org.filteredpush.kuration.services.GeoLocate3;
 import org.filteredpush.kuration.util.GEOUtil;
+import org.geotools.filter.text.cql2.CQLException;
 import org.junit.Test;
+import org.nocrala.tools.gis.data.esri.shapefile.exception.InvalidShapeFileException;
 
 /**
  * @author mole
@@ -49,5 +59,70 @@ public class GeoUtiltsTest {
 	    assertEquals(2886421,GEOUtil.calcDistanceHaversineMeters(36.120, -86.670, 33.940, -118.400));
 		
 	}
+	
+	@Test
+	public void testOnLand() { 
+        Set<Path2D> setPolygon = null;
+        try {
+            setPolygon = new GeoLocate3().ReadLandData();
+            //System.out.println("read data");
+        } catch (IOException e) {
+        	fail(e.getMessage());
+        } catch (InvalidShapeFileException e) {
+        	fail(e.getMessage());
+        }
+        boolean invertSense = false;
+        // Barrow, Alaska
+        double originalLng = -156.766389d;
+        double originalLat = 71.295556d;
+        assertTrue(GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense));
+        // further north
+        originalLng = -156.766389d;
+        originalLat = 80.0d;
+        assertFalse(GEOUtil.isInPolygon(setPolygon, originalLng, originalLat, invertSense));
+	} 
+	
+	@Test
+	public void testInCountry() { 
+        assertTrue(GEOUtil.isCountryKnown("United States"));
+        assertTrue(GEOUtil.isCountryKnown("UNITED STATES"));
+        assertFalse(GEOUtil.isCountryKnown("zzzzzzzzzzzzz"));
+        
+        // Barrow, Alaska
+        double originalLng = -156.766389d;
+        double originalLat = 71.295556d;
+        assertTrue(GEOUtil.isPointInCountry("United States", originalLat, originalLng));
+        assertTrue(GEOUtil.isPointInCountry("UNITED STATES", originalLat, originalLng));
+        // further north
+        originalLng = -156.766389d;
+        originalLat = 80.0d;
+        assertFalse(GEOUtil.isPointInCountry("United States", originalLat, originalLng));
+        // transposed
+        originalLat = -156.766389d;
+        originalLng = 71.295556d;
+        assertFalse(GEOUtil.isPointInCountry("United States", originalLat, originalLng));        
+	}
+	
+	@Test 
+	public void testInPrimary() { 
+		assertTrue(GEOUtil.isPrimaryKnown("United States", "Alaska"));
+		assertFalse(GEOUtil.isPrimaryKnown("United States", "ZZZZZZZZZZZZ"));
+		assertFalse(GEOUtil.isPrimaryKnown("zzzzzzzzzzzzzz", "Alaska"));
+		
+        double originalLng = -156.766389d;
+        double originalLat = 71.295556d;
+        assertTrue(GEOUtil.isPointInPrimary("United States","Alaska", originalLat, originalLng));
+        
+        // further north
+        originalLng = -156.766389d;
+        originalLat = 80.0d;
+        assertFalse(GEOUtil.isPointInPrimary("United States", "Alaska", originalLat, originalLng));
+        // transposed
+        originalLat = -156.766389d;
+        originalLng = 71.295556d;
+        assertFalse(GEOUtil.isPointInPrimary("United States", "Alaska", originalLat, originalLng));        
+	}
 
 }
+
+

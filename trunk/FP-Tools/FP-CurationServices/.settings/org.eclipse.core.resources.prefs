@@ -1,5 +1,14 @@
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/GeographicPoint.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/Geolocatesvc.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/GeolocatesvcLocator.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/GeolocatesvcSoap.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/GeolocatesvcSoapStub.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/Georef_Result.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/Georef_Result_Set.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/LocalityDescription.java=UTF-8
+encoding//src/main/java/edu/tulane/museum/www/webservices/holders/GeographicPointHolder.java=UTF-8
 encoding//src/main/resources=UTF-8
 encoding//src/test/java=UTF-8
 encoding//src/test/resources=UTF-8

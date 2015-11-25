@@ -1,5 +1,21 @@
 package org.filteredpush.kuration.util;
 
+import java.awt.geom.Path2D;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.filteredpush.kuration.services.GeoLocate3;
+import org.geotools.data.FileDataStore;
+import org.geotools.data.FileDataStoreFinder;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.filter.text.cql2.CQL;
+import org.geotools.filter.text.cql2.CQLException;
+import org.geotools.filter.text.ecql.ECQL;
+import org.opengis.filter.Filter;
+
 public class GEOUtil {
 	/**
 	 * Equatorial radius of the Earth in kilometers (GRS80).
@@ -108,6 +124,150 @@ public class GEOUtil {
 	 *  [-]DD MM SS
      *  [-]DDdMM'SS"
 	 */
+	
+    /**
+     * Test to see if an x/y coordinate is inside any of a set of polygons.
+     * 
+     * @param polygonSet
+     * @param Xvalue
+     * @param Yvalue
+     * @param invertSense true to invert the result, false to keep the result unchanged.
+     * 
+     * @return true if the x/y value is inside polygonSet and invertSense is false 
+     *         false if the x/y value is outside polygonSet and invertSense is false
+     *         false if the x/y value is insidePolygonSet and invertSense is true
+     *         true if the x/y value is outside polygonSet and invertSense is true
+     */
+    public static boolean isInPolygon(Set<Path2D> polygonSet, double Xvalue, double Yvalue, boolean invertSense){
+        boolean foundInPolygon = GEOUtil.isInPolygon(polygonSet, Xvalue, Yvalue);
+        if (invertSense) { foundInPolygon = ! foundInPolygon; } 
+        return foundInPolygon;
+    } 	
+ 
+    /**
+     * Test to see if an x/y coordinate is inside any of a set of polygons.
+     * 
+     * @param polygonSet
+     * @param Xvalue
+     * @param Yvalue
+     * 
+     * @return true if the x/y value is inside polygonSet
+     *         false if the x/y value is outside or on a boundary of polygonSet
+     */    
+    public static boolean isInPolygon(Set<Path2D> polygonSet, double Xvalue, double Yvalue){
+        Boolean foundInPolygon = false;
+        Iterator it = polygonSet.iterator();
+        while(it.hasNext()){
+            Path2D poly=(Path2D)it.next();
+            if (poly.contains(Xvalue, Yvalue)) {
+                //System.out.println("Found in polygon");
+                foundInPolygon = true;
+            }
+        }
+        return foundInPolygon;
+    }    
+	
+	public static boolean isPointInCountry(String country, double latitude, double longitude) { 
+		boolean result = false;
+        URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_0_countries.shp");
+        FileDataStore store;
+		try {
+			store = FileDataStoreFinder.getDataStore(countryShapeFile);
+            SimpleFeatureSource featureSource = store.getFeatureSource();
+		    Filter filter = ECQL.toFilter("NAME ILIKE '"+ country +"' AND CONTAINS(the_geom, POINT(" + Double.toString(longitude) + " " + Double.toString(latitude) + "))");
+		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
+		    result = !collection.isEmpty();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	/**
+	 * Is a given point inside a primary division (state/province) of a given country.
+	 * 
+	 * @param country
+	 * @param primaryDivision
+	 * @param latitude
+	 * @param longitude
+	 * @return 
+	 */
+	public static boolean isPointInPrimary(String country, String primaryDivision, double latitude, double longitude) { 
+		boolean result = false;
+        URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_1_states_provinces.shp");
+        FileDataStore store;
+		try {
+			store = FileDataStoreFinder.getDataStore(countryShapeFile);
+            SimpleFeatureSource featureSource = store.getFeatureSource();
+            if (country.toLowerCase().equals("united states")) { country = "United States of America"; } 
+		    Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision +"' AND admin ILIKE '"+ country +"' AND CONTAINS(the_geom, POINT(" + Double.toString(longitude) + " " + Double.toString(latitude) + "))");
+		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
+		    result = !collection.isEmpty();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}	
+	
+	public static boolean isCountryKnown(String country) { 
+		boolean result = false;
+        URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_0_countries.shp");
+        FileDataStore store;
+		try {
+			store = FileDataStoreFinder.getDataStore(countryShapeFile);
+            SimpleFeatureSource featureSource = store.getFeatureSource();
+		    Filter filter = ECQL.toFilter("NAME ILIKE '"+ country +"'");
+		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
+		    result = !collection.isEmpty();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}	
+	
+	/**
+	 * Is a combination of country name and primary division (state/province) name known the primary division data set. 
+	 * 
+	 * @param country
+	 * @param primaryDivision
+	 * @return
+	 */
+	public static boolean isPrimaryKnown(String country, String primaryDivision) { 
+		boolean result = false;
+        URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_1_states_provinces.shp");
+        FileDataStore store;
+		try {
+			store = FileDataStoreFinder.getDataStore(countryShapeFile);
+            SimpleFeatureSource featureSource = store.getFeatureSource();
+            if (country.toLowerCase().equals("united states")) { country = "United States of America"; } 
+		    Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision +"' AND admin ILIKE '"+ country +"'");
+		    // Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision +"'");
+		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
+		    if (collection!=null && collection.size()>0) { 
+		        result = !collection.isEmpty();
+		    }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (CQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}	
+	
 	
 }
 
