@@ -95,7 +95,6 @@ public class GeolocationResult implements Serializable {
 			while (!result && i.hasNext()) { 
 				GeolocationResult candidate = i.next();
 				long distance = GEOUtil.calcDistanceHaversineMeters(latitude, longitude, candidate.getLatitude(), candidate.getLongitude());
-System.out.println(distance);				
 				if (candidate.getCoordinateUncertaintyMeters()>0) { 
 					if (distance<=candidate.getCoordinateUncertaintyMeters() || distance<=thresholdDistanceMeters) { 
 						result = true;
