@@ -212,30 +212,36 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 
             	// (2) Locality not inside country?
             	if (GEOUtil.isCountryKnown(country)) {  
-            		if (!GEOUtil.isPointInCountry(country, originalLat, originalLong)) { 
-            		addToComment("Original coordinate is not inside country ("+country+").");
-            		addToServiceName("Country boundary data from Natural Earth");
-            		flagError = true;
+            		if (GEOUtil.isPointInCountry(country, originalLat, originalLong)) {  
+            			addToComment("Original coordinate is inside country ("+country+").");
+            			addToServiceName("Country boundary data from Natural Earth");
+            		} else { 
+            			addToComment("Original coordinate is not inside country ("+country+").");
+            			addToServiceName("Country boundary data from Natural Earth");
+            			flagError = true;
             		}
             	} else { 
-                    addToComment("Can't find country: " + country + " in country name list");
+            		addToComment("Can't find country: " + country + " in country name list");
             	}
 
             	if (stateProvince!=null && stateProvince.length()>0) { 
             		// (3) Locality not inside primary division?
             		if (GEOUtil.isPrimaryKnown(country, stateProvince)) { 
-            			if (!GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLong)) { 
-            			addToComment("Original coordinate is not inside primary division ("+stateProvince+").");
-            			addToServiceName("State/province boundary data from Natural Earth");
-            			flagError = true;
+            			if (GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLong)) {
+            				addToComment("Original coordinate is inside primary division ("+stateProvince+").");
+            				addToServiceName("State/province boundary data from Natural Earth");
+            			} else { 
+            				addToComment("Original coordinate is not inside primary division ("+stateProvince+").");
+            				addToServiceName("State/province boundary data from Natural Earth");
+            				flagError = true;
             			} 
             		} else { 
-                        addToComment("Can't find state/province: " + stateProvince + " in primaryDivision name list");
+            			addToComment("Can't find state/province: " + stateProvince + " in primaryDivision name list");
             		}
             	}
             }
 
-            // Is locality marine? 
+            // (4) Is locality marine? 
             Set<Path2D> setPolygon = null;
             try {
             	setPolygon = ReadLandData();
@@ -278,7 +284,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             	}
             }            
 
-            // (4) Geolocate returned some result, is original locality near that result?
+            // (5) Geolocate returned some result, is original locality near that result?
             if (potentialMatches!=null && potentialMatches.size()>0) { 
             	if (GeolocationResult.isLocationNearAResult(originalLat, originalLong, potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
             		setCurationStatus(CurationComment.CORRECT);
@@ -321,10 +327,10 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
             				}
             			} else { 
             				if (GEOUtil.isCountryKnown(country) && 
-            						!GEOUtil.isPointInCountry(country, alt.getLatitude(), alt.getLongitude())) { 
+            						GEOUtil.isPointInCountry(country, alt.getLatitude(), alt.getLongitude())) { 
             					addToComment("Modified coordinate ("+alt.getAlternative()+") is inside country ("+country+").");
             					if (GEOUtil.isPrimaryKnown(country, stateProvince) && 
-            							!GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLong)) { 
+            							GEOUtil.isPointInPrimary(country, stateProvince, originalLat, originalLong)) { 
             						setCurationStatus(CurationComment.CURATED);
             						addToComment("Modified coordinate ("+alt.getAlternative()+") is inside stateProvince ("+stateProvince+").");
             						correctedLatitude = alt.getLatitude();
@@ -380,9 +386,6 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         }
 
     }
-//	public boolean isCoordinatesFound(){
-//		return isCoordinatesFound;
-//	}
 	
 	public double getCorrectedLatitude() {
 		return correctedLatitude;
