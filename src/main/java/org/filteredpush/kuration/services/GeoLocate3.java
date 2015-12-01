@@ -350,6 +350,15 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
                     	addNewToCache(correctedLatitude, correctedLongitude, country, stateProvince, county, locality); 
                     }
             	} else { 
+            		if (country!=null && GEOUtil.isCountryKnown(country)) {
+            			if (isMarine) { 
+            				 addToComment("No transformation of the coordinates is near the provided country.");
+            			} else {
+            				if (stateProvince!=null && GEOUtil.isPrimaryKnown(country, stateProvince)) { 
+            				     addToComment("No transformation of the coordinates is inside the provided country and state/province.");
+            				}
+            			}
+            		}
             		setCurationStatus(CurationComment.UNABLE_CURATED);
             	}
             } else { 

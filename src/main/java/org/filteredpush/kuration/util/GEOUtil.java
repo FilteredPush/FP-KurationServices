@@ -235,15 +235,14 @@ public class GEOUtil {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
             if (country.toLowerCase().equals("united states")) { country = "United States of America"; } 
-		    Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision +"' AND admin ILIKE '"+ country +"' AND CONTAINS(the_geom, POINT(" + Double.toString(longitude) + " " + Double.toString(latitude) + "))");
+		    Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision.replace("'", "''") +"' AND admin ILIKE '"+ country +"' AND CONTAINS(the_geom, POINT(" + Double.toString(longitude) + " " + Double.toString(latitude) + "))");
 		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
 		    result = !collection.isEmpty();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (CQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("GEOUtil.isPointInPrimary error: " + e.getMessage());
 		}
 		return result;
 	}	
@@ -283,7 +282,7 @@ public class GEOUtil {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
             if (country.toLowerCase().equals("united states")) { country = "United States of America"; } 
-		    Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision +"' AND admin ILIKE '"+ country +"'");
+		    Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision.replace("'", "''") +"' AND admin ILIKE '"+ country +"'");
 		    // Filter filter = ECQL.toFilter("name ILIKE '"+ primaryDivision +"'");
 		    SimpleFeatureCollection collection=featureSource.getFeatures(filter);
 		    if (collection!=null && collection.size()>0) { 
@@ -293,8 +292,7 @@ public class GEOUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (CQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("GEOUtil.isPrimaryKnown error: " + e.getMessage());
 		}
 		return result;
 	}	
