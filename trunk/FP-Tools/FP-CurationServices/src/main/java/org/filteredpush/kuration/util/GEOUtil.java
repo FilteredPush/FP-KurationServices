@@ -11,7 +11,6 @@ import org.geotools.data.FileDataStore;
 import org.geotools.data.FileDataStoreFinder;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.opengis.filter.Filter;
@@ -170,7 +169,7 @@ public class GEOUtil {
 	public static boolean isPointInCountry(String country, double latitude, double longitude) { 
 		boolean result = false;
         URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_0_countries.shp");
-        FileDataStore store;
+        FileDataStore store = null;
 		try {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
@@ -183,6 +182,8 @@ public class GEOUtil {
 		} catch (CQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally { 
+			if (store!=null) { store.dispose(); }			
 		}
 		return result;
 	}
@@ -200,7 +201,7 @@ public class GEOUtil {
 	public static boolean isPointNearCountry(String country, double latitude, double longitude, double distanceKm) { 
 		boolean result = false;
         URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_0_countries.shp");
-        FileDataStore store;
+        FileDataStore store = null;
 		try {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
@@ -214,6 +215,8 @@ public class GEOUtil {
 		} catch (CQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally { 
+			if (store!=null) { store.dispose(); }			
 		}
 		return result;
 	}	
@@ -230,7 +233,7 @@ public class GEOUtil {
 	public static boolean isPointInPrimary(String country, String primaryDivision, double latitude, double longitude) { 
 		boolean result = false;
         URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_1_states_provinces.shp");
-        FileDataStore store;
+        FileDataStore store = null;
 		try {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
@@ -243,6 +246,8 @@ public class GEOUtil {
 			e.printStackTrace();
 		} catch (CQLException e) {
 			System.out.println("GEOUtil.isPointInPrimary error: " + e.getMessage());
+		} finally { 
+			if (store!=null) { store.dispose(); }			
 		}
 		return result;
 	}	
@@ -250,7 +255,7 @@ public class GEOUtil {
 	public static boolean isCountryKnown(String country) { 
 		boolean result = false;
         URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_0_countries.shp");
-        FileDataStore store;
+        FileDataStore store = null;
 		try {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
@@ -263,6 +268,8 @@ public class GEOUtil {
 		} catch (CQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally { 
+			if (store!=null) { store.dispose(); }
 		}
 		return result;
 	}	
@@ -277,7 +284,7 @@ public class GEOUtil {
 	public static boolean isPrimaryKnown(String country, String primaryDivision) { 
 		boolean result = false;
         URL countryShapeFile = GeoLocate3.class.getResource("/org.filteredpush.kuration.services/ne_10m_admin_1_states_provinces.shp");
-        FileDataStore store;
+        FileDataStore store = null;
 		try {
 			store = FileDataStoreFinder.getDataStore(countryShapeFile);
             SimpleFeatureSource featureSource = store.getFeatureSource();
@@ -293,6 +300,8 @@ public class GEOUtil {
 			e.printStackTrace();
 		} catch (CQLException e) {
 			System.out.println("GEOUtil.isPrimaryKnown error: " + e.getMessage());
+		} finally { 
+			if (store!=null) { store.dispose(); }			
 		}
 		return result;
 	}	
