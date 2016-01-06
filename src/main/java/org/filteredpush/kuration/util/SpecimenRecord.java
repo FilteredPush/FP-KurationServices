@@ -48,6 +48,11 @@ public class SpecimenRecord extends HashMap<String,String> {
     public static final String dwc_decimalLongitude = "decimalLongitude";
     public static final String dwc_basisOfRecord = "basisOfRecord";
     public static final String dwc_geodeticDatum = "geodeticDatum";
+    public static final String dwc_kingdom = "kingdom";
+    public static final String dwc_phylum = "phylum";
+    public static final String dwc_class = "class";
+    public static final String dwc_order = "order";
+    public static final String dwc_family = "family";
 
     public SpecimenRecord() {
         super();

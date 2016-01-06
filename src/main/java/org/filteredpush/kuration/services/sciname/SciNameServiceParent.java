@@ -46,6 +46,8 @@ import org.gbif.nameparser.UnparsableException;
  */
 public abstract class SciNameServiceParent extends BaseCurationService implements INewScientificNameValidationService {
 
+
+
 	private static final Log logger = LogFactory.getLog(SciNameServiceParent.class);
 	
 	/**
@@ -547,7 +549,44 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
     public String getGUID(){
         return validatedNameUsage.getGuid();
     }
+    
+    @Override
+    public String getCorrectedKingdom(){
+        return validatedNameUsage.getKingdom();
+    }    
 
+	/* (non-Javadoc)
+	 * @see org.filteredpush.kuration.interfaces.INewScientificNameValidationService#getCorrectedPhylum()
+	 */
+	@Override
+	public String getCorrectedPhylum() {
+        return validatedNameUsage.getPhylum();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.filteredpush.kuration.interfaces.INewScientificNameValidationService#getCorrectedOrder()
+	 */
+	@Override
+	public String getCorrectedOrder() {
+        return validatedNameUsage.getOrder();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.filteredpush.kuration.interfaces.INewScientificNameValidationService#getCorrectedClass()
+	 */
+	@Override
+	public String getCorrectedClass() {
+        return validatedNameUsage.getClazz();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.filteredpush.kuration.interfaces.INewScientificNameValidationService#getCorrectedFamily()
+	 */
+	@Override
+	public String getCorrectedFamily() {
+        return validatedNameUsage.getFamily();
+	}
+    
 
     protected String getKey(String name, String author){
         return name+author;

@@ -103,7 +103,31 @@ public class NameUsage implements LinneanClassification {
 		}
 	}	
 	
+	private void init() { 
+		kingdom = null;  
+		phylum = null;   
+		tclass = null;   
+		order = null;    
+		family = null;   
+		genus = null;
+		subgenus = null;
+	}
+	
+	/**
+	 * Set values for higher classification to null if they are empty strings.
+	 */
+	private void nullBlanks() {
+		if (kingdom!=null && kingdom.trim().length()==0) { kingdom = null; }
+		if (phylum!=null && phylum.trim().length()==0) { phylum = null; }
+		if (tclass!=null && tclass.trim().length()==0) { tclass = null; }
+		if (order!=null && order.trim().length()==0) { order = null; }
+		if (family!=null && family.trim().length()==0) { family = null; }
+		if (genus!=null && genus.trim().length()==0) { genus = null; }
+		if (subgenus!=null && subgenus.trim().length()==0) { subgenus = null; }
+	}
+	
 	public NameUsage() { 
+		init();
 		authorComparator = new ICZNAuthorNameComparator(.75d,.5d);
 	}
 	
@@ -116,6 +140,7 @@ public class NameUsage implements LinneanClassification {
 	 * of authors with this name usage.
 	 */
 	public NameUsage(String sourceAuthority, AuthorNameComparator authorNameComparator) {
+		init();
 		this.authorComparator = authorNameComparator;
 		this.setSourceAuthority(sourceAuthority);
 	}	
@@ -131,6 +156,7 @@ public class NameUsage implements LinneanClassification {
 	 * @param originalAuthorship
 	 */
 	public NameUsage(String sourceAuthority, AuthorNameComparator authorNameComparator, String originalScientificName, String originalAuthorship) { 
+		init();
 		this.authorComparator = authorNameComparator;
 		this.setSourceAuthority(sourceAuthority);
 		setOriginalAuthorship(originalAuthorship);
@@ -140,6 +166,7 @@ public class NameUsage implements LinneanClassification {
 
 	
 	public NameUsage(JSONObject json) { 
+		init();
 		if (json!=null) { 
 			key = Integer.parseInt(getValFromKey(json,"key"));
 			taxonomicStatus = getValFromKey(json,"taxonomicStatus");
@@ -176,6 +203,7 @@ public class NameUsage implements LinneanClassification {
 			link = getValFromKey(json,"link");
             synonyms = Boolean.parseBoolean(getValFromKey(json,"synonym"));
             fixAuthorship();
+            nullBlanks();
 		}
 	}
 	
@@ -186,6 +214,7 @@ public class NameUsage implements LinneanClassification {
 	 * @see org.gbif.api.model.checklistbank.NameUsage
 	 */
 	public NameUsage(org.gbif.api.model.checklistbank.NameUsage record) {
+		init();
 		if (record.getDatasetKey().equals(GBIFService.KEY_GBIFBACKBONE)) { 
 		    this.setSourceAuthority("GBIF Backbone Taxonomy");
 		} else { 
@@ -202,6 +231,7 @@ public class NameUsage implements LinneanClassification {
 		this.setFamily(record.getFamily());
 		this.setGenus(record.getGenus());		
 		fixAuthorship();
+        nullBlanks();
 	}	
 	
 	/**
@@ -211,6 +241,7 @@ public class NameUsage implements LinneanClassification {
 	 * @param record an AphiaRecord from WoRMS.
 	 */
 	public NameUsage(AphiaRecord record) {
+		init();
 		authorComparator = new ICZNAuthorNameComparator(.75d,.5d);
 		this.setSourceAuthority("WoRMS (World Register of Marine Species)");
 		this.setScientificName(record.getScientificname());
@@ -227,6 +258,7 @@ public class NameUsage implements LinneanClassification {
 		this.setTaxonomicStatus(record.getStatus());
 		this.setUnacceptReason(record.getUnacceptreason());
 		fixAuthorship();
+        nullBlanks();
 	}	
 	
 	public static String csvHeaderLine() { 

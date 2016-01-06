@@ -337,6 +337,12 @@ public class GBIFService extends SciNameServiceParent {
 				validatedNameUsage.setScientificNameStringEditDistance(1d);
 				validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 				validatedNameUsage.setOriginalScientificName(toCheck.getCanonicalName());
+				if(validatedNameUsage.getKingdom()==null) { validatedNameUsage.setKingdom(potentialMatch.getKingdom()); }
+				if(validatedNameUsage.getPhylum()==null) { validatedNameUsage.setPhylum(potentialMatch.getPhylum()); } 
+				if(validatedNameUsage.getClazz()==null) { validatedNameUsage.setClazz(potentialMatch.getClazz()); }
+				if(validatedNameUsage.getOrder()==null) { validatedNameUsage.setOrder(potentialMatch.getOrder()); }
+				if(validatedNameUsage.getFamily()==null) { validatedNameUsage.setFamily(potentialMatch.getFamily()); }
+				
 				result = true;
 			} else { 
 				// multiple possible matches
