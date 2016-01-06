@@ -72,5 +72,11 @@ public interface INewScientificNameValidationService {
                                        String taxonRank, String kingdom, String phylum,
                                        String tclass, String order, String family, String genericEpithet);
 
-
+    public String getCorrectedKingdom();
+    public String getCorrectedPhylum();
+    public String getCorrectedOrder();
+    public String getCorrectedClass();
+    public String getCorrectedFamily();
+    
+    
     }
