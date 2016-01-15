@@ -436,6 +436,11 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
     		   setCurationStatus(CurationComment.UNABLE_CURATED);
     		   validatedNameUsage.setAuthorship(authorToValidate);
     	   }
+    	   if (authorToValidate.equals("auct non " + this.getCorrectedAuthor())) { 
+    		   addToComment("Retaining original authorship string '"+ authorToValidate +"' = of authors not " + this.getCorrectedAuthor() +".");
+    		   setCurationStatus(CurationComment.UNABLE_CURATED);
+    		   validatedNameUsage.setAuthorship(authorToValidate);
+    	   }    	   
        }
        
        
