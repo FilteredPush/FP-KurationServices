@@ -27,6 +27,10 @@ import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
+import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.api.vocabulary.Rank;
+import org.gbif.nameparser.NameParser;
+import org.gbif.nameparser.UnparsableException;
 import org.marinespecies.aphia.v1_0.AphiaNameServicePortTypeProxy;
 import org.marinespecies.aphia.v1_0.AphiaRecord;
 
@@ -294,6 +298,7 @@ public class WoRMSService extends SciNameServiceParent {
 						// closest authorship and list all of the potential matches.  
 						Iterator<AphiaRecord> im = matches.iterator();
 						AphiaRecord ar = im.next();
+						logger.debug(ar.getScientificname());
 						NameUsage closest = new NameUsage(ar);
 						StringBuffer names = new StringBuffer();
 						names.append(closest.getScientificName()).append(" ").append(closest.getAuthorship()).append(" ").append(closest.getUnacceptReason()).append(" ").append(closest.getTaxonomicStatus());
@@ -344,6 +349,7 @@ public class WoRMSService extends SciNameServiceParent {
 								logger.debug(ar.getAuthority());
 								NameComparison comparison = authorNameComparator.compare(authorship, ar.getAuthority());
 								String match = comparison.getMatchType();
+								logger.debug(match);
 								double similarity = comparison.getSimilarity();
 								logger.debug(similarity);
 								if (match.equals(NameComparison.MATCH_DISSIMILAR) || match.equals(NameComparison.MATCH_ERROR)) {
@@ -371,8 +377,33 @@ public class WoRMSService extends SciNameServiceParent {
 			} else { 
 				logger.debug("No match.");
 				addToComment("Trying for fuzzy match in WoRMS.");
+				if (authorship==null||authorship.trim().length()==0) { 
+					addToComment("Authorship is blank, treat fuzzy matches sceptically.");
+				}
 				// Try WoRMS fuzzy matching query
-				String[] searchNames = { taxonName + " " + authorship };
+				ArrayList<String> searchNamesList = new ArrayList<String>();
+				searchNamesList.add(taxonName);
+				searchNamesList.add(taxonName + " " + authorship);
+				NameParser parser = new NameParser();
+				Rank inputParsedRank = null;
+				ParsedName parse = null;
+				   try {
+					   parse = parser.parse(taxonName + " " + authorship);
+					   inputParsedRank = parse.getRank();
+					   if (authorship!=null && authorship.trim().length()>0 && Rank.SPECIES_OR_BELOW.contains(inputParsedRank) && !inputParsedRank.equals(Rank.SPECIES) && AuthorNameComparator.consistentWithICZNAuthor(authorship)) { 
+						   // We were given a trinomial, try checking for the binomial that combines the genus with the trivial epithet.
+						   // in zoology the authorship applies to the trivial epithet, regardless of changes in rank.
+						   // This won't hold for changes of rank in plants in worms, where change in rank is a 
+						   // nomenclatural act and involves including a revising author in the authorship string.
+						   // Iffy fuzzy match if we don't have an authorship, so don't try in that case.
+						   String binomen = parse.getGenusOrAbove() + " " + parse.getInfraSpecificEpithet() + " " + authorship;
+						   searchNamesList.add(binomen);
+						   addToComment("Also checking binomial: " + binomen);
+					   }
+				   } catch (UnparsableException e) {
+				   }				
+				String[] searchNames = new String[searchNamesList.size()];
+				searchNames = searchNamesList.toArray(searchNames);
 				AphiaRecord[][] matchResultsArr = wormsService.matchAphiaRecordsByNames(searchNames, false);
 				if (matchResultsArr!=null && matchResultsArr.length>0) {
 					Iterator<AphiaRecord[]> i0 = (Arrays.asList(matchResultsArr)).iterator();
@@ -392,15 +423,30 @@ public class WoRMSService extends SciNameServiceParent {
 								logger.debug(match.getScientificName());
 								logger.debug(match.getAuthorship());
 								logger.debug(similarity);
+								logger.debug(match.getRank());
 								potentialMatches.add(match);
 							} else {
-								logger.debug("im.next() was null");
+								logger.debug("im.next() was null, no results on fuzzy match");
 							}
 						} 
 						logger.debug("Fuzzy Matches: " + potentialMatches.size());
 						if (potentialMatches.size()==1) { 
-							validatedNameUsage = potentialMatches.get(0);
-							String authorComparison = authorNameComparator.compare(toCheck.getAuthorship(), validatedNameUsage.getAuthorship()).getMatchType();
+							NameUsage match = potentialMatches.get(0);
+							if (parse!=null && match!=null && match.getRank()!=null && inputParsedRank!=null) { 
+							   if (inputParsedRank.isInfraspecific() && match.getRank().equals("Species") && parse.getInfraSpecificEpithet()!=null && !parse.getInfraSpecificEpithet().toString().equals("null")) {
+								  // we had a trinomial, it matched a binomial 
+								  if (match.getScientificName().equals(parse.getGenusOrAbove() + " " +  parse.getInfraSpecificEpithet())) { 
+									  if (AuthorNameComparator.consistentWithICZNAuthor(match.getOriginalAuthorship()) && AuthorNameComparator.consistentWithICZNAuthor(toCheck.getOriginalAuthorship())) {
+										 // and we don't have a plant name 
+									     addToComment("Fuzzy match in WoRMS appears to be on binomial for a name of infraspecific rank. " + parse.getScientificName() + " matched with " + match.getScientificName());
+									     match.setScientificName(toCheck.getOriginalScientificName());
+									     match.setRank(inputParsedRank.toString());
+									  }
+								  }
+							   }
+							}
+							validatedNameUsage = match;
+							String authorComparison = authorNameComparator.compare(toCheck.getOriginalAuthorship(), validatedNameUsage.getAuthorship()).getMatchType();
 							validatedNameUsage.setMatchDescription(NameComparison.MATCH_FUZZY_SCINAME + "; authorship " + authorComparison);
 							validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 							validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());

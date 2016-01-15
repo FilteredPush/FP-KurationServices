@@ -9,11 +9,13 @@ import org.filteredpush.kuration.interfaces.ICurationService;
 import org.filteredpush.kuration.services.sciname.COLService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationStatus;
+import org.kurator.akka.data.CurationStep;
 
 public abstract class BaseCurationService implements ICurationService {
 
 	private static final Log logger = LogFactory.getLog(BaseCurationService.class);
 
+	private CurationStep curationStep;
 	
 	/**
 	 * Comments added during curation.
@@ -55,7 +57,7 @@ public abstract class BaseCurationService implements ICurationService {
 		initBase();
 	}
 	
-	protected void initBase() { 
+	protected void initBase() {
 		comments = new StringBuffer();
 		services = new StringBuffer();
 		inputValues = new HashMap<String,String>();

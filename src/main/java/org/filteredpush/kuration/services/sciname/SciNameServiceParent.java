@@ -51,6 +51,13 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 	private static final Log logger = LogFactory.getLog(SciNameServiceParent.class);
 	
 	/**
+	 * Regular expression pattern that recognizes comments that denote higher taxa being filled in.
+	 * Can be used to remove comments when the filled in fields aren't included in the output produced
+	 * by code that uses the scientific name validate method.
+	 */
+	public static final String FILL_IN_HIGHER_REGEX = "\\| Filled In (Kingdom|Phylum|Class|Order|Family) {0,1}";
+	
+	/**
 	 * Search the supported service for a taxon name, and set the metadata of the SciNameService instance
 	 * to reflect the results.  Sets values for curationStatus, comment, and validatedNameUsage.
 	 * 
@@ -237,12 +244,18 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 
 	   if (scientificNameToValidate!=null && scientificNameToValidate.length()>0) { 
 		   // If we've got something to validate.
+		   String parsedRank = null;
 
-		   // (1a) Check for hybrid
+		   // (1a) Check for hybrid (and find rank of input name)
 		   NameParser parser = new NameParser();
 		   try {
 			   ParsedName parse = parser.parse(scientificNameToValidate);
+			   if (parse!=null && parse.getRank()!=null) { 
+			       parsedRank = parse.getRank().toString();
+			   }
+			   logger.debug(parsedRank);
 		   } catch (UnparsableException e) {
+			   parsedRank = "unknown";
 			   if (e.getMessage().contains("Name of type HYBRID unparsable")) { 
 				   String[] bits = scientificNameToValidate.split(" × ");
 				   if (bits.length==2) { 
@@ -319,6 +332,7 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 		   // (4) failover by trying alternative supporting services.
 		   if (!matched && result1.get("scientificName") != null){
 			   // (4a) Try the global names resolver.
+			   logger.debug(result1.get("scientificName"));
 			   HashMap<String, String> result2 = SciNameServiceUtil.checkMisspelling(result1.get("scientificName"));
 			   addToServiceName("Global Name Resolver");
 			   addToComment(result2.get("comment"));
@@ -373,19 +387,32 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 
 						   String authorshipSimilarity = " Authorship: " +  validatedNameUsage.getMatchDescription() + " Similarity: " + Double.toString(authorSimilarity);
 
-						   addToComment(authorshipSimilarity);                       
+						   addToComment(authorshipSimilarity); 
+						   
 					   }
 				   }else{
 					   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
 					   addToComment("The original SciName and Authorship cannot be curated");
 				   }
-
-				   //todo: next
-			   }
-			   else{
+			   } else {
 				   //no result, stop
 			   }
-		   }else{
+			   
+			   // add a comment if the proposed correction differs in rank from the name provided.
+			   if (getCurationStatus().toString().equals(CurationComment.CURATED.toString())) { 
+				   try {
+					   ParsedName cparse = parser.parse(this.getCorrectedScientificName());
+					   ParsedName oparse = parser.parse(scientificNameToValidate);
+					   if (!cparse.getRank().equals(oparse.getRank())) { 
+						   addToComment("Proposed correction is at a different rank than provided name.");
+					   }
+				   } catch (NullPointerException ex) { 
+					   logger.debug(ex.getMessage());
+				   } catch (UnparsableException e) {
+					   logger.error(e.getMessage());
+				   }
+			   }
+		   } else {
 			   //System.err.println("step2not#"+_id + "#" + System.currentTimeMillis());
 			   //no result, stop
 		   }
