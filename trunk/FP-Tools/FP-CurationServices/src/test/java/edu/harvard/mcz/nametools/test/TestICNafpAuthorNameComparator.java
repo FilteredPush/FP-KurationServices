@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.harvard.mcz.nametools.AuthorNameComparator;
 import edu.harvard.mcz.nametools.ICNafpAuthorNameComparator;
 import edu.harvard.mcz.nametools.ICZNAuthorNameComparator;
 import edu.harvard.mcz.nametools.NameComparison;
@@ -205,6 +206,12 @@ public class TestICNafpAuthorNameComparator {
 		assertTrue(ICNafpAuthorNameComparator.initalsAreDifferent("A. Smith", "B.Smith"));
 		
 		assertFalse(ICNafpAuthorNameComparator.initalsAreDifferent("DC.", "de Candolle"));
+	}
+	
+	@Test 
+	public void testTyping() { 
+		assertFalse(AuthorNameComparator.consistentWithICZNAuthor("(C.Agardh) Lyngbye"));
+		assertTrue(AuthorNameComparator.consistentWithICNapfAuthor("(C.Agardh) Lyngbye"));
 	}
 	
 }

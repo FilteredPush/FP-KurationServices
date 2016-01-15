@@ -7,6 +7,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.services.sciname.GNISupportingService;
 import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.nameparser.NameParser;
 import org.gbif.nameparser.UnparsableException;
 import org.json.simple.JSONArray;
@@ -205,6 +206,8 @@ public class SciNameServiceUtil {
      */
     public static HashMap checkMisspelling (String name){
 
+    	logger.debug("Checking " + name + " against global names resolver.");
+    	
         CurationStatus curationStatus = null;
         String comment = "";
         String resultName = null;
@@ -213,8 +216,8 @@ public class SciNameServiceUtil {
         StringBuilder result = new StringBuilder();
         URL url;
         try {
-            name = name.replace(" ", "+");
-            url = new URL("http://resolver.globalnames.org/name_resolvers.json?names=" + name +"&resolve_once=true");
+            String uname = name.replace(" ", "+");
+            url = new URL("http://resolver.globalnames.org/name_resolvers.json?names=" + uname +"&resolve_once=true");
             //System.out.println(url);
             URLConnection connection = url.openConnection();
             String line;
@@ -281,11 +284,43 @@ public class SciNameServiceUtil {
         //if not exact match, print out reminder
         if (type > 2){
             if (score > 0.9){
-                //System.out.println("The provided name: \"" + name + "\" is misspelled, changed to \"" + resolvedName + "\".");
-                comment = comment + " | The provided name: " + name + " is misspelled, changed to " + resolvedName;
-                curationStatus = CurationComment.CURATED;
-            }
-            else {
+            	boolean found = false;
+               NameParser nparser = new NameParser();
+     		   try {
+     			   ParsedName iparse = nparser.parse(name);
+     			   String inputRank = iparse.getRank().toString();
+     			   logger.debug(inputRank);
+     			   ParsedName oparse = nparser.parse(resolvedName);
+     			   String outputRank = oparse.getRank().toString();
+     			   logger.debug(outputRank);
+     			   if (inputRank.equals(outputRank)) {
+     				   // good match at same rank
+     				   found = true;   
+     			   } else if (Rank.SPECIES_OR_BELOW.contains(inputRank) && outputRank.equals(Rank.SPECIES) && !inputRank.equals(Rank.SPECIES)) {
+     				   // match, but output is a species and input was below species (likely match on parent of infraspecific rank, not same name)
+     				   logger.debug(iparse.getScientificName());
+     				   logger.debug(oparse.getScientificName());
+     				   if (iparse.getInfraSpecificEpithet().equals(oparse.getSpecificEpithet())) { 
+     					   // likely match on infraspecific name treated as a species.
+     					   found = true;
+     				   }
+     			   } else { 
+     				   logger.debug(iparse.getScientificName());
+     				   logger.debug(oparse.getScientificName());
+     			   }
+     		   } catch (UnparsableException e) {
+     			   logger.error("unable to parse name " + e.getMessage());
+     		   }
+     		   if (found) { 
+                   //System.out.println("The provided name: \"" + name + "\" is misspelled, changed to \"" + resolvedName + "\".");
+                   comment = comment + " | The provided name: " + name + " is misspelled, changed to " + resolvedName;
+                   curationStatus = CurationComment.CURATED;
+     		   } else { 
+                   curationStatus = CurationComment.UNABLE_CURATED;
+                   comment = comment + " | The provided name: " + name + " cannot be found in GlobalNames Resolver";
+                   resolvedName = null;
+     		   }
+            } else {
                 //System.out.println("The provided name: \"" + name + "\" has spelling issue, changed to \"" + resolvedName + "\" for now.");
                 //System.out.println("The provided name: \"" + name + "\" has spelling issue and it cannot be curated");
                 curationStatus = CurationComment.UNABLE_CURATED;
