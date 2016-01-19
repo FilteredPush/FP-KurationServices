@@ -353,7 +353,7 @@ public class WoRMSService extends SciNameServiceParent {
 								double similarity = comparison.getSimilarity();
 								logger.debug(similarity);
 								if (match.equals(NameComparison.MATCH_DISSIMILAR) || match.equals(NameComparison.MATCH_ERROR)) {
-									addToComment("Found a possible match " + ar.getScientificname() + " " + ar.getAuthority() + "in WoRMS, but authorship is different (" + match + "), so not asserting a match.");
+									addToComment("Found a possible match " + ar.getScientificname() + " " + ar.getAuthority() + " in WoRMS, but authorship is different (" + match + "), so not asserting a match.");
 								} else { 
 							        validatedNameUsage = new NameUsage(ar);
 							        validatedNameUsage.setInputDbPK(toCheck.getInputDbPK());

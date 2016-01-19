@@ -172,7 +172,6 @@ public class SciNameServiceUtil {
 
                     if(cn != null){
                         //validatedAuthor = null;
-
                         curationStatus = CurationComment.UNABLE_CURATED;
                         comment = comment + "| scientificName is inconsistent with atomic fields";
                         name = null;
@@ -187,7 +186,11 @@ public class SciNameServiceUtil {
 
         }else{
             curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
-            comment = comment + "| can't construct sciName from atomic fields";
+            if (scientificName==null || scientificName.trim().length()==0) { 
+                comment = "No scientific name was provided in either the scientific name or atomic fields.";
+            } else { 
+                comment = "Atomic fields for scientific name are blank, nothing to compare with scientific name.";
+            }
             name =  scientificName;
         }
 
