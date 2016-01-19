@@ -3,6 +3,7 @@
  */
 package org.filteredpush.kuration.services;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.filteredpush.kuration.interfaces.IStringValidationService;
@@ -10,6 +11,7 @@ import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
 import org.filteredpush.kuration.util.SpecimenRecord;
+import org.kurator.akka.data.CurationStep;
 
 /**
  * @author mole
@@ -23,18 +25,18 @@ public class GeodeticDatumValidationService extends BaseCurationService implemen
 	
 	public GeodeticDatumValidationService() {
 		super();
-		initDS();
+		initDS(new CurationStep("GeodeticDatumValidaionService: Not initialized properly.", new HashMap<String, String>()));
 		useEPSGCodes = false;
 	}
 	
 	public GeodeticDatumValidationService(boolean useEPSGCodes) {
 		super();
-		initDS();
+		initDS(new CurationStep("GeodeticDatumValidaionService: Not initialized properly.", new HashMap<String, String>()));
 		this.useEPSGCodes = useEPSGCodes;
 	}	
 	
-	protected void initDS() { 
-		initBase();
+	protected void initDS(CurationStep curationStep) { 
+		initBase(curationStep);
 		correctedValue = "";
 	}
 	
@@ -87,7 +89,10 @@ public class GeodeticDatumValidationService extends BaseCurationService implemen
 	 */
 	@Override
 	public void validateString(String aString) {
-		initDS();
+		HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("datum", aString);
+		initDS(new CurationStep("Validate Geodetic Datum: check dwc:datum against controled vocabulary for the term. ", initialValues));
+		
 		this.addInputValue(SpecimenRecord.dwc_geodeticDatum, aString);
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		if (aString !=null) { 

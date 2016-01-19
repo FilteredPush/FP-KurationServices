@@ -91,6 +91,10 @@ public class CurationStep {
 		curationComments.add(curationComment);
 	}
 	
+	public List<String> getCurationComments() { 
+		return new ArrayList<String>(curationComments);
+	}
+	
 	public void addCurationState(String curationState) { 
 		curationStates.add(curationState);
 	}	

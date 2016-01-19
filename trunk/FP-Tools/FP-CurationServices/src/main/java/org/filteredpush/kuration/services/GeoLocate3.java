@@ -16,6 +16,7 @@ import org.filteredpush.kuration.util.GEOUtil;
 import org.filteredpush.kuration.util.GeoRefCacheValue;
 import org.filteredpush.kuration.util.GeolocationAlternative;
 import org.filteredpush.kuration.util.GeolocationResult;
+import org.kurator.akka.data.CurationStep;
 import org.nocrala.tools.gis.data.esri.shapefile.ShapeFileReader;
 import org.nocrala.tools.gis.data.esri.shapefile.ValidationPreferences;
 import org.nocrala.tools.gis.data.esri.shapefile.exception.InvalidShapeFileException;
@@ -79,7 +80,11 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 	 */
 	public void validateGeoRef(String country, String stateProvince, String county, String waterBody, String verbatimDepth, String locality, String latitude, String longitude, double thresholdDistanceKm){
 		logger.debug("Geolocate3.validateGeoref("+country+","+stateProvince+","+county+","+locality+")");
-		initBase();
+		
+		HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("decimalLatitude", latitude);
+		initialValues.put("decimalLongitude", longitude);
+		initBase(new CurationStep("Validate Georeference: check dwc:decimalLatitude and dwc:decimalLongitude against the textual locality data. ", initialValues));
 		setCurationStatus(CurationComment.UNABLE_CURATED);
 		correctedLatitude = -1;
 		correctedLongitude = -1;
