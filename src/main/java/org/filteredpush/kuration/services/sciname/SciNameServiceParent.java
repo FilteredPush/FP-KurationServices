@@ -34,6 +34,7 @@ import org.filteredpush.kuration.util.*;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.nameparser.NameParser;
 import org.gbif.nameparser.UnparsableException;
+import org.kurator.akka.data.CurationStep;
 
 
 /**
@@ -86,6 +87,7 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 
     public SciNameServiceParent() {
     	super();
+    	initBase(new CurationStep("SciNameServiceParent: Not initialized properly.", new HashMap<String, String>()));
     	initSciName();
     }
     
@@ -132,8 +134,10 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
    public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family, String genericEpithet) {
 
 	   // (1) set up initial conditions 
-	   
-	   initBase();
+	   HashMap<String, String> initialValues = new HashMap<String, String>();
+	   initialValues.put("scientificName", scientificNameToValidate);
+	   initialValues.put("scientificNameAuthorship", authorToValidate);
+	   initBase(new CurationStep("Validate Scientific Name: check dwc:scientificName and dwc:scientificNameAuthorship against some list of authoritative scientific names. ", initialValues));
        // To carry over the original sciname and author:
        // This has the appearance of an assignment to the wrong variable, but it isn't
 	   // this data is extracted by MongoSummaryWriter to provide "WAS:" values
@@ -397,6 +401,15 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 			   } else {
 				   //no result, stop
 			   }
+			   
+			   // *** Comment on likely problem cases were we probably are making a poor proposal ****
+			   
+			   // add a comment if the proposed correction differs in genus and authorship from the 
+			   // name provided 
+			   // TODO: Mucella lima Martyn gets curated to Nucella lima (Gmelin, 1791).
+			   //   Nucella lima (Martyn) or Nucella lima (Martyn, 1880) might be plausible
+			   //   change of Mucella -> Nucella and Martyn to Gmelin is implausible.
+			   
 			   
 			   // add a comment if the proposed correction differs in rank from the name provided.
 			   if (getCurationStatus().toString().equals(CurationComment.CURATED.toString())) { 

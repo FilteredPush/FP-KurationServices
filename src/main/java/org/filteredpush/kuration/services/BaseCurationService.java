@@ -1,12 +1,12 @@
 package org.filteredpush.kuration.services;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.interfaces.ICurationService;
-import org.filteredpush.kuration.services.sciname.COLService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationStatus;
 import org.kurator.akka.data.CurationStep;
@@ -20,7 +20,7 @@ public abstract class BaseCurationService implements ICurationService {
 	/**
 	 * Comments added during curation.
 	 */
-	private StringBuffer comments;
+	// private StringBuffer comments;
 	/**
 	 * List of external services that have been invoked.
 	 */
@@ -31,7 +31,21 @@ public abstract class BaseCurationService implements ICurationService {
 	 
     public static final String SEPARATOR = " | ";
 	
-    public Map<String,String> getInputValues() {
+    /**
+	 * @return the curationStep
+	 */
+	public CurationStep getCurationStep() {
+		return curationStep;
+	}
+
+	/**
+	 * @param curationStep the curationStep to set
+	 */
+	public void setCurationStep(CurationStep curationStep) {
+		this.curationStep = curationStep;
+	}
+
+	public Map<String,String> getInputValues() {
     	if (inputValues==null) { 
     		inputValues = new HashMap<String,String>();
     	}
@@ -54,37 +68,42 @@ public abstract class BaseCurationService implements ICurationService {
     }
     
 	public BaseCurationService() { 
-		initBase();
+		initBase(new CurationStep("BaseCurationService: Not initialized properly.", new HashMap<String, String>()));
 	}
 	
-	protected void initBase() {
-		comments = new StringBuffer();
+	protected void initBase(CurationStep curationStep) {
 		services = new StringBuffer();
 		inputValues = new HashMap<String,String>();
 		curatedValues = new HashMap<String,String>();
         curationStatus = CurationComment.UNABLE_DETERMINE_VALIDITY;
+        this.curationStep = curationStep;
 	}
 	
 	protected void init() { 
-		comments = new StringBuffer();
 		services = new StringBuffer();
 	}
 	
 	@Override
 	public String getComment() {
-		return comments.toString();
+		StringBuffer result = new StringBuffer();
+		Iterator<String> i = curationStep.getCurationComments().iterator();
+		while (i.hasNext()) { 
+			String comment = i.next();
+			if (comment!=null && comment.trim().length()>0) { 
+				if (result.length()>0) { 
+				    result.append(SEPARATOR).append(comment);
+				} else { 
+					result.append(comment);
+				}
+			}
+		}
+		return result.toString();
 	}
 
 	@Override
 	public void addToComment(String comment) {
 		logger.debug(comment);
-	    if (comment!=null && comment.length()>0) {
-	    	if (comments.length()>0) { 
-                comments.append(SEPARATOR).append(comment);
-	    	}  else { 
-	    		comments.append(comment);
-	    	}
-        }
+		curationStep.addCurationComment(comment);
 	}
 
 	@Override

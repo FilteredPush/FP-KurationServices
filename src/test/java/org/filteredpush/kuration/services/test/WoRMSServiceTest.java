@@ -96,8 +96,13 @@ public class WoRMSServiceTest {
 		// That correction is change of rank isn't being included in output.
     }
     
+    /**
+     * Cases where WoRMS fuzzy matching casts too wide a net, and we tend to return results that
+     * assert an undesirable proposed change to some other taxon.
+     */
     @Test 
     public void testTooWideFuzzy() { 
+    	// fuzzy matching when no author is provided is very iffy.
     	String name = "Limaea bronniana lata";
     	String author = "";
 		service.validateScientificName(name, author);

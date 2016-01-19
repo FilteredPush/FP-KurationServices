@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 import org.joda.time.IllegalFieldValueException;
 import org.joda.time.Interval;
 import org.joda.time.format.*;
+import org.kurator.akka.data.CurationStep;
 
 import java.io.*;
 import java.net.ConnectException;
@@ -57,16 +58,22 @@ public class InternalDateValidationService extends BaseCurationService implement
 	
 	public InternalDateValidationService() { 
 		super();
-		initDate();
+		initDate(new CurationStep("InternalDateValidaionService: Not initialized properly.", new HashMap<String, String>()));
 	}
 	
-	private void initDate() { 
-		initBase();
+	private void initDate(CurationStep curationStep) { 
+		initBase(curationStep);
         correctEventDate = null;
 	}
 
 	public void validateDate(String eventDate, String verbatimEventDate, String startDayOfYear, String year, String month, String day, String modified, String collector) {
-		initDate();
+		HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("eventDate", eventDate);
+		initialValues.put("year", year);
+		initialValues.put("month", month);
+		initialValues.put("day", day);
+		initDate(new CurationStep("Validate Collecting Event Date: check dwc:eventDate against dates of birth/death for collector name in some service, and compare with year/month/day terms. ", initialValues));
+				
 		boolean gotFilledIn  = false;  
         correctEventDate = null;
 		setCurationStatus(CurationComment.CORRECT);

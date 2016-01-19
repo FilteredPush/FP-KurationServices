@@ -3,7 +3,7 @@ package org.filteredpush.kuration.services;
 import org.filteredpush.kuration.interfaces.IFloweringTimeValidationService;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
-import org.filteredpush.kuration.util.CurationStatus;
+import org.kurator.akka.data.CurationStep;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -15,7 +15,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.*;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -34,6 +33,14 @@ public class FNAFloweringTimeService extends BaseCurationService implements IFlo
 	
 	private final String serviceName = "Authoritative Data from FNA";
 
+	public FNAFloweringTimeService() { 
+		initDate(new CurationStep("FNAFloweringTimeService: Not initialized properly.", new HashMap<String, String>()));
+	}
+	
+	protected void initDate(CurationStep curationStep) { 
+		initBase(curationStep);
+	}
+	
     public void setCacheFile(String file) throws CurationException {
         useCache = true;
 		initializeCacheFile(file);
@@ -43,7 +50,19 @@ public class FNAFloweringTimeService extends BaseCurationService implements IFlo
 	}
 
 	public void validateFloweringTime(String scientificName, String eventDate, String reproductiveState, String country, String kingdom) {
-		initBase();
+		validateFloweringTime(scientificName, eventDate, reproductiveState, country, kingdom, null, null);
+	}
+	
+	public void validateFloweringTime(String scientificName, String eventDate, String reproductiveState, String country, String kingdom, String latitude, String longitude) {
+		HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("eventDate", eventDate);
+		initialValues.put("scientificName", scientificName);
+		initialValues.put("reproductive", reproductiveState);
+		initialValues.put("country", country);
+		initialValues.put("kingdom", kingdom);
+		initialValues.put("latitude", latitude);
+		initialValues.put("longitude", longitude);
+		initDate(new CurationStep("Validate Collecting Event Date: check dwc:eventDate against reproductive state. ", initialValues));
 		
 		// TODO: fix to compare provided eventDate and reproductiveState with data from FNA
 		
@@ -191,7 +210,6 @@ public class FNAFloweringTimeService extends BaseCurationService implements IFlo
             }
         }
     }
-	
 
 	
 }

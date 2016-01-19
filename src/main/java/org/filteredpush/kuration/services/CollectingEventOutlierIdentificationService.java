@@ -35,6 +35,7 @@ import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.GEOUtil;
 import org.filteredpush.kuration.util.SpecimenRecord;
 import org.filteredpush.kuration.util.SpecimenRecordTypeConf;
+import org.kurator.akka.data.CurationStep;
 
 public class CollectingEventOutlierIdentificationService extends BaseCurationService implements ICollectingEventIdentificationService {
 
@@ -57,7 +58,12 @@ public class CollectingEventOutlierIdentificationService extends BaseCurationSer
 	private final String serviceName = "Collecting Event Outlier Identification Service";
 	
 	public void identifyOutlier(LinkedHashMap<String, TreeSet<SpecimenRecord>> inputDataMap, boolean doRemoteComparison) {
-		initBase();
+		
+		// TODO: Extract initial values.
+		HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("eventDate", "");
+		initBase(new CurationStep(serviceName + ": Check for collecting event outliers. ", initialValues));
+		
 		noneOutlier.clear();
 		outlierLocalComparatorMap.clear();
 		outlierRemoteComparatorMap.clear();

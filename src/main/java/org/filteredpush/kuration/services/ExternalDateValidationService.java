@@ -21,6 +21,7 @@ import org.joda.time.Days;
 import org.joda.time.IllegalFieldValueException;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.kurator.akka.data.CurationStep;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -70,9 +71,24 @@ public class ExternalDateValidationService extends BaseCurationService implement
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	
 	private final String serviceName = "Harvard List of Botanists";     
-
+	
+	public ExternalDateValidationService() { 
+		initDate(new CurationStep("ExternalDateValidaionService: Not initialized properly.", new HashMap<String, String>()));
+	}
+	
+	protected void initDate(CurationStep curationStep) { 
+		initBase(curationStep);
+	}
+	
     public void validateDate(DateMidnight eventDate, String collector, String latitude, String longitude) {
-    	initBase();
+    	HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("eventDate", eventDate.toString());
+		initialValues.put("collector", collector);
+		initialValues.put("latitude", latitude);
+		initialValues.put("longitude", longitude);
+		initDate(new CurationStep("Validate Collecting Event Date: check dwc:eventDate against dates of birth/death for collector name in some service, and compare with temporally and spatially nearby collecting events. ", initialValues));
+		    	
+    	
         HashSet<HashMap<String, String>> resultSet;
         // can switch between querying mongoDB or Solr index
         if (useSolr){

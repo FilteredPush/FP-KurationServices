@@ -3,6 +3,7 @@
  */
 package org.filteredpush.kuration.services;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.filteredpush.kuration.interfaces.IStringValidationService;
@@ -10,6 +11,7 @@ import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.CurationException;
 import org.filteredpush.kuration.util.CurationStatus;
 import org.filteredpush.kuration.util.SpecimenRecord;
+import org.kurator.akka.data.CurationStep;
 
 /**
  * @author mole
@@ -21,11 +23,11 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	
 	public BasisOfRecordValidationService() { 
 		super();
-		initBR();
+		initBR(new CurationStep("BasisOfRecordValidationService: Not initialized properly.", new HashMap<String, String>()));
 	}
 	
-	protected void initBR() { 
-		initBase();
+	protected void initBR(CurationStep curationStep) { 
+		initBase(curationStep);
 		correctedValue = "";
 	}
 	
@@ -70,7 +72,9 @@ public class BasisOfRecordValidationService extends BaseCurationService implemen
 	 */
 	@Override
 	public void validateString(String aString) {
-		initBR();
+		HashMap<String, String> initialValues = new HashMap<String, String>();
+		initialValues.put("basisOfRecord", aString);
+		initBR(new CurationStep("Validate BasisOfRecord: check dwc:basisOfRecord against controled vocabulary for the term. ", initialValues));
 		addInputValue(SpecimenRecord.dwc_basisOfRecord, aString);
 		if (aString==null || aString.length()==0) { 
 			setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY); 
