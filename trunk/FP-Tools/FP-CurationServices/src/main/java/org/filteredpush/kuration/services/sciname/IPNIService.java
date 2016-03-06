@@ -57,6 +57,7 @@ public class IPNIService extends SciNameServiceParent {
 	private final static String ipniLSIDPrefix = "urn:lsid:ipni.org:names:";
 	
 	private String IPNIlsid = null;	
+	private boolean homonymFlag = false;
 	
 	private String IPNISourceId = null;	
     
@@ -67,6 +68,7 @@ public class IPNIService extends SciNameServiceParent {
 			
     protected void initSciName() { 
 		validatedNameUsage = new NameUsage("IPNI",new ICNafpAuthorNameComparator(.70d, .5d));
+		homonymFlag = false;
     }
     
 
@@ -230,6 +232,7 @@ public class IPNIService extends SciNameServiceParent {
 			}
 		} else if (searchResults.size()>1) {  
 		    addToComment("More than one (" + searchResults.size() + ") match in IPNI on scientific name, potential homonym.");
+		    homonymFlag = true;
 		    Iterator<NameUsage> i = searchResults.iterator();
 		    boolean done = false;
 		    double bestMatch = -1d;
@@ -394,6 +397,7 @@ public class IPNIService extends SciNameServiceParent {
 	@Override
 	protected boolean nameSearchAgainstServices(NameUsage toCheck) {
 		boolean result = false;
+		homonymFlag = false;
 		validatedNameUsage.setOriginalAuthorship(toCheck.getOriginalAuthorship());
 		validatedNameUsage.setOriginalScientificName(toCheck.getOriginalScientificName());
 		setCurationStatus(CurationComment.UNABLE_CURATED);
@@ -427,6 +431,9 @@ public class IPNIService extends SciNameServiceParent {
 				    logger.debug(id);
 				    logger.debug(getCurationStatus().toString());
 					addToComment("Found name in IPNI.");
+				} else if (homonymFlag==true && toCheck.getAuthorship().trim().length()==0) { 
+					addToComment("Found Homonyms in IPNI, but no authorship was provided, unable to disambiguate.");
+					setCurationStatus(CurationComment.UNABLE_CURATED);
 				} else {
 					addToComment("Didn't find name in IPNI.");
 				    logger.debug(id);
