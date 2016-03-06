@@ -39,7 +39,7 @@ public class CurationStep {
 	 * 
 	 * @see org.filteredpush.kuration.services.BaseCurationService.inputValues
 	 */
-	private Map<String,String> initialElementValues;   
+	private Map<String,String> initialElementValues;
 	/**
 	 * Key value pairs representing (a flat list of) data elements after any modifications by
 	 * application of the method. 
