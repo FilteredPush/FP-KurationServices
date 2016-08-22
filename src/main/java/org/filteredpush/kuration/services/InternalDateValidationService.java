@@ -97,11 +97,16 @@ public class InternalDateValidationService extends BaseCurationService implement
         }
 
         if (eventDate!=null && (eventDate.length()==4 || eventDate.length()==7 )) {
-        	Interval interval = DateUtils.extractInterval(eventDate);
-        	eventDate = interval.getStart().toString("yyyy-MM-dd") + "/" + interval.getEnd().toString("yyyy-MM-dd");
-        	correctEventDate = eventDate;
-        	setCurationStatus(CurationComment.CURATED);
-            addToComment("expanded event date to a date range");
+        	Interval interval = DateUtils.extractDateInterval(eventDate);
+        	if (interval==null) { 
+               addToComment("eventDate appeared to contain an interval but no interval parsed from: [" + eventDate + "]");
+        	   logger.debug("eventDate appears as interval, but doesn't parse as such: " + eventDate);
+        	} else { 
+        	   eventDate = interval.getStart().toString("yyyy-MM-dd") + "/" + interval.getEnd().toString("yyyy-MM-dd");
+        	   correctEventDate = eventDate;
+        	   setCurationStatus(CurationComment.CURATED);
+               addToComment("expanded event date to a date range");
+        	} 
         }
         
         if (eventDate==null) { 
@@ -156,7 +161,7 @@ public class InternalDateValidationService extends BaseCurationService implement
 		Boolean correctionProposed = false;
 	    String lifeYears = "";
 		if (DateUtils.isRange(eventString)) { 
-		    Interval eventInterval = DateUtils.extractInterval(eventString);
+		    Interval eventInterval = DateUtils.extractDateInterval(eventString);
 		    if (eventInterval!=null) { 
 		    	// TODO: Check if collecting event date was before collector was 10 years old.
 		       Interval lifeSpan;
