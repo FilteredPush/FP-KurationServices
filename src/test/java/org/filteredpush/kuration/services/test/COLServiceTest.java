@@ -124,11 +124,20 @@ public class COLServiceTest {
         String name2 = "Formicidae";
         String author2 = null;
         scientificNameService.validateScientificName(name2, author2);
-        logger.debug(scientificNameService.getCurationStatus());
-        logger.debug(scientificNameService.getCorrectedScientificName());
-        logger.debug(scientificNameService.getCorrectedAuthor());
-        assertTrue(scientificNameService.getCorrectedAuthor().equals("Latreille, 1802"));
-        assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CURATED));
+        if (scientificNameService.getCorrectedAuthor().equals("Latreille, 1802")) { 
+        	// The correct value, which GBIF was returning, until they replaced it with an empty string from COL.
+           assertTrue(scientificNameService.getCorrectedAuthor().equals("Latreille, 1802"));
+           assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CURATED));
+        } else if (scientificNameService.getCorrectedAuthor().equals("")) { 
+        	// The incorrect value GBIF is returning in 2016, an empty string from COL which overwrote the correct value.
+           assertTrue(scientificNameService.getCorrectedAuthor().equals(""));
+           assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.UNABLE_DETERMINE_VALIDITY));
+        } else { 
+        	fail("Unexpected value returned: " + scientificNameService.getCorrectedAuthor() );
+            logger.debug(scientificNameService.getCurationStatus());
+            logger.debug(scientificNameService.getCorrectedScientificName());
+            logger.debug(scientificNameService.getCorrectedAuthor());
+        }
     }
 
 }
