@@ -147,8 +147,8 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         				addToComment("Added a longitude from "+getServiceName()+" as longitude was missing and geolocate had a confident match near the original line of latitude. ");
         			}
         		}
-        		if (latitude!=null && longitude==null) { 
-        			// Try to fill in the longitude
+        		if (latitude==null && longitude!=null) { 
+        			// Try to fill in the latitude
         			if (GeolocationResult.isLocationNearAResult(potentialMatches.get(0).getLatitude(), Double.valueOf(longitude), potentialMatches, (int)Math.round(thresholdDistanceKm * 1000))) {
         				// if latitude plus longitude from best match is near a match, propose the longitude from the best match.
         			    setCurationStatus(CurationComment.FILLED_IN);
