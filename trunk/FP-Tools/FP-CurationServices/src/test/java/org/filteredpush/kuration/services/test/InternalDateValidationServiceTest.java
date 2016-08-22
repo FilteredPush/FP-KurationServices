@@ -13,6 +13,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -186,8 +187,13 @@ public class InternalDateValidationServiceTest {
 		String collector = "Alpheus Spring Packard Jr.";
 		InternalDateValidationService service = new InternalDateValidationService();
 		Interval test = service.lookupEntomologist(collector);
-		assertEquals(1839,test.getStart().getYear());
-		assertEquals(1905,test.getEnd().getYear());
+		assertNotNull(null,test);
+		if (test!=null) { 
+		   assertEquals(1839,test.getStart().getYear());
+		   assertEquals(1905,test.getEnd().getYear());
+		} else { 
+			fail("Solr service for ent-bios is probably down.");
+		}
 	}	
     
 }
