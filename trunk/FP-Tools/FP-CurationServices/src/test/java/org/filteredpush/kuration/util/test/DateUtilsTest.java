@@ -51,6 +51,8 @@ public class DateUtilsTest {
         assertFalse(DateUtils.isRange("1880/01/01"));
         assertTrue(DateUtils.isRange("1980-01-01/1880-12-31"));  // is range doesn't test start/end
         assertTrue(DateUtils.isRange("1880/1881"));
+        assertTrue(DateUtils.isRange("1880-03"));
+        assertTrue(DateUtils.isRange("1884-01-01T05:05Z/1884-12-05"));
     }
 
 	/**
@@ -58,27 +60,36 @@ public class DateUtilsTest {
 	 */
 	@Test
 	public void testExtractInterval() {
-    	Interval test = DateUtils.extractInterval("1880-01-01/1880-12-31");
+    	Interval test = DateUtils.extractDateInterval("1880-01-01/1880-12-31");
     	assertEquals(1880, test.getStart().getYear());
     	assertEquals(1, test.getStart().getMonthOfYear());
     	assertEquals(1, test.getStart().getDayOfYear());
     	assertEquals(1880, test.getEnd().getYear());
     	assertEquals(12, test.getEnd().getMonthOfYear());
     	assertEquals(31, test.getEnd().getDayOfMonth());
-    	test = DateUtils.extractInterval("1880");
+    	test = DateUtils.extractDateInterval("1880");
     	assertEquals(1880, test.getStart().getYear());
     	assertEquals(1, test.getStart().getMonthOfYear());
     	assertEquals(1, test.getStart().getDayOfYear());
     	assertEquals(1880, test.getEnd().getYear());
     	assertEquals(12, test.getEnd().getMonthOfYear());
     	assertEquals(31, test.getEnd().getDayOfMonth());
-    	test = DateUtils.extractInterval("1880-02");
+    	test = DateUtils.extractDateInterval("1880-02");
     	assertEquals(1880, test.getStart().getYear());
     	assertEquals(2, test.getStart().getMonthOfYear());
     	assertEquals(1, test.getStart().getDayOfMonth());
     	assertEquals(1880, test.getEnd().getYear());
     	assertEquals(2, test.getEnd().getMonthOfYear());
     	assertEquals(29, test.getEnd().getDayOfMonth());
+    	test = DateUtils.extractDateInterval("1880-01-01T08:30Z/1880-12-31");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(0, test.getStart().getHourOfDay());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(12, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth());    	
+    	assertEquals(0, test.getEnd().getHourOfDay());    	
     }	
 
 	/**
@@ -99,6 +110,35 @@ public class DateUtilsTest {
     	assertEquals(1, test.getMonthOfYear());
     	assertEquals(1, test.getDayOfMonth());
     	assertEquals(null,DateUtils.extractDate(""));
+    }
+    
+    @Test
+    public void isConsistentTest() { 
+    	assertEquals(true, DateUtils.isConsistent("", "", "", ""));
+    	assertEquals(true, DateUtils.isConsistent(null, "", "", ""));
+    	assertEquals(true, DateUtils.isConsistent(null, "", null, ""));
+    	assertEquals(true, DateUtils.isConsistent("1884-03-18", "1884", "03", "18"));
+    	assertEquals(false, DateUtils.isConsistent("1884-03-18", "1884", "03", "17"));
+    	assertEquals(false, DateUtils.isConsistent("1884-03-18", "1884", "03", ""));
+    	assertEquals(false, DateUtils.isConsistent("1884-03-18", "1884", "03", null));
+    	assertEquals(false, DateUtils.isConsistent("1884-03-18", "1884", null, "18"));
+    	assertEquals(false, DateUtils.isConsistent("1884-03-18", null, "03", "18"));
+    	assertEquals(false, DateUtils.isConsistent(null, "1884", "03", "18"));
+    	assertEquals(false, DateUtils.isConsistent("1884-01-01", "1884", "01", null));
+    	assertEquals(false, DateUtils.isConsistent("1884-01-01", "1884", null, null));
+    	assertEquals(false, DateUtils.isConsistent(null, "1884", "1", "1"));
+    	assertEquals(true, DateUtils.isConsistent("1884-03-01", "1884", "03", "1"));
+    	assertEquals(true, DateUtils.isConsistent("1884-03-01", "1884", "03", "01"));
+    	assertEquals(false, DateUtils.isConsistent("1884-03", "1884", "03", "01"));
+    	assertEquals(true, DateUtils.isConsistent("1884-03", "1884", "03", ""));
+    	assertEquals(true, DateUtils.isConsistent("1884-03", "1884", "03", null));
+    	assertEquals(true, DateUtils.isConsistent("1884-01-01/1884-01-31", "1884", "01", null));
+    	assertEquals(false, DateUtils.isConsistent("1884-01-01/1884-01-05", "1884", "01", null));    	
+    	assertEquals(true, DateUtils.isConsistent("1884-01-01/1884-01-31", "1884", "01", ""));
+    	assertEquals(false, DateUtils.isConsistent("1884-01-01/1884-01-05", "1884", "01", ""));    	
+    	assertEquals(true, DateUtils.isConsistent("1884-01-01/1884-12-31", "1884", null, null));
+    	assertEquals(false, DateUtils.isConsistent("1884-01-01/1884-12-05", "1884", null, null));    	
+    	assertEquals(false, DateUtils.isConsistent("1884-01-01T05:05Z/1884-12-05", "1884", null, null));
     }
 
 }
