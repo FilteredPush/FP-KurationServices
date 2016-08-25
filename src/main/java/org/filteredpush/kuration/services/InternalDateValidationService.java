@@ -87,7 +87,9 @@ public class InternalDateValidationService extends BaseCurationService implement
         this.addInputValue("day", day);
         
         if (eventDate==null || eventDate.trim().length()==0) {
-        	eventDate = DateUtils.createEventDateFromParts(verbatimEventDate, startDayOfYear, year, month, day);
+        	// TODO: Support endDayOfYear
+        	String endDayOfYear = null;
+        	eventDate = DateUtils.createEventDateFromParts(verbatimEventDate, startDayOfYear, endDayOfYear, year, month, day);
         	if (eventDate!=null && eventDate.trim().length() >0) { 
         		setCurationStatus(CurationComment.FILLED_IN);
         		correctEventDate = eventDate;

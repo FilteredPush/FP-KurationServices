@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.filteredpush.kuration.util.CurationStatus;
+
 /**
  * A report from a data validation method concerning a data record.  
  * 
@@ -95,6 +97,12 @@ public class CurationStep {
 		return new ArrayList<String>(curationComments);
 	}
 	
+	public void addCurationState(CurationStatus aCurationState) {
+		if (aCurationState!=null) { 
+		    curationStates.add(aCurationState.toString());
+		}
+	}
+	
 	public void addCurationState(String curationState) { 
 		curationStates.add(curationState);
 	}	
@@ -123,6 +131,20 @@ public class CurationStep {
 	
 	public Map<String,String> getFinalElementValues() { 
 		return finalElementValues;
+	}
+
+	/**
+	 * @return a copy of the curationStates list
+	 */
+	public List<String> getCurationStates() {
+		return new ArrayList<String>(curationStates);
+	}
+
+	/**
+	 * @return a copy of the sourcesConsulted list
+	 */
+	public List<String> getSourcesConsulted() {
+		return new ArrayList<String>(sourcesConsulted);
 	}
 
 }
