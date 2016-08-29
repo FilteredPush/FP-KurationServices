@@ -16,16 +16,23 @@
  */
 package org.filteredpush.kuration.util;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTimeFieldType;
+import org.joda.time.Instant;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
@@ -82,7 +89,7 @@ public class DateUtils {
 				) {
 			try { 
 				StringBuffer assembly = new StringBuffer();
-				if (endDayOfYear !=null && endDayOfYear.trim().length() > 0 && !startDayOfYear.trim().equals(endDayOfYear.trim())) {  
+				if (!isEmpty(endDayOfYear) && !startDayOfYear.trim().equals(endDayOfYear.trim())) {  
 					assembly.append(year).append("-").append(String.format("%03d",Integer.parseInt(startDayOfYear))).append("/");
 					assembly.append(year).append("-").append(String.format("%03d",Integer.parseInt(endDayOfYear)));
 				} else { 
@@ -140,6 +147,19 @@ public class DateUtils {
 		Map result = new HashMap<String,String>();
 		String resultDate = null;
 		
+		// Strip off leading and trailing []
+		if (verbatimEventDate!=null && verbatimEventDate.startsWith("[")) { 
+			verbatimEventDate = verbatimEventDate.substring(1);
+		}
+		if (verbatimEventDate!=null && verbatimEventDate.endsWith("]")) { 
+			verbatimEventDate = verbatimEventDate.substring(0,verbatimEventDate.length()-1);
+		}
+		
+		// Stop before doing work if provided verbatim string is null.
+		if (isEmpty(verbatimEventDate)) { 
+			return result;
+		}
+		
 		if (verbatimEventDate.matches("^[0-9]{4}[-/]([0-9]{1,2}|[A-Za-z]+)[-/][0-9]{1,2}.*")) { 
 			try { 
 				DateTimeParser[] parsers = { 
@@ -157,13 +177,37 @@ public class DateUtils {
 				logger.debug(e.getMessage());
 			}
 		}
-		if (verbatimEventDate.matches("^([0-9]{1,2}|[A-Za-z]+)[-/]([0-9]{1,2}|[A-Za-z]+)[-/][0-9]{4}$")) { 
+		if (verbatimEventDate.matches("^[0-9]{4}年[0-9]{1,2}月[0-9]{1,2}[日号]$")) { 
+			try { 
+				DateTimeParser[] parsers = { 
+						DateTimeFormat.forPattern("yyyy年MM月dd日").getParser(),
+						DateTimeFormat.forPattern("yyyy年MM月dd号").getParser(),
+						ISODateTimeFormat.dateOptionalTimeParser().getParser()
+				};
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter().withLocale(Locale.CHINESE);
+				DateMidnight parseDate = LocalDate.parse(verbatimEventDate,formatter).toDateMidnight();
+				resultDate = parseDate.toString("yyyy-MM-dd");
+				result.put("resultState", "date");
+				result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}
+		}		
+		if (verbatimEventDate.matches("^([0-9]{1,2}|[A-Za-z]+)[-/.]([0-9]{1,2}|[A-Za-z]+)[-/. ][0-9]{4}$")) { 
 			try { 
 				DateTimeParser[] parsers = { 
 						DateTimeFormat.forPattern("MMM/dd/yyyy").getParser(),
 						DateTimeFormat.forPattern("dd/MMM/yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM/dd yyyy").getParser(),
+						DateTimeFormat.forPattern("dd/MMM yyyy").getParser(),
 						DateTimeFormat.forPattern("MMM-dd-yyyy").getParser(),
-						DateTimeFormat.forPattern("dd-MMM-yyyy").getParser()						
+						DateTimeFormat.forPattern("dd-MMM-yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM-dd yyyy").getParser(),
+						DateTimeFormat.forPattern("dd-MMM yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM.dd.yyyy").getParser(),
+						DateTimeFormat.forPattern("dd.MMM.yyyy").getParser(),
+						DateTimeFormat.forPattern("MM.dd.yyyy").getParser(),
+						DateTimeFormat.forPattern("dd.MM.yyyy").getParser()						
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
 				DateMidnight parseDate = LocalDate.parse(verbatimEventDate,formatter).toDateMidnight();
@@ -201,6 +245,7 @@ public class DateUtils {
 			try { 
 				DateTimeParser[] parsers = { 
 					DateTimeFormat.forPattern("MM/dd/yyyy").getParser(),
+					DateTimeFormat.forPattern("MM/dd yyyy").getParser(),
 					DateTimeFormat.forPattern("MM-dd-yyyy").getParser(),
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
@@ -212,6 +257,7 @@ public class DateUtils {
 			try { 
 				DateTimeParser[] parsers = { 
 					DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
+					DateTimeFormat.forPattern("dd/MM yyyy").getParser(),
 					DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
@@ -296,18 +342,265 @@ public class DateUtils {
 		if (result.size()==0) {
 			try { 
 				DateTimeParser[] parsers = { 
+					DateTimeFormat.forPattern("yyyy MMM dd").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM. dd").getParser(),
+					DateTimeFormat.forPattern("yyyy, MMM dd").getParser(),
+					DateTimeFormat.forPattern("yyyy, MMM. dd").getParser(),
+					
 					DateTimeFormat.forPattern("MMM dd, yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM. dd, yyyy").getParser()
+					DateTimeFormat.forPattern("MMM dd'st', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'nd', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'rd', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'th', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd, yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'st', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'nd', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'rd', yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'th', yyyy").getParser(),
+					
+					DateTimeFormat.forPattern("MMM.dd,yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'st',yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'nd',yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'rd',yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'th',yyyy").getParser(),	
+					
+					DateTimeFormat.forPattern("MMM.dd.yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'st'.yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'nd'.yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'rd'.yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd'th'.yyyy").getParser(),					
+					
+					DateTimeFormat.forPattern("MMM-dd-yyyy").getParser(),
+					DateTimeFormat.forPattern("dd-MMM-yyyy").getParser(),
+					DateTimeFormat.forPattern("dd.MMM.yyyy").getParser(),
+					DateTimeFormat.forPattern("dd,MMM,yyyy").getParser(),
+					DateTimeFormat.forPattern("dd.MMM.,yyyy").getParser(),
+					DateTimeFormat.forPattern("dd. MMM.,yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM, dd yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM, dd. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM, dd, yyyy").getParser(),					
+					DateTimeFormat.forPattern("MMM, dd., yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd/yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd,yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd, yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd,yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd. MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM., yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM.,yyyy").getParser(),
+					
+					DateTimeFormat.forPattern("dd MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM,yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM.yyyy").getParser(),
+					
+					DateTimeFormat.forPattern("MMM dd yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'st' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'nd' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'rd' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'th' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'st' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'nd' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'rd' yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'th' yyyy").getParser(),	
+					
+					DateTimeFormat.forPattern("dd MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'st' MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'nd' MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'rd' MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'th MMM', yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM., yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'st' MMM., yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'nd' MMM., yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'rd' MMM., yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'th' MMM., yyyy").getParser(),
+					
+					DateTimeFormat.forPattern("dd MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'st' MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'nd' MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'rd' MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'th' MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'st' MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'nd' MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'rd' MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("dd'th' MMM. yyyy").getParser(),					
+					
+					DateTimeFormat.forPattern("dd/MMM/yyyy").getParser(),
+					DateTimeFormat.forPattern("dd/MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM/dd yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM/dd/yyyy").getParser(),
+					
+					DateTimeFormat.forPattern("MMM dd. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'st'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'nd'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'rd'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'th'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'st'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'nd'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'rd'. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'th'. yyyy").getParser(),					
+					DateTimeFormat.forPattern("MMM dd.yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd.yyyy").getParser(),
+
+					DateTimeFormat.forPattern("MMM. dd-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'st'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'nd'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'rd'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd'th'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'st'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'nd'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'rd'-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM dd'th'-yyyy").getParser(),
+					
+					DateTimeFormat.forPattern("yyyy-MMM-dd").getParser()
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-				LocalDate parseDate = LocalDate.parse(verbatimEventDate,formatter);
-				resultDate =  parseDate.toString("yyyy-MM-dd");
+				String cleaned = verbatimEventDate.replace("Sept.", "Sep.");
+				cleaned = cleaned.replace("Sept ", "Sep. ");
+				cleaned = cleaned.replace("Sept,", "Sep.,");
+				cleaned = cleaned.replace("  ", " ").trim();
+				cleaned = cleaned.replace(" ,", ",");
+				cleaned = cleaned.replace("- ", "-");
+				// Strip off a trailing period after a final year
+				if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
+					cleaned = cleaned.replaceAll("[.]$", "");
+				}
+				cleaned = cleaned.replace("XII", "December");
+				cleaned = cleaned.replace("XI", "November");
+				cleaned = cleaned.replace("IX", "September");
+				cleaned = cleaned.replace("X", "October");
+				cleaned = cleaned.replace("VIII", "August");
+				cleaned = cleaned.replace("VII", "July");
+				cleaned = cleaned.replace("VIII", "August");
+				cleaned = cleaned.replace("VI", "June");
+				cleaned = cleaned.replace("IV", "April");
+				cleaned = cleaned.replace("V", "May");
+				cleaned = cleaned.replace("III", "March");
+				cleaned = cleaned.replace("II", "February");
+				cleaned = cleaned.replace("I", "January");
+				try {
+				    LocalDate parseDate = LocalDate.parse(cleaned,formatter);
+				    resultDate =  parseDate.toString("yyyy-MM-dd");
+				} catch (Exception e) {
+					try {
+						logger.debug(e.getMessage());
+						LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.FRENCH));
+						resultDate =  parseDate.toString("yyyy-MM-dd");
+					} catch (Exception e1) { 
+						try { 
+							logger.debug(e1.getMessage());
+							LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.ITALIAN));
+							resultDate =  parseDate.toString("yyyy-MM-dd");
+						} catch (Exception e2) { 
+							logger.debug(e2.getMessage());
+							LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.GERMAN));
+							resultDate =  parseDate.toString("yyyy-MM-dd");
+						}
+					}
+				}	
 				logger.debug(resultDate);
 				result.put("resultState", "date");
 				result.put("result",resultDate);
 			} catch (Exception e) { 
 				logger.debug(e.getMessage());
 			}			
+		}		
+		if (result.size()==0) {
+			try { 
+				DateTimeParser[] parsers = { 
+					DateTimeFormat.forPattern("MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM., yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.,yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM yyyy").getParser(),
+				};
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+				String cleaned = verbatimEventDate.replace("Sept.", "Sep.");
+				cleaned = cleaned.replace("  ", " ").trim();
+				cleaned = cleaned.replace(" ,", ",");
+				cleaned = cleaned.replace(" ,", ",");
+				cleaned = cleaned.replace("Sept ", "Sep. ");
+				cleaned = cleaned.replace("XII", "December");
+				cleaned = cleaned.replace("XI", "November");
+				cleaned = cleaned.replace("IX", "September");
+				cleaned = cleaned.replace("X", "October");
+				cleaned = cleaned.replace("VIII", "August");
+				cleaned = cleaned.replace("VII", "July");
+				cleaned = cleaned.replace("VIII", "August");
+				cleaned = cleaned.replace("VI", "June");
+				cleaned = cleaned.replace("IV", "April");
+				cleaned = cleaned.replace("V", "May");
+				cleaned = cleaned.replace("III", "March");
+				cleaned = cleaned.replace("II", "February");
+				cleaned = cleaned.replace("I", "January");
+				// Strip off a trailing period after a final year
+				if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
+					cleaned = cleaned.replaceAll("[.]$", "");
+				}
+				LocalDate parseDate = LocalDate.parse(cleaned,formatter);
+				resultDate =  parseDate.toString("yyyy-MM");
+				logger.debug(resultDate);
+				result.put("resultState", "range");
+				result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}			
+		}		
+		if (result.size()==0) {
+			try { 
+				Interval parseDate = Interval.parse(verbatimEventDate);
+				logger.debug(parseDate);
+				resultDate =  parseDate.getStart().toString("yyyy-MM-dd") + "/" + parseDate.getEnd().toString("yyyy-MM-dd");
+				result.put("resultState", "range");
+				result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}			
+		}		
+		if (result.size()==0) {
+			String cleaned = verbatimEventDate.trim();
+			if (verbatimEventDate.matches("^[A-Za-z.]+[ ,]+[0-9]{1,2}-[0-9]{0,2}[ ,]+[0-9]{4}$")) { 
+				cleaned = cleaned.replace("-", " to ");
+			}
+			if (cleaned.contains(" to ")) { 
+				String[] bits = cleaned.split(" to ");
+				String yearRegex = ".*([0-9]{4}).*";
+				Matcher yearMatcher = Pattern.compile(yearRegex).matcher(cleaned);
+				String monthRegex = "([A-Za-z.]+).*";
+				Matcher monthMatcher = Pattern.compile(monthRegex).matcher(cleaned);				
+				if (yearMatcher.matches() && monthMatcher.matches()) {
+				    String year = yearMatcher.group(1);
+				    String month = monthMatcher.group(1);
+				        if (bits.length==2) { 
+				        	if (!bits[0].contains(year)) { 
+				        		bits[0] = bits[0] + " " + year;
+				        	}
+				        	if (!bits[1].contains(year)) { 
+				        		bits[1] = bits[1] + " " + year;
+				        	}
+				        	if (!bits[1].contains(month)) { 
+				        		bits[1] = month + " " + bits[1];
+				        	}				        	
+				        	Map<String,String> resultBit0 = DateUtils.extractDateFromVerbatim(bits[0]);
+				        	if (resultBit0.size()>0 && resultBit0.get("resultState").equals("date")) {
+				        	    Map<String,String> resultBit1 = DateUtils.extractDateFromVerbatim(bits[1]);
+				        	    if (resultBit1.size()>0 && resultBit1.get("resultState").equals("date")) {
+				    				result.put("resultState", "range");
+				    				result.put("result",resultBit0.get("result")+ "/" + resultBit1.get("result"));
+				        	    }
+				        	}
+				        	logger.debug(bits[0]);
+				        	logger.debug(bits[1]);
+				        }
+				}
+			}
 		}		
 		
 		return result;
@@ -445,16 +738,17 @@ public class DateUtils {
     	DateTimeParser[] parsers = { 
     			DateTimeFormat.forPattern("yyyy-MM").getParser(),
     			DateTimeFormat.forPattern("yyyy").getParser(),
+    			ISODateTimeFormat.dateOptionalTimeParser().getParser(), 
     			ISODateTimeFormat.date().getParser() 
     	};
     	DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-    		try { 
-               result = DateMidnight.parse(eventDate, formatter);
-               logger.debug(result);
-    		} catch (Exception e) { 
-    			// not a date
-               logger.error(e.getMessage());
-    		}
+    	try { 
+    		result = DateMidnight.parse(eventDate, formatter);
+    		logger.debug(result);
+    	} catch (Exception e) { 
+    		// not a date
+    		logger.error(e.getMessage());
+    	}
     	return result;
     }      
     
@@ -593,5 +887,140 @@ public class DateUtils {
     	}
     	return result;
     }
+   
+    /**
+     * Does eventDate match an ISO date that contains a time (including the instant of 
+     * midnight (a time with all zero elements)). 
+     * 
+     * @param eventDate string to check for an ISO date with a time.
+     * @return true if eventDate is an ISO date that includes a time, or if eventDate is an 
+     * ISO date range either the start or end of which contains a time.  
+     */
+    public static boolean containsTime(String eventDate) {
+    	boolean result = false;
+    	if (!isEmpty(eventDate)) { 
+    		if (eventDate.endsWith("UTC")) { eventDate = eventDate.replace("UTC", "Z"); } 
+    		DateTimeParser[] parsers = { 
+    				ISODateTimeFormat.dateHour().getParser(),
+    				ISODateTimeFormat.dateTimeParser().getParser(),
+    				ISODateTimeFormat.dateHourMinute().getParser(),
+    				ISODateTimeFormat.dateHourMinuteSecond().getParser(),
+    				ISODateTimeFormat.dateTime().getParser() 
+    		};
+    		DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+    		if (eventDate.matches("^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[Tt].+")) { 
+    			try { 
+    				LocalDate match = LocalDate.parse(eventDate, formatter);
+    				result = true;
+    				logger.debug(match);
+    			} catch (Exception e) { 
+    				// not a date with a time
+    				logger.error(e.getMessage());
+    			}    		
+    		}
+    		if (isRange(eventDate) && eventDate.contains("/") && !result) { 
+    			String[] bits = eventDate.split("/");
+    			if (bits!=null && bits.length>1) { 
+    				// does either start or end date contain a time?
+    				if (bits[0].matches("^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[Tt].+")) { 
+    					try { 
+    						LocalDate match = LocalDate.parse(bits[0], formatter);
+    						result = true;
+    						logger.debug(match);
+    					} catch (Exception e) { 
+    						// not a date with a time
+    						logger.error(e.getMessage());
+    					}     
+    				}
+    				if (bits[1].matches("^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[Tt].+")) { 
+    					try { 
+    						LocalDate match = LocalDate.parse(bits[1], formatter);
+    						result = true;
+    						logger.debug(match);
+    					} catch (Exception e) { 
+    						// not a date with a time
+    						logger.error(e.getMessage());
+    					}     	  
+    				}
+    			}
+    		}
+    	}
+    	return result;
+    }
     
+    public static String extractZuluTime(String eventDate) {
+    	String result = null;
+    	if (!isEmpty(eventDate)) { 
+    		if (eventDate.endsWith("UTC")) { eventDate = eventDate.replace("UTC", "Z"); } 
+    		DateTimeParser[] parsers = { 
+    				ISODateTimeFormat.dateHour().getParser(),
+    				ISODateTimeFormat.dateTimeParser().getParser(),
+    				ISODateTimeFormat.dateHourMinute().getParser(),
+    				ISODateTimeFormat.dateHourMinuteSecond().getParser(),
+    				ISODateTimeFormat.dateTime().getParser() 
+    		};
+    		DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+    		if (eventDate.matches("^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[Tt].+")) { 
+    			try { 
+    	    		result = instantToStringTime(Instant.parse(eventDate, formatter));
+    				logger.debug(result);
+    			} catch (Exception e) { 
+    				// not a date with a time
+    				logger.error(e.getMessage());
+    			}    		
+    		}
+    		if (isRange(eventDate) && eventDate.contains("/") && result!=null) { 
+    			String[] bits = eventDate.split("/");
+    			if (bits!=null && bits.length>1) { 
+    				// does either start or end date contain a time?
+    				if (bits[0].matches("^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[Tt].+")) { 
+    					try { 
+    	    				result = instantToStringTime(Instant.parse(bits[0], formatter));
+    						logger.debug(result);
+    					} catch (Exception e) { 
+    						// not a date with a time
+    						logger.error(e.getMessage());
+    					}     
+    				}
+    				if (bits[1].matches("^[0-9]{4}[-][0-9]{2}[-][0-9]{2}[Tt].+") && result!=null) { 
+    					try { 
+    	    				result = instantToStringTime(Instant.parse(bits[1], formatter));
+    	    				logger.debug(result);
+    					} catch (Exception e) { 
+    						// not a date with a time
+    						logger.error(e.getMessage());
+    					}     	  
+    				}
+    			}
+    		}
+    	}
+    	return result;
+    }    
+    
+    /**
+     * Given an instant, return the time within one day that it represents as a string.
+     * 
+     * @param instant to obtain time from.
+     * @return string in the form hh:mm:ss.sssZ or an empty string if instant is null.  
+     */
+    protected static String instantToStringTime(Instant instant) {
+    	String result = "";
+    	if (instant!=null) { 
+    		StringBuffer time = new StringBuffer();
+    		time.append(String.format("%02d",instant.get(DateTimeFieldType.hourOfDay())));
+    		time.append(":").append(String.format("%02d",instant.get(DateTimeFieldType.minuteOfHour())));
+    		time.append(":").append(String.format("%02d",instant.get(DateTimeFieldType.secondOfMinute())));
+    		time.append(".").append(String.format("%03d",instant.get(DateTimeFieldType.millisOfSecond())));
+    		String timeZone = instant.getZone().getID();
+    		if (timeZone.equals("UTC")) { 
+    		    time.append("Z"); 
+    		} else { 
+    			time.append(timeZone);
+    		}
+    		result = time.toString();
+    	}
+    	return result;
+    }
+    
+
 }

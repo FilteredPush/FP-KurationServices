@@ -146,5 +146,10 @@ public class CurationStep {
 	public List<String> getSourcesConsulted() {
 		return new ArrayList<String>(sourcesConsulted);
 	}
+	
+	public void replaceCurationStates(CurationStatus aCurationState) {
+		curationStates = new ArrayList<String>();
+		addCurationState(aCurationState);
+	}
 
 }
