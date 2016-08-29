@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.kurator.akka.data.CurationStep;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.DateUtils;
 
@@ -28,6 +30,8 @@ import org.filteredpush.kuration.util.DateUtils;
  *
  */
 public class DateValidator {
+	
+	private static final Log logger = LogFactory.getLog(DateValidator.class);
 
 	/**
 	 * 
@@ -78,6 +82,16 @@ public class DateValidator {
 			}
 		}
 		
+		if (!DateUtils.isEmpty(eventTime)) {
+			if (DateUtils.containsTime(eventDate)) { 
+				if (!DateUtils.extractZuluTime(eventDate).equals(DateUtils.extractZuluTime("1970-01-10T" + eventTime))) { 
+					result.addCurationComment("dwc:eventDate is not consistent with eventTime");
+					result.replaceCurationStates(CurationComment.UNABLE_CURATED);
+			    } else { 
+				    logger.debug(DateUtils.extractZuluTime(eventDate).equals(DateUtils.extractZuluTime("1970-01-10T" + eventTime)));
+			    }
+			}
+		}
 		
 		return result;
 	}
