@@ -862,7 +862,10 @@ public class DateUtils {
     
     /**
      * Given a string that may be a date or a date range, extract a interval of
-     * dates from that date range (ignoring time).
+     * dates from that date range (ignoring time (thus the duration for the 
+     * interval will be from one date midnight to another).
+     * 
+     * @see extractInterval, which is probably the method you want.
      * 
      * @param eventDate
      * @return An interval from one DateMidnight to another DateMidnight.
@@ -914,7 +917,61 @@ public class DateUtils {
     	return result;
     }
     
-  
+    /**
+     * Given a string that may be a date or a date range, extract a interval of
+     * dates from that date range, up to the end milisecond of the last day.
+     * 
+     * @see extractDateInterval which returns a pair of DateMidnights.
+     * 
+     * @param eventDate
+     * @return an interval from the beginning of event date to the end of event date.
+     */
+    public static Interval extractInterval(String eventDate) {
+    	Interval result = null;
+    	DateTimeParser[] parsers = { 
+    			DateTimeFormat.forPattern("yyyy-MM").getParser(),
+    			DateTimeFormat.forPattern("yyyy").getParser(),
+    			ISODateTimeFormat.dateOptionalTimeParser().getParser() 
+    	};
+    	DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+    	if (eventDate!=null && eventDate.contains("/") && isRange(eventDate)) {
+    		String[] dateBits = eventDate.split("/");
+    		try { 
+    			// must be at least a 4 digit year.
+    			if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
+    				DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
+    				DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
+    				if (dateBits[1].length()==4) { 
+    	                  result = new Interval(startDate,endDate.plusMonths(12).minus(1l));
+    	               } else if (dateBits[1].length()==7) { 
+    	                  result = new Interval(startDate,endDate.plusMonths(1).minus(1l));
+    	               } else { 
+    				      result = new Interval(startDate, endDate.plusDays(1).minus(1l));
+    	               }
+    			}
+    		} catch (Exception e) { 
+    			// not a date range
+               logger.error(e.getMessage());
+    		}
+    	} else {
+    		try { 
+               DateMidnight startDate = DateMidnight.parse(eventDate, formatter);
+               logger.debug(startDate);
+               if (eventDate.length()==4) { 
+                  result = new Interval(startDate,startDate.plusMonths(12).minus(1l));
+               } else if (eventDate.length()==7) { 
+                  result = new Interval(startDate,startDate.plusMonths(1).minus(1l));
+               } else { 
+                  result = new Interval(startDate,startDate.plusDays(1).minus(1l));
+               }
+    		} catch (Exception e) { 
+    			// not a date
+    			e.printStackTrace();
+               logger.error(e.getMessage());
+    		}
+    	}
+    	return result;
+    }  
     
     /**
      * Extract a single joda date from an event date.
@@ -1187,6 +1244,78 @@ public class DateUtils {
     }    
     
     /**
+     * Test if an event date specifies a duration of one day or less.
+     * 
+     * @param eventDate to test.
+     * @return true if duration is one day or less.
+     */
+    public static boolean specificToDay(String eventDate) { 
+    	boolean result = false;
+    	if (!isEmpty(eventDate)) { 
+    	    Interval eventDateInterval = extractInterval(eventDate);
+    	    logger.debug(eventDateInterval);
+    	    logger.debug(eventDateInterval.toDuration());
+    	    if (eventDateInterval.toDuration().getStandardDays()<1l) { 
+    	    	result = true;
+    	    } else if (eventDateInterval.toDuration().getStandardDays()==1l && eventDateInterval.getStart().getDayOfYear()==eventDateInterval.getEnd().getDayOfYear()) {
+    	    	result = true;
+    	    }
+    	}
+    	return result;
+    }
+
+    /**
+     * Test if an event date specifies a duration of 31 days or less.
+     * 
+     * @param eventDate to test.
+     * @return true if duration is 31 days or less.
+     */
+    public static boolean specificToMonthScale(String eventDate) { 
+    	boolean result = false;
+    	if (!isEmpty(eventDate)) { 
+    	    Interval eventDateInterval = extractDateInterval(eventDate);
+    	    if (eventDateInterval.toDuration().getStandardDays()<=31l) { 
+    	    	result = true;
+    	    }
+    	}
+    	return result;
+    }    
+    
+    /**
+     * Test if an event date specifies a duration of one year or less.
+     * 
+     * @param eventDate to test.
+     * @return true if duration is 365 days or less.
+     */    
+    public static boolean specificToYearScale(String eventDate) { 
+    	boolean result = false;
+    	if (!isEmpty(eventDate)) { 
+    	    Interval eventDateInterval = extractDateInterval(eventDate);
+    	    if (eventDateInterval.toDuration().getStandardDays()<=365l) { 
+    	    	result = true;
+    	    }
+    	}
+    	return result;
+    }      
+    
+    /**
+     * Test if an event date specifies a duration of 10 years or less.
+     * 
+     * @param eventDate to test.
+     * @return true if duration is 10 years or or less.
+     */    
+    public static boolean specificToDecadeScale(String eventDate) { 
+    	boolean result = false;
+    	if (!isEmpty(eventDate)) { 
+    	    Interval eventDateInterval = extractDateInterval(eventDate);
+    	    if (eventDateInterval.toDuration().getStandardDays()<=3650l) { 
+    	    	result = true;
+    	    }
+    	}
+    	return result;
+    }        
+    
+    /**
      * Given an instant, return the time within one day that it represents as a string.
      * 
      * @param instant to obtain time from.
@@ -1211,122 +1340,132 @@ public class DateUtils {
     	return result;
     }
     
-    
-
+    /**
+     * Perform transformations to make more cases of textual months parsable by
+     * joda. Transform roman numerals into months. For example, Sep. parses as 
+     * month=09, but Sept. doesn't.  Likewise settembre parses as month=09, but
+     * Settembre doesn't as joda expects months in Italian to be in lower case.
+     * 
+     * @param verbatimEventDate
+     * @return String containing verbatimEventDate with transformations applied.
+     */
     public static String cleanMonth(String verbatimEventDate) {
     	String cleaned = verbatimEventDate;
     	if (!isEmpty(verbatimEventDate)) { 
-    	cleaned = cleaned.replace("Sept.", "Sep.");
-		cleaned = cleaned.replace("Sept ", "Sep. ");
-		cleaned = cleaned.replace("Sept,", "Sep.,");
-		cleaned = cleaned.replace("  ", " ").trim();
-		cleaned = cleaned.replace(" ,", ",");
-		cleaned = cleaned.replace(" - ", "-");
-		cleaned = cleaned.replace("- ", "-");
-		cleaned = cleaned.replace(" -", "-");
-		// Strip off a trailing period after a final year
-		if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
-			cleaned = cleaned.replaceAll("[.]$", "");
-		}
-		cleaned = cleaned.replace(".i.", ".January.");
-		cleaned = cleaned.replace(" i ", " January ");
-		cleaned = cleaned.replace(".ii.", ".February.");
-		cleaned = cleaned.replace(" ii ", " February ");	
-		cleaned = cleaned.replace(".v.", ".May.");
-		cleaned = cleaned.replace(" v ", " May ");
-		cleaned = cleaned.replace(".iv.", ".April.");
-		cleaned = cleaned.replace(" iv ", " April ");	
-		cleaned = cleaned.replace(".vi.", ".June.");
-		cleaned = cleaned.replace(" vi ", " June ");	
-		cleaned = cleaned.replace(".x.", ".October.");
-		cleaned = cleaned.replace(" x ", " October ");
-		cleaned = cleaned.replace(".ix.", ".September.");
-		cleaned = cleaned.replace(" ix ", " September ");	
-		cleaned = cleaned.replace(".xi.", ".November.");
-		cleaned = cleaned.replace(" xi ", " November ");		
-		cleaned = cleaned.replace(",i,", ".January.");
-		cleaned = cleaned.replace("-i-", " January ");
-		cleaned = cleaned.replace(",ii,", ".February.");
-		cleaned = cleaned.replace("-ii-", " February ");	
-		cleaned = cleaned.replace(",v,", ".May.");
-		cleaned = cleaned.replace("-v-", " May ");
-		cleaned = cleaned.replace(",iv,", ".April.");
-		cleaned = cleaned.replace("-iv-", " April ");	
-		cleaned = cleaned.replace(",vi,", ".June.");
-		cleaned = cleaned.replace("-vi-", " June ");	
-		cleaned = cleaned.replace(",x,", ".October.");
-		cleaned = cleaned.replace("-x-", " October ");
-		cleaned = cleaned.replace(",ix,", ".September.");
-		cleaned = cleaned.replace("-ix-", " September ");	
-		cleaned = cleaned.replace(",xi,", ".November.");
-		cleaned = cleaned.replace("-xi-", " November ");				
-		cleaned = cleaned.replace("XII", "December");
-		cleaned = cleaned.replace("xii", "December");
-		cleaned = cleaned.replace("XI", "November");
-		cleaned = cleaned.replace("IX", "September");
-		cleaned = cleaned.replace("X", "October");
-		cleaned = cleaned.replace("VIII", "August");
-		cleaned = cleaned.replace("viii", "August");
-		cleaned = cleaned.replace("VII", "July");
-		cleaned = cleaned.replace("vii", "July");
-		cleaned = cleaned.replace("VI", "June");
-		cleaned = cleaned.replace("IV", "April");
-		cleaned = cleaned.replace("V", "May");
-		cleaned = cleaned.replace("III", "March");
-		cleaned = cleaned.replace("iii", "March");
-		cleaned = cleaned.replace("II", "February");
-		cleaned = cleaned.replace("I", "January");
-		
-		// Italian months are lower case, if capitalized, skip a step and go right to english.
-		// Joda date time parsing, as used here is case sensitive for months.
-		cleaned = cleaned.replace("Dicembre", "December");
-		cleaned = cleaned.replace("Novembre", "November");
-		cleaned = cleaned.replace("Ottobre", "October");
-		cleaned = cleaned.replace("Settembre", "September");
-		cleaned = cleaned.replace("Agosto", "August");
-		cleaned = cleaned.replace("Luglio", "July");
-		cleaned = cleaned.replace("Giugno", "June");
-		cleaned = cleaned.replace("Maggio", "May");
-		cleaned = cleaned.replace("Aprile", "April");
-		cleaned = cleaned.replace("Marzo", "March");
-		cleaned = cleaned.replace("Febbraio", "February");
-		cleaned = cleaned.replace("Gennaio", "January");			
-		// likewise french, also handle omitted accents
-		cleaned = cleaned.replace("Janvier", "January");
-		cleaned = cleaned.replace("Février", "February");
-		cleaned = cleaned.replace("Fevrier", "February");
-		cleaned = cleaned.replace("fevrier", "February");
-		cleaned = cleaned.replace("Mars", "March");
-		cleaned = cleaned.replace("Avril", "April");
-		cleaned = cleaned.replace("Mai", "May");
-		cleaned = cleaned.replace("Juin", "June");
-		cleaned = cleaned.replace("Juillet", "July");
-		cleaned = cleaned.replace("Août", "August");
-		cleaned = cleaned.replace("Aout", "August");
-		cleaned = cleaned.replace("aout", "August");
-		cleaned = cleaned.replace("Septembre", "September");
-		cleaned = cleaned.replace("Octobre", "October");
-		cleaned = cleaned.replace("Novembre", "November");
-		cleaned = cleaned.replace("Décembre", "December");
-		cleaned = cleaned.replace("Decembre", "December");
-		cleaned = cleaned.replace("decembre", "December");
-		// likewise spanish
-		cleaned = cleaned.replace("Enero", "January");
-		cleaned = cleaned.replace("Febrero", "February");
-		cleaned = cleaned.replace("Marzo", "March");
-		cleaned = cleaned.replace("Abril", "April");
-		cleaned = cleaned.replace("Mayo", "May");
-		cleaned = cleaned.replace("Junio", "June");
-		cleaned = cleaned.replace("Julio", "July");
-		cleaned = cleaned.replace("Agosto", "August");
-		cleaned = cleaned.replace("Septiembre", "September");
-		cleaned = cleaned.replace("Setiembre", "September");  // alternative spelling
-		cleaned = cleaned.replace("setiembre", "September");
-		cleaned = cleaned.replace("Octubre", "October");
-		cleaned = cleaned.replace("Noviembre", "November");
-		cleaned = cleaned.replace("Diciembre", "December");
+    		cleaned = cleaned.replace("Sept.", "Sep.");
+    		cleaned = cleaned.replace("Sept ", "Sep. ");
+    		cleaned = cleaned.replace("Sept,", "Sep.,");
+    		cleaned = cleaned.replace("  ", " ").trim();
+    		cleaned = cleaned.replace(" ,", ",");
+    		cleaned = cleaned.replace(" - ", "-");
+    		cleaned = cleaned.replace("- ", "-");
+    		cleaned = cleaned.replace(" -", "-");
+    		// Strip off a trailing period after a final year
+    		if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
+    			cleaned = cleaned.replaceAll("[.]$", "");
+    		}
+    		cleaned = cleaned.replace(".i.", ".January.");
+    		cleaned = cleaned.replace(" i ", " January ");
+    		cleaned = cleaned.replace(".ii.", ".February.");
+    		cleaned = cleaned.replace(" ii ", " February ");	
+    		cleaned = cleaned.replace(".v.", ".May.");
+    		cleaned = cleaned.replace(" v ", " May ");
+    		cleaned = cleaned.replace(".iv.", ".April.");
+    		cleaned = cleaned.replace(" iv ", " April ");	
+    		cleaned = cleaned.replace(".vi.", ".June.");
+    		cleaned = cleaned.replace(" vi ", " June ");	
+    		cleaned = cleaned.replace(".x.", ".October.");
+    		cleaned = cleaned.replace(" x ", " October ");
+    		cleaned = cleaned.replace(".ix.", ".September.");
+    		cleaned = cleaned.replace(" ix ", " September ");	
+    		cleaned = cleaned.replace(".xi.", ".November.");
+    		cleaned = cleaned.replace(" xi ", " November ");		
+    		cleaned = cleaned.replace(",i,", ".January.");
+    		cleaned = cleaned.replace("-i-", " January ");
+    		cleaned = cleaned.replace(",ii,", ".February.");
+    		cleaned = cleaned.replace("-ii-", " February ");	
+    		cleaned = cleaned.replace(",v,", ".May.");
+    		cleaned = cleaned.replace("-v-", " May ");
+    		cleaned = cleaned.replace(",iv,", ".April.");
+    		cleaned = cleaned.replace("-iv-", " April ");	
+    		cleaned = cleaned.replace(",vi,", ".June.");
+    		cleaned = cleaned.replace("-vi-", " June ");	
+    		cleaned = cleaned.replace(",x,", ".October.");
+    		cleaned = cleaned.replace("-x-", " October ");
+    		cleaned = cleaned.replace(",ix,", ".September.");
+    		cleaned = cleaned.replace("-ix-", " September ");	
+    		cleaned = cleaned.replace(",xi,", ".November.");
+    		cleaned = cleaned.replace("-xi-", " November ");				
+    		cleaned = cleaned.replace("XII", "December");
+    		cleaned = cleaned.replace("xii", "December");
+    		cleaned = cleaned.replace("XI", "November");
+    		cleaned = cleaned.replace("IX", "September");
+    		cleaned = cleaned.replace("X", "October");
+    		cleaned = cleaned.replace("VIII", "August");
+    		cleaned = cleaned.replace("viii", "August");
+    		cleaned = cleaned.replace("VII", "July");
+    		cleaned = cleaned.replace("vii", "July");
+    		cleaned = cleaned.replace("VI", "June");
+    		cleaned = cleaned.replace("IV", "April");
+    		cleaned = cleaned.replace("V", "May");
+    		cleaned = cleaned.replace("III", "March");
+    		cleaned = cleaned.replace("iii", "March");
+    		cleaned = cleaned.replace("II", "February");
+    		cleaned = cleaned.replace("I", "January");
+
+    		// Joda date time parsing as used here, is case sensitive for months.
+    		// Put cases of alternative spellings, missing accents, and capitalization into
+    		// a form that Joda will parse.
+
+    		// Italian months are lower case, if capitalized, skip a step and go right to english.
+    		cleaned = cleaned.replace("Dicembre", "December");
+    		cleaned = cleaned.replace("Novembre", "November");
+    		cleaned = cleaned.replace("Ottobre", "October");
+    		cleaned = cleaned.replace("Settembre", "September");
+    		cleaned = cleaned.replace("Agosto", "August");
+    		cleaned = cleaned.replace("Luglio", "July");
+    		cleaned = cleaned.replace("Giugno", "June");
+    		cleaned = cleaned.replace("Maggio", "May");
+    		cleaned = cleaned.replace("Aprile", "April");
+    		cleaned = cleaned.replace("Marzo", "March");
+    		cleaned = cleaned.replace("Febbraio", "February");
+    		cleaned = cleaned.replace("Gennaio", "January");			
+    		// likewise french, also handle omitted accents
+    		cleaned = cleaned.replace("Janvier", "January");
+    		cleaned = cleaned.replace("Février", "February");
+    		cleaned = cleaned.replace("Fevrier", "February");
+    		cleaned = cleaned.replace("fevrier", "February");
+    		cleaned = cleaned.replace("Mars", "March");
+    		cleaned = cleaned.replace("Avril", "April");
+    		cleaned = cleaned.replace("Mai", "May");
+    		cleaned = cleaned.replace("Juin", "June");
+    		cleaned = cleaned.replace("Juillet", "July");
+    		cleaned = cleaned.replace("Août", "August");
+    		cleaned = cleaned.replace("Aout", "August");
+    		cleaned = cleaned.replace("aout", "August");
+    		cleaned = cleaned.replace("Septembre", "September");
+    		cleaned = cleaned.replace("Octobre", "October");
+    		cleaned = cleaned.replace("Novembre", "November");
+    		cleaned = cleaned.replace("Décembre", "December");
+    		cleaned = cleaned.replace("Decembre", "December");
+    		cleaned = cleaned.replace("decembre", "December");
+    		// likewise spanish
+    		cleaned = cleaned.replace("Enero", "January");
+    		cleaned = cleaned.replace("Febrero", "February");
+    		cleaned = cleaned.replace("Marzo", "March");
+    		cleaned = cleaned.replace("Abril", "April");
+    		cleaned = cleaned.replace("Mayo", "May");
+    		cleaned = cleaned.replace("Junio", "June");
+    		cleaned = cleaned.replace("Julio", "July");
+    		cleaned = cleaned.replace("Agosto", "August");
+    		cleaned = cleaned.replace("Septiembre", "September");
+    		cleaned = cleaned.replace("Setiembre", "September");  // alternative spelling
+    		cleaned = cleaned.replace("setiembre", "September");
+    		cleaned = cleaned.replace("Octubre", "October");
+    		cleaned = cleaned.replace("Noviembre", "November");
+    		cleaned = cleaned.replace("Diciembre", "December");
     	}
-		return cleaned;
+    	return cleaned;
     }
   
     /**

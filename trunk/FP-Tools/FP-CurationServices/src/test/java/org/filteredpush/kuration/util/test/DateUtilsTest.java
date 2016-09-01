@@ -103,7 +103,7 @@ public class DateUtilsTest {
 	 * Test method for {@link org.filteredpush.kuration.util.DateUtils#extractInterval(java.lang.String)}.
 	 */
 	@Test
-	public void testExtractInterval() {
+	public void testExtractDateInterval() {
     	Interval test = DateUtils.extractDateInterval("1880-01-01/1880-12-31");
     	assertEquals(1880, test.getStart().getYear());
     	assertEquals(1, test.getStart().getMonthOfYear());
@@ -147,6 +147,65 @@ public class DateUtilsTest {
     	assertEquals(30, test.getEnd().getDayOfMonth());    	
     }	
 
+	@Test
+	public void testExtractInterval() {
+    	Interval test = DateUtils.extractInterval("1880-01-01/1880-12-31");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(12, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth());
+    	
+    	test = DateUtils.extractInterval("1880-01-01");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(1, test.getEnd().getMonthOfYear());
+    	assertEquals(1, test.getEnd().getDayOfMonth());
+    	
+    	test = DateUtils.extractInterval("1880-01");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(1, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth()); 
+    	
+    	test = DateUtils.extractInterval("1880");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1880, test.getEnd().getYear());
+    	assertEquals(12, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth());   
+    	
+       	test = DateUtils.extractInterval("1880/1881");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1881, test.getEnd().getYear());
+    	assertEquals(12, test.getEnd().getMonthOfYear());
+    	assertEquals(31, test.getEnd().getDayOfMonth());    	
+    	
+       	test = DateUtils.extractInterval("1880-01/1881-02");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(1, test.getStart().getDayOfYear());
+    	assertEquals(1881, test.getEnd().getYear());
+    	assertEquals(2, test.getEnd().getMonthOfYear());
+    	assertEquals(28, test.getEnd().getDayOfMonth());  
+    	
+       	test = DateUtils.extractInterval("1880-01-05/1881-02-05");
+    	assertEquals(1880, test.getStart().getYear());
+    	assertEquals(1, test.getStart().getMonthOfYear());
+    	assertEquals(5, test.getStart().getDayOfYear());
+    	assertEquals(1881, test.getEnd().getYear());
+    	assertEquals(2, test.getEnd().getMonthOfYear());
+    	assertEquals(5, test.getEnd().getDayOfMonth());     	
+	}
+    	
 	/**
 	 * Test method for {@link org.filteredpush.kuration.util.DateUtils#extractDate(java.lang.String)}.
 	 */
@@ -242,6 +301,50 @@ public class DateUtilsTest {
     	assertEquals(null, DateUtils.extractZuluTime("1251e3254w2v"));
     }
     
+    @Test
+    public void specificityTest() { 
+    	assertEquals(false, DateUtils.specificToDay(""));
+    	assertEquals(false, DateUtils.specificToMonthScale(""));
+    	assertEquals(false, DateUtils.specificToYearScale(""));
+    	assertEquals(false, DateUtils.specificToDay(null));
+    	assertEquals(false, DateUtils.specificToMonthScale(null));
+    	assertEquals(false, DateUtils.specificToYearScale(null));
+    	
+    	assertEquals(false, DateUtils.specificToDay("1805-11-03/1805-11-05"));
+    	assertEquals(false, DateUtils.specificToMonthScale("1805"));
+    	assertEquals(false, DateUtils.specificToYearScale("1805/1806"));
+    	
+    	assertEquals(true, DateUtils.specificToDay("1805-11-03"));
+    	assertEquals(true, DateUtils.specificToMonthScale("1805-11-03"));
+    	assertEquals(true, DateUtils.specificToYearScale("1805-11-03"));
+    	
+    	assertEquals(false, DateUtils.specificToDay("1805-11"));
+    	assertEquals(true, DateUtils.specificToMonthScale("1805-11"));
+    	assertEquals(true, DateUtils.specificToYearScale("1805-11"));
+    	
+    	assertEquals(false, DateUtils.specificToDay("1805"));
+    	assertEquals(false, DateUtils.specificToMonthScale("1805"));
+    	assertEquals(true, DateUtils.specificToYearScale("1805"));   
+    	
+    	assertEquals(false, DateUtils.specificToDay("1805-11-03/1805-11-04"));
+    	assertEquals(true, DateUtils.specificToMonthScale("1805-11-03/1805-11-04"));
+    	assertEquals(true, DateUtils.specificToYearScale("1805-11-03/1805-11-04"));    
+    	
+    	assertEquals(false, DateUtils.specificToDay("1805-09-03/1805-11-04"));
+    	assertEquals(false, DateUtils.specificToMonthScale("1805-09-03/1805-11-04"));
+    	assertEquals(true, DateUtils.specificToYearScale("1805-09-03/1805-11-04")); 
+    	
+    	assertEquals(true, DateUtils.specificToYearScale("1805-09-03/1806-01-04")); 
+    	
+    	assertEquals(true, DateUtils.specificToDecadeScale("1805-09-03"));    	
+    	assertEquals(true, DateUtils.specificToDecadeScale("1805-09"));    	
+    	assertEquals(true, DateUtils.specificToDecadeScale("1805"));    	
+    	assertEquals(true, DateUtils.specificToDecadeScale("1805/1806"));    	
+    	assertEquals(true, DateUtils.specificToDecadeScale("1805-09-03/1806-01-04")); 
+    	
+    	assertEquals(false, DateUtils.specificToDecadeScale("1805-09-03/1815-10-01"));    	
+    	assertEquals(false, DateUtils.specificToDecadeScale("1805/1816"));    	
+    }
     
     @Test
     public void extractDateFromVerbatimTest() { 
