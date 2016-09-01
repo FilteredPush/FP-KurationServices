@@ -17,9 +17,12 @@
 package org.filteredpush.kuration.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -29,6 +32,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
@@ -50,6 +54,13 @@ public class DateUtils {
 	private static final Log logger = LogFactory.getLog(DateUtils.class);
 	
 	/**
+	 * Verbatim dates that parse to years prior to this year are considered suspect
+	 * by default.
+	 * 
+	 */
+	public static final int YEAR_BEFORE_SUSPECT = 1000;
+	
+	/**
 	 * Attempt to construct an ISO formatted date as a string built from atomic parts of the date.
 	 * 
 	 * @param verbatimEventDate
@@ -66,7 +77,7 @@ public class DateUtils {
 		String result = null;
 
 		if (verbatimEventDate!=null && verbatimEventDate.trim().length()>0) { 
-			Map<String,String> verbatim = extractDateFromVerbatim(verbatimEventDate); 
+			Map<String,String> verbatim = extractDateToDayFromVerbatim(verbatimEventDate, DateUtils.YEAR_BEFORE_SUSPECT); 
 			if (verbatim.size()>0) { 
 				if (verbatim.get("resultState")!=null && verbatim.get("resultState").equals("date")) { 
 					result = verbatim.get("result");
@@ -95,7 +106,7 @@ public class DateUtils {
 				} else { 
 					assembly.append(year).append("-").append(String.format("%03d",Integer.parseInt(startDayOfYear)));
 				}
-			    Map<String,String> verbatim = extractDateFromVerbatim(assembly.toString()) ;
+			    Map<String,String> verbatim = extractDateToDayFromVerbatim(assembly.toString(), DateUtils.YEAR_BEFORE_SUSPECT) ;
 			    logger.debug(verbatim.get("resultState"));
 			    logger.debug(verbatim.get("result"));
 				if (verbatim.get("resultState")!=null && (verbatim.get("resultState").equals("date") || verbatim.get("resultState").equals("range"))) { 
@@ -119,7 +130,7 @@ public class DateUtils {
 				} else { 
 					assembly.append(verbatimEventDate).append("-").append(String.format("%03d",Integer.parseInt(startDayOfYear)));
 				}
-			    Map<String,String> verbatim = extractDateFromVerbatim(assembly.toString()) ;
+			    Map<String,String> verbatim = extractDateToDayFromVerbatim(assembly.toString(), DateUtils.YEAR_BEFORE_SUSPECT) ;
 			    logger.debug(verbatim.get("resultState"));
 			    logger.debug(verbatim.get("result"));
 				if (verbatim.get("resultState")!=null && (verbatim.get("resultState").equals("date") || verbatim.get("resultState").equals("range"))) { 
@@ -139,11 +150,49 @@ public class DateUtils {
 	}
 	
 	/**
+	 * Attempt to extract a date or date range in standard format from a provided verbatim 
+	 * date string.  
 	 * 
 	 * @param verbatimEventDate
 	 * @return
 	 */
 	public static Map<String,String> extractDateFromVerbatim(String verbatimEventDate) {
+		return extractDateFromVerbatim(verbatimEventDate, DateUtils.YEAR_BEFORE_SUSPECT);
+	}
+	
+	/**
+	 * Extract a date from a verbatim date, returning ranges specified to day.
+	 * 
+	 * @param verbatimEventDate
+	 * @param yearsBeforeSuspect
+	 * @return 
+	 */
+	public static Map<String,String> extractDateToDayFromVerbatim(String verbatimEventDate, int yearsBeforeSuspect) {
+		Map<String,String> result =  extractDateFromVerbatim(verbatimEventDate, yearsBeforeSuspect);
+		if (result.size()>0 && result.get("resultState").equals("range")) {
+			String dateRange = result.get("result");
+			try { 
+				   Interval parseDate = extractDateInterval(dateRange);
+				   logger.debug(parseDate);
+				   String resultDate =  parseDate.getStart().toString("yyyy-MM-dd") + "/" + parseDate.getEnd().toString("yyyy-MM-dd");
+				   result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Given a string that may represent a date or range of dates, or date time or range of date times,
+	 * attempt to extract a standard date from that string.
+	 * 
+	 * @param verbatimEventDate
+	 * @param yearsBeforeSuspect  Dates that parse to a year prior to this year are marked as suspect.
+	 * 
+	 * @return a map with keys resultState for the nature of the match and result for the resulting date. 
+	 */
+	public static Map<String,String> extractDateFromVerbatim(String verbatimEventDate, int yearsBeforeSuspect) {		
 		Map result = new HashMap<String,String>();
 		String resultDate = null;
 		
@@ -160,6 +209,20 @@ public class DateUtils {
 			return result;
 		}
 		
+		if (verbatimEventDate.matches("^[0-9]{1,2}[-. ][0-9]{1,2}[-. ][0-9]{4}/[0-9]{1,2}[-. ][0-9]{1,2}[-. ][0-9]{4}$")) {
+			// if verbatim date is a range with identical first and last dates, use just one.
+			String[] bits = verbatimEventDate.split("/");
+			if (bits.length==2 && bits[0].equals(bits[1])) { 
+				verbatimEventDate = bits[0];
+			}
+		}
+		if (verbatimEventDate.matches("^[0-9]{1,2}[./ ][0-9]{1,2}[./ ][0-9]{4}[-][0-9]{1,2}[./ ][0-9]{1,2}[./ ][0-9]{4}$")) {
+			// if verbatim date is a range with identical first and last dates, use just one.
+			String[] bits = verbatimEventDate.split("-");
+			if (bits.length==2 && bits[0].equals(bits[1])) { 
+				verbatimEventDate = bits[0];
+			}
+		}
 		if (verbatimEventDate.matches("^[0-9]{4}[-/]([0-9]{1,2}|[A-Za-z]+)[-/][0-9]{1,2}.*")) { 
 			try { 
 				DateTimeParser[] parsers = { 
@@ -177,6 +240,22 @@ public class DateUtils {
 				logger.debug(e.getMessage());
 			}
 		}
+		if (verbatimEventDate.matches("^[0-9]{1,2}[-/ ][0-9]{4}")) { 
+			try { 
+				DateTimeParser[] parsers = { 
+						DateTimeFormat.forPattern("MM-yyyy").getParser(),
+						DateTimeFormat.forPattern("MM/yyyy").getParser(),
+						DateTimeFormat.forPattern("MM yyyy").getParser()
+				};
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+				DateMidnight parseDate = LocalDate.parse(verbatimEventDate,formatter).toDateMidnight();
+				resultDate = parseDate.toString("yyyy-MM");
+				result.put("resultState", "range");
+				result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}
+		}		
 		if (verbatimEventDate.matches("^[0-9]{4}年[0-9]{1,2}月[0-9]{1,2}[日号]$")) { 
 			try { 
 				DateTimeParser[] parsers = { 
@@ -193,32 +272,6 @@ public class DateUtils {
 				logger.debug(e.getMessage());
 			}
 		}		
-		if (verbatimEventDate.matches("^([0-9]{1,2}|[A-Za-z]+)[-/.]([0-9]{1,2}|[A-Za-z]+)[-/. ][0-9]{4}$")) { 
-			try { 
-				DateTimeParser[] parsers = { 
-						DateTimeFormat.forPattern("MMM/dd/yyyy").getParser(),
-						DateTimeFormat.forPattern("dd/MMM/yyyy").getParser(),
-						DateTimeFormat.forPattern("MMM/dd yyyy").getParser(),
-						DateTimeFormat.forPattern("dd/MMM yyyy").getParser(),
-						DateTimeFormat.forPattern("MMM-dd-yyyy").getParser(),
-						DateTimeFormat.forPattern("dd-MMM-yyyy").getParser(),
-						DateTimeFormat.forPattern("MMM-dd yyyy").getParser(),
-						DateTimeFormat.forPattern("dd-MMM yyyy").getParser(),
-						DateTimeFormat.forPattern("MMM.dd.yyyy").getParser(),
-						DateTimeFormat.forPattern("dd.MMM.yyyy").getParser(),
-						DateTimeFormat.forPattern("MM.dd.yyyy").getParser(),
-						DateTimeFormat.forPattern("dd.MM.yyyy").getParser()						
-				};
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-				DateMidnight parseDate = LocalDate.parse(verbatimEventDate,formatter).toDateMidnight();
-				resultDate = parseDate.toString("yyyy-MM-dd");
-			    result.clear();
-				result.put("resultState", "date");
-				result.put("result",resultDate);
-			} catch (Exception e) { 
-				logger.debug(e.getMessage());
-			}
-		}
 		if (verbatimEventDate.matches("^[0-9]{4}[-][0-9]{3}/[0-9]{4}[-][0-9]{3}$")) { 
 			try { 
 				String[] bits = verbatimEventDate.split("/");
@@ -237,6 +290,23 @@ public class DateUtils {
 				logger.debug(e.getMessage());
 			}			
 		}		
+		if (result.size()==0 && verbatimEventDate.matches("^[A-Za-z]{3,9}[.]{0,1}[-/ ][0-9]{4}$")) { 
+			try { 
+				DateTimeParser[] parsers = { 
+						DateTimeFormat.forPattern("MMM-yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM/yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM yyyy").getParser()
+				};
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+				String cleaned = verbatimEventDate.replace(".", "");
+				DateMidnight parseDate = LocalDate.parse(cleaned,formatter).toDateMidnight();
+				resultDate = parseDate.toString("yyyy-MM");
+				result.put("resultState", "range");
+				result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}
+		}
 		if (result.size()==0) {
 			String resultDateMD = null;
 			String resultDateDM = null;
@@ -247,6 +317,7 @@ public class DateUtils {
 					DateTimeFormat.forPattern("MM/dd/yyyy").getParser(),
 					DateTimeFormat.forPattern("MM/dd yyyy").getParser(),
 					DateTimeFormat.forPattern("MM-dd-yyyy").getParser(),
+					DateTimeFormat.forPattern("MM.dd.yyyy").getParser()
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
 				parseDate1 = LocalDate.parse(verbatimEventDate,formatter).toDateMidnight();
@@ -259,6 +330,7 @@ public class DateUtils {
 					DateTimeFormat.forPattern("dd/MM/yyyy").getParser(),
 					DateTimeFormat.forPattern("dd/MM yyyy").getParser(),
 					DateTimeFormat.forPattern("dd-MM-yyyy").getParser(),
+					DateTimeFormat.forPattern("dd.MM.yyyy").getParser()
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
 				parseDate2 = LocalDate.parse(verbatimEventDate,formatter).toDateMidnight();
@@ -287,6 +359,33 @@ public class DateUtils {
 				}
 			} 
 		}
+		if (result.size()==0 && verbatimEventDate.matches("^([0-9]{1,2}|[A-Za-z]+)[-/.]([0-9]{1,2}|[A-Za-z]+)[-/. ][0-9]{4}$")) { 
+			try { 
+				DateTimeParser[] parsers = { 
+						DateTimeFormat.forPattern("MMM/dd/yyyy").getParser(),
+						DateTimeFormat.forPattern("dd/MMM/yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM/dd yyyy").getParser(),
+						DateTimeFormat.forPattern("dd/MMM yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM-dd-yyyy").getParser(),
+						DateTimeFormat.forPattern("dd-MMM-yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM-dd yyyy").getParser(),
+						DateTimeFormat.forPattern("dd-MMM yyyy").getParser(),
+						DateTimeFormat.forPattern("MMM.dd.yyyy").getParser(),
+						DateTimeFormat.forPattern("dd.MMM.yyyy").getParser(),
+						DateTimeFormat.forPattern("MM.dd.yyyy").getParser(),
+						DateTimeFormat.forPattern("dd.MM.yyyy").getParser()						
+				};
+				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+				
+				DateMidnight parseDate = LocalDate.parse(verbatimEventDate,formatter.withLocale(Locale.ENGLISH)).toDateMidnight();
+				resultDate = parseDate.toString("yyyy-MM-dd");
+			    result.clear();
+				result.put("resultState", "date");
+				result.put("result",resultDate);
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}
+		}		
 		if (verbatimEventDate.matches("^[0-9]{4}[-][0-9]{3}$")) { 
 			if (result.size()==0) {
 				try { 
@@ -315,14 +414,47 @@ public class DateUtils {
 					DateTimeFormat.forPattern("yyyy/MMM").getParser()
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-				LocalDate parseDate = LocalDate.parse(verbatimEventDate,formatter);
-				resultDate =  parseDate.dayOfMonth().withMinimumValue() + "/" + parseDate.dayOfMonth().withMaximumValue();
+				LocalDate parseDate = LocalDate.parse(verbatimEventDate,formatter.withLocale(Locale.ENGLISH));
+				resultDate =  parseDate.toString("yyyy-MM");
+				// resultDate =  parseDate.dayOfMonth().withMinimumValue() + "/" + parseDate.dayOfMonth().withMaximumValue();
 				logger.debug(resultDate);
+				if (verbatimEventDate.matches("^[0-9]{4}[-][0-9]{2}$")) { 
+				   String century = verbatimEventDate.substring(0,2);
+				   String startBit = verbatimEventDate.substring(0,4);
+				   String endBit = verbatimEventDate.substring(5, 7);
+				   // 1815-16  won't parse here, passes to next block
+				   // 1805-06  could be month or abbreviated year
+				   // 1805-03  should to be month
+				   if (Integer.parseInt(startBit)>=Integer.parseInt(century+endBit)) { 
+				      result.put("resultState", "range");
+				      result.put("result",resultDate);
+				   } else { 
+					  result.put("resultState", "suspect");
+				      result.put("result",resultDate);
+				   }
+				} else {
+				   result.put("resultState", "range");
+				   result.put("result",resultDate);
+				}
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}			
+		}
+		if (result.size()==0 && verbatimEventDate.matches("^[0-9]{4}[-][0-9]{2}$")) {
+			try { 
+				String century = verbatimEventDate.substring(0,2);
+				String startBit = verbatimEventDate.substring(0,4);
+				String endBit = verbatimEventDate.substring(5, 7);
+				String assembly = startBit+"/"+century+endBit;
+				logger.debug(assembly);
+				Interval parseDate = Interval.parse(assembly);
+				logger.debug(parseDate);
+				resultDate =  parseDate.getStart().toString("yyyy") + "/" + parseDate.getEnd().toString("yyyy");
 				result.put("resultState", "range");
 				result.put("result",resultDate);
 			} catch (Exception e) { 
 				logger.debug(e.getMessage());
-			}			
+			}					
 		}
 		if (result.size()==0) {
 			try { 
@@ -346,6 +478,16 @@ public class DateUtils {
 					DateTimeFormat.forPattern("yyyy MMM. dd").getParser(),
 					DateTimeFormat.forPattern("yyyy, MMM dd").getParser(),
 					DateTimeFormat.forPattern("yyyy, MMM. dd").getParser(),
+					DateTimeFormat.forPattern("yyyy.MMM.dd").getParser(),
+					
+					DateTimeFormat.forPattern("yyyy MMM dd'st'").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM. dd'st'").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM dd'nd'").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM. dd'nd'").getParser(),	
+					DateTimeFormat.forPattern("yyyy MMM dd'rd'").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM. dd'rd'").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM dd'th'").getParser(),
+					DateTimeFormat.forPattern("yyyy MMM. dd'th'").getParser(),
 					
 					DateTimeFormat.forPattern("MMM dd, yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM dd'st', yyyy").getParser(),
@@ -371,6 +513,7 @@ public class DateUtils {
 					DateTimeFormat.forPattern("MMM.dd'th'.yyyy").getParser(),					
 					
 					DateTimeFormat.forPattern("MMM-dd-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM-dd yyyy").getParser(),
 					DateTimeFormat.forPattern("dd-MMM-yyyy").getParser(),
 					DateTimeFormat.forPattern("dd.MMM.yyyy").getParser(),
 					DateTimeFormat.forPattern("dd,MMM,yyyy").getParser(),
@@ -386,14 +529,23 @@ public class DateUtils {
 					DateTimeFormat.forPattern("MMM dd,yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM dd, yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM. dd,yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM. dd-yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd-yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM. dd, yyyy").getParser(),
 					DateTimeFormat.forPattern("dd. MMM. yyyy").getParser(),
+					DateTimeFormat.forPattern("dd. MMM.yyyy").getParser(),
 					DateTimeFormat.forPattern("dd MMM., yyyy").getParser(),
 					DateTimeFormat.forPattern("dd MMM.,yyyy").getParser(),
 					
 					DateTimeFormat.forPattern("dd MMM, yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM yyyy").getParser(),
 					DateTimeFormat.forPattern("dd MMM,yyyy").getParser(),
 					DateTimeFormat.forPattern("dd MMM.yyyy").getParser(),
+					DateTimeFormat.forPattern("dd.MMM-yyyy").getParser(),
+					DateTimeFormat.forPattern("dd.MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("dd MMM-yyyy").getParser(),
+					DateTimeFormat.forPattern("dd-MMM yyyy").getParser(),
+					DateTimeFormat.forPattern("ddMMMyyyy").getParser(),
 					
 					DateTimeFormat.forPattern("MMM dd yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM dd'st' yyyy").getParser(),
@@ -405,6 +557,8 @@ public class DateUtils {
 					DateTimeFormat.forPattern("MMM. dd'nd' yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM. dd'rd' yyyy").getParser(),
 					DateTimeFormat.forPattern("MMM. dd'th' yyyy").getParser(),	
+					DateTimeFormat.forPattern("MMMdd yyyy").getParser(),
+					DateTimeFormat.forPattern("MMM.dd yyyy").getParser(),
 					
 					DateTimeFormat.forPattern("dd MMM, yyyy").getParser(),
 					DateTimeFormat.forPattern("dd'st' MMM, yyyy").getParser(),
@@ -460,31 +614,11 @@ public class DateUtils {
 					DateTimeFormat.forPattern("yyyy-MMM-dd").getParser()
 				};
 				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-				String cleaned = verbatimEventDate.replace("Sept.", "Sep.");
-				cleaned = cleaned.replace("Sept ", "Sep. ");
-				cleaned = cleaned.replace("Sept,", "Sep.,");
-				cleaned = cleaned.replace("  ", " ").trim();
-				cleaned = cleaned.replace(" ,", ",");
-				cleaned = cleaned.replace("- ", "-");
-				// Strip off a trailing period after a final year
-				if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
-					cleaned = cleaned.replaceAll("[.]$", "");
-				}
-				cleaned = cleaned.replace("XII", "December");
-				cleaned = cleaned.replace("XI", "November");
-				cleaned = cleaned.replace("IX", "September");
-				cleaned = cleaned.replace("X", "October");
-				cleaned = cleaned.replace("VIII", "August");
-				cleaned = cleaned.replace("VII", "July");
-				cleaned = cleaned.replace("VIII", "August");
-				cleaned = cleaned.replace("VI", "June");
-				cleaned = cleaned.replace("IV", "April");
-				cleaned = cleaned.replace("V", "May");
-				cleaned = cleaned.replace("III", "March");
-				cleaned = cleaned.replace("II", "February");
-				cleaned = cleaned.replace("I", "January");
+				String cleaned = cleanMonth(verbatimEventDate);
+				
 				try {
-				    LocalDate parseDate = LocalDate.parse(cleaned,formatter);
+					// Specify English locale, or local default will be used
+				    LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.ENGLISH));
 				    resultDate =  parseDate.toString("yyyy-MM-dd");
 				} catch (Exception e) {
 					try {
@@ -496,10 +630,22 @@ public class DateUtils {
 							logger.debug(e1.getMessage());
 							LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.ITALIAN));
 							resultDate =  parseDate.toString("yyyy-MM-dd");
-						} catch (Exception e2) { 
+						} catch (Exception e2) {
+							try { 
 							logger.debug(e2.getMessage());
 							LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.GERMAN));
 							resultDate =  parseDate.toString("yyyy-MM-dd");
+							} catch (Exception e3) { 
+								try { 
+								    logger.debug(e2.getMessage());
+								    LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.forLanguageTag("es")));
+								    resultDate =  parseDate.toString("yyyy-MM-dd");
+								} catch (Exception e4) { 
+									logger.debug(e2.getMessage());
+									LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.forLanguageTag("pt")));
+									resultDate =  parseDate.toString("yyyy-MM-dd");
+								}
+							}
 						}
 					}
 				}	
@@ -511,48 +657,76 @@ public class DateUtils {
 			}			
 		}		
 		if (result.size()==0) {
-			try { 
-				DateTimeParser[] parsers = { 
-					DateTimeFormat.forPattern("MMM, yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM., yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM.,yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM.yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM. yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM-yyyy").getParser(),
-					DateTimeFormat.forPattern("MMM yyyy").getParser(),
-				};
-				DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
-				String cleaned = verbatimEventDate.replace("Sept.", "Sep.");
-				cleaned = cleaned.replace("  ", " ").trim();
-				cleaned = cleaned.replace(" ,", ",");
-				cleaned = cleaned.replace(" ,", ",");
-				cleaned = cleaned.replace("Sept ", "Sep. ");
-				cleaned = cleaned.replace("XII", "December");
-				cleaned = cleaned.replace("XI", "November");
-				cleaned = cleaned.replace("IX", "September");
-				cleaned = cleaned.replace("X", "October");
-				cleaned = cleaned.replace("VIII", "August");
-				cleaned = cleaned.replace("VII", "July");
-				cleaned = cleaned.replace("VIII", "August");
-				cleaned = cleaned.replace("VI", "June");
-				cleaned = cleaned.replace("IV", "April");
-				cleaned = cleaned.replace("V", "May");
-				cleaned = cleaned.replace("III", "March");
-				cleaned = cleaned.replace("II", "February");
-				cleaned = cleaned.replace("I", "January");
-				// Strip off a trailing period after a final year
-				if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
-					cleaned = cleaned.replaceAll("[.]$", "");
+			if (verbatimEventDate.matches(".*[0-9]{4}.*")) { 
+				try { 
+					DateTimeParser[] parsers = { 
+							DateTimeFormat.forPattern("MMM, yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM., yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM.,yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM.-yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM.yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM. yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM-yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM -yyyy").getParser(),
+							DateTimeFormat.forPattern("MMM yyyy").getParser()
+					};
+					DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+					String cleaned = cleanMonth(verbatimEventDate);
+					// Strip off a trailing period after a final year
+					if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
+						cleaned = cleaned.replaceAll("[.]$", "");
+					}
+					LocalDate parseDate = LocalDate.parse(cleaned,formatter.withLocale(Locale.ENGLISH));
+					resultDate =  parseDate.toString("yyyy-MM");
+					logger.debug(resultDate);
+					result.put("resultState", "range");
+					result.put("result",resultDate);
+				} catch (Exception e) { 
+					logger.debug(e.getMessage());
 				}
-				LocalDate parseDate = LocalDate.parse(cleaned,formatter);
-				resultDate =  parseDate.toString("yyyy-MM");
-				logger.debug(resultDate);
+			}
+		}
+		if (result.size()==0 &&  verbatimEventDate.matches("^[0-9]{4}([- ]+| to |[/ ]+)[0-9]{4}$")) {
+			try { 
+				String cleaned = verbatimEventDate.replace(" ", "");
+				cleaned = cleaned.replace("-", "/");
+				if (cleaned.matches("^[0-9]{4}to[0-9]{4}$")) { 
+					int len = verbatimEventDate.length();
+					int lastYear = len - 4;
+					cleaned = verbatimEventDate.substring(0,4) + "/" + verbatimEventDate.substring(lastYear, len);
+				}
+				logger.debug(cleaned);
+				Interval parseDate = Interval.parse(cleaned);
+				logger.debug(parseDate);
+				resultDate =  parseDate.getStart().toString("yyyy") + "/" + parseDate.getEnd().toString("yyyy");
 				result.put("resultState", "range");
 				result.put("result",resultDate);
 			} catch (Exception e) { 
 				logger.debug(e.getMessage());
 			}			
-		}		
+		}	
+		if (result.size()==0 && verbatimEventDate.matches("^[A-Za-z]+[-][A-Za-z]+[/ ][0-9]{4}$")) { 
+			try { 
+				String[] bits = verbatimEventDate.replace(" ", "/").split("-");
+				if (bits!=null && bits.length==2) { 
+					String year = verbatimEventDate.substring(verbatimEventDate.length()-4,verbatimEventDate.length());
+					String startBit = bits[0]+"/"+year;
+					DateTimeParser[] parsers = { 
+							DateTimeFormat.forPattern("MMM/yyyy").getParser()
+					};
+					DateTimeFormatter formatter = new DateTimeFormatterBuilder().append( null, parsers ).toFormatter();
+					LocalDate parseStartDate = LocalDate.parse(startBit,formatter.withLocale(Locale.ENGLISH));
+					LocalDate parseEndDate = LocalDate.parse(bits[1],formatter.withLocale(Locale.ENGLISH));
+					resultDate =  parseStartDate.toString("yyyy-MM") + "/" + parseEndDate.toString("yyyy-MM");
+					logger.debug(resultDate);
+					result.clear();
+					result.put("resultState", "range");
+					result.put("result",resultDate);
+				}
+			} catch (Exception e) { 
+				logger.debug(e.getMessage());
+			}			
+		}
 		if (result.size()==0) {
 			try { 
 				Interval parseDate = Interval.parse(verbatimEventDate);
@@ -563,7 +737,7 @@ public class DateUtils {
 			} catch (Exception e) { 
 				logger.debug(e.getMessage());
 			}			
-		}		
+		}	
 		if (result.size()==0) {
 			String cleaned = verbatimEventDate.trim();
 			if (verbatimEventDate.matches("^[A-Za-z.]+[ ,]+[0-9]{1,2}-[0-9]{0,2}[ ,]+[0-9]{4}$")) { 
@@ -602,6 +776,17 @@ public class DateUtils {
 				}
 			}
 		}		
+		if (result!=null && result.size()>0) {
+			Interval testExtract = DateUtils.extractDateInterval(result.get("result").toString());
+			if(testExtract==null || testExtract.getStart().getYear()< yearsBeforeSuspect) { 
+				result.put("resultState", "suspect");
+				logger.debug(result.get("result"));
+				logger.debug(testExtract);
+			}
+			if (!verbatimEventDate.matches(".*[0-9]{4}.*")) { 
+				result.clear();
+			}
+		}
 		
 		return result;
 	}
@@ -617,7 +802,6 @@ public class DateUtils {
     	if (eventDate!=null) { 
     		String[] dateBits = eventDate.split("/");
     		if (dateBits!=null && dateBits.length==2) { 
-    		    logger.debug(dateBits.length);
     			//probably a range.
     			DateTimeParser[] parsers = { 
     					DateTimeFormat.forPattern("yyyy-MM").getParser(),
@@ -698,8 +882,13 @@ public class DateUtils {
     			if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
     				DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
     				DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
-    				// both start date and end date must parse as dates.
-    				result = new Interval(startDate, endDate);
+    				if (dateBits[1].length()==4) { 
+    	                  result = new Interval(startDate,endDate.plusMonths(12).minusDays(1));
+    	               } else if (dateBits[1].length()==7) { 
+    	                  result = new Interval(startDate,endDate.plusMonths(1).minusDays(1));
+    	               } else { 
+    				      result = new Interval(startDate, endDate);
+    	               }
     			}
     		} catch (Exception e) { 
     			// not a date range
@@ -1022,5 +1211,175 @@ public class DateUtils {
     	return result;
     }
     
+    
 
+    public static String cleanMonth(String verbatimEventDate) {
+    	String cleaned = verbatimEventDate;
+    	if (!isEmpty(verbatimEventDate)) { 
+    	cleaned = cleaned.replace("Sept.", "Sep.");
+		cleaned = cleaned.replace("Sept ", "Sep. ");
+		cleaned = cleaned.replace("Sept,", "Sep.,");
+		cleaned = cleaned.replace("  ", " ").trim();
+		cleaned = cleaned.replace(" ,", ",");
+		cleaned = cleaned.replace(" - ", "-");
+		cleaned = cleaned.replace("- ", "-");
+		cleaned = cleaned.replace(" -", "-");
+		// Strip off a trailing period after a final year
+		if (cleaned.matches("^.*[0-9]{4}[.]$")) { 
+			cleaned = cleaned.replaceAll("[.]$", "");
+		}
+		cleaned = cleaned.replace(".i.", ".January.");
+		cleaned = cleaned.replace(" i ", " January ");
+		cleaned = cleaned.replace(".ii.", ".February.");
+		cleaned = cleaned.replace(" ii ", " February ");	
+		cleaned = cleaned.replace(".v.", ".May.");
+		cleaned = cleaned.replace(" v ", " May ");
+		cleaned = cleaned.replace(".iv.", ".April.");
+		cleaned = cleaned.replace(" iv ", " April ");	
+		cleaned = cleaned.replace(".vi.", ".June.");
+		cleaned = cleaned.replace(" vi ", " June ");	
+		cleaned = cleaned.replace(".x.", ".October.");
+		cleaned = cleaned.replace(" x ", " October ");
+		cleaned = cleaned.replace(".ix.", ".September.");
+		cleaned = cleaned.replace(" ix ", " September ");	
+		cleaned = cleaned.replace(".xi.", ".November.");
+		cleaned = cleaned.replace(" xi ", " November ");		
+		cleaned = cleaned.replace(",i,", ".January.");
+		cleaned = cleaned.replace("-i-", " January ");
+		cleaned = cleaned.replace(",ii,", ".February.");
+		cleaned = cleaned.replace("-ii-", " February ");	
+		cleaned = cleaned.replace(",v,", ".May.");
+		cleaned = cleaned.replace("-v-", " May ");
+		cleaned = cleaned.replace(",iv,", ".April.");
+		cleaned = cleaned.replace("-iv-", " April ");	
+		cleaned = cleaned.replace(",vi,", ".June.");
+		cleaned = cleaned.replace("-vi-", " June ");	
+		cleaned = cleaned.replace(",x,", ".October.");
+		cleaned = cleaned.replace("-x-", " October ");
+		cleaned = cleaned.replace(",ix,", ".September.");
+		cleaned = cleaned.replace("-ix-", " September ");	
+		cleaned = cleaned.replace(",xi,", ".November.");
+		cleaned = cleaned.replace("-xi-", " November ");				
+		cleaned = cleaned.replace("XII", "December");
+		cleaned = cleaned.replace("xii", "December");
+		cleaned = cleaned.replace("XI", "November");
+		cleaned = cleaned.replace("IX", "September");
+		cleaned = cleaned.replace("X", "October");
+		cleaned = cleaned.replace("VIII", "August");
+		cleaned = cleaned.replace("viii", "August");
+		cleaned = cleaned.replace("VII", "July");
+		cleaned = cleaned.replace("vii", "July");
+		cleaned = cleaned.replace("VI", "June");
+		cleaned = cleaned.replace("IV", "April");
+		cleaned = cleaned.replace("V", "May");
+		cleaned = cleaned.replace("III", "March");
+		cleaned = cleaned.replace("iii", "March");
+		cleaned = cleaned.replace("II", "February");
+		cleaned = cleaned.replace("I", "January");
+		
+		// Italian months are lower case, if capitalized, skip a step and go right to english.
+		// Joda date time parsing, as used here is case sensitive for months.
+		cleaned = cleaned.replace("Dicembre", "December");
+		cleaned = cleaned.replace("Novembre", "November");
+		cleaned = cleaned.replace("Ottobre", "October");
+		cleaned = cleaned.replace("Settembre", "September");
+		cleaned = cleaned.replace("Agosto", "August");
+		cleaned = cleaned.replace("Luglio", "July");
+		cleaned = cleaned.replace("Giugno", "June");
+		cleaned = cleaned.replace("Maggio", "May");
+		cleaned = cleaned.replace("Aprile", "April");
+		cleaned = cleaned.replace("Marzo", "March");
+		cleaned = cleaned.replace("Febbraio", "February");
+		cleaned = cleaned.replace("Gennaio", "January");			
+		// likewise french, also handle omitted accents
+		cleaned = cleaned.replace("Janvier", "January");
+		cleaned = cleaned.replace("Février", "February");
+		cleaned = cleaned.replace("Fevrier", "February");
+		cleaned = cleaned.replace("fevrier", "February");
+		cleaned = cleaned.replace("Mars", "March");
+		cleaned = cleaned.replace("Avril", "April");
+		cleaned = cleaned.replace("Mai", "May");
+		cleaned = cleaned.replace("Juin", "June");
+		cleaned = cleaned.replace("Juillet", "July");
+		cleaned = cleaned.replace("Août", "August");
+		cleaned = cleaned.replace("Aout", "August");
+		cleaned = cleaned.replace("aout", "August");
+		cleaned = cleaned.replace("Septembre", "September");
+		cleaned = cleaned.replace("Octobre", "October");
+		cleaned = cleaned.replace("Novembre", "November");
+		cleaned = cleaned.replace("Décembre", "December");
+		cleaned = cleaned.replace("Decembre", "December");
+		cleaned = cleaned.replace("decembre", "December");
+		// likewise spanish
+		cleaned = cleaned.replace("Enero", "January");
+		cleaned = cleaned.replace("Febrero", "February");
+		cleaned = cleaned.replace("Marzo", "March");
+		cleaned = cleaned.replace("Abril", "April");
+		cleaned = cleaned.replace("Mayo", "May");
+		cleaned = cleaned.replace("Junio", "June");
+		cleaned = cleaned.replace("Julio", "July");
+		cleaned = cleaned.replace("Agosto", "August");
+		cleaned = cleaned.replace("Septiembre", "September");
+		cleaned = cleaned.replace("Setiembre", "September");  // alternative spelling
+		cleaned = cleaned.replace("setiembre", "September");
+		cleaned = cleaned.replace("Octubre", "October");
+		cleaned = cleaned.replace("Noviembre", "November");
+		cleaned = cleaned.replace("Diciembre", "December");
+    	}
+		return cleaned;
+    }
+  
+    /**
+     * Run from the command line, arguments -f to specify a file, -m to show matches.
+     * 
+     * @param args "-f filename" to check a file containing a list of dates, one per line.
+     *    "-m" to show matched dates and their interpretations otherwise lists non-matched lines.  
+     */
+    public static void main(String[] args) { 
+        try {
+        	URL datesURI = DateUtils.class.getResource("/org.filteredpush.kuration.services/example_dates.csv");
+        	File datesFile = new File(datesURI.toURI());
+        	if (args[0]!=null && args[0].toLowerCase().equals("-f")) {
+        		if (args[1]!=null) { 
+        			datesFile = new File(args[1]);
+        		}
+            }
+        	boolean showMatches = false;
+        	for (int i=0; i<args.length; i++) {
+        		if (args[i].equals("-m")) { showMatches = true; } 
+        	}
+			BufferedReader reader = new BufferedReader(new FileReader(datesFile));
+			String line = null;
+			int unmatched = 0;
+			int matched = 0;
+			while ((line=reader.readLine())!=null) {
+				Map<String,String> result = DateUtils.extractDateFromVerbatim(line);
+				if (result==null || result.size()==0) {
+					if (!showMatches) {
+					   System.out.println(line);
+					}
+					unmatched++;
+				} else { 
+					matched++;
+				   if (showMatches) { 
+					   // if (result.get("resultState").equals("suspect")) 
+					   System.out.println(line + "\t" + result.get("resultState") + "\t" + result.get("result"));
+				   }
+				}
+			}
+			reader.close();
+			System.out.println("Unmatched lines: " + unmatched);
+			System.out.println("Matched lines: " + matched);
+		} catch (FileNotFoundException e) {
+			logger.error(e.getMessage());
+			System.out.println(e.getMessage());
+		} catch (IOException e) {
+			logger.error(e.getMessage());;
+			System.out.println(e.getMessage());
+		} catch (URISyntaxException e) {
+			System.out.println(e.getMessage());
+		}
+        
+    }
+    
 }
