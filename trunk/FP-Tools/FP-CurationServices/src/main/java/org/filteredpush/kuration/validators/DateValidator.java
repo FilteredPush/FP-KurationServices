@@ -56,10 +56,12 @@ public class DateValidator {
 		String specification = "";
 		CurationStep result = new CurationStep(specification, initialValues);
 		
+		String scopeTestValue = null;
+		
 		if (DateUtils.isEmpty(eventDate)) { 
 			result.addCurationComment("dwc:eventDate does not contain a value.");
-			if (DateUtils.isEmpty(year)) { 
-				result.addCurationComment("dwc:year does not contain a value.");
+			if (DateUtils.isEmpty(year) && DateUtils.isEmpty(verbatimEventDate) ) { 
+				result.addCurationComment("dwc:year and dwc:verbatimEventDate do not contain values.");
 				result.addCurationComment("Event does not specify an identifiable date or date range.");
 				result.addCurationState(CurationComment.UNABLE_DETERMINE_VALIDITY);
 			} else { 
@@ -67,6 +69,7 @@ public class DateValidator {
 				if (newEventDate!=null) { 
 					result.addCurationState(CurationComment.FILLED_IN);
 					curatedValues.put("eventDate", newEventDate);
+					scopeTestValue = newEventDate;
 				} else { 
 					result.addCurationComment("Unable to construct an event date from atomic parts.");
 					result.addCurationState(CurationComment.UNABLE_CURATED);
@@ -76,9 +79,19 @@ public class DateValidator {
 			if (DateUtils.isConsistent(eventDate, startDayOfYear, endDayOfYear, year, month, day)) { 
 				result.addCurationComment("dwc:eventDate is consistent with atomic parts");
 				result.addCurationState(CurationComment.CORRECT);
+				scopeTestValue = eventDate;
 			} else {
-				result.addCurationComment("dwc:eventDate is not consistent with atomic parts");
+				result.addCurationComment("dwc:eventDate is not consistent with atomic parts (" + eventDate + " <> [" + startDayOfYear + "][" + endDayOfYear + "][" + year + "][" + month + "][" + day + "])");
 				result.addCurationState(CurationComment.UNABLE_CURATED);
+			}
+		}
+		
+		if (!DateUtils.isEmpty(verbatimEventDate)) { 
+			String extractedVerbatimDate = DateUtils.createEventDateFromParts(verbatimEventDate, null, null, null, null, null);
+			if (eventDate.trim().equals(extractedVerbatimDate.trim())) { 
+				result.addCurationComment("dwc:verbatimEventDate parses to the same value as dwc:eventDate.");
+			} else {
+				result.addCurationComment("dwc:verbatimEventDate does not parse to the same value as dwc:eventDate (["+ extractedVerbatimDate + "]<>["+ eventDate +"]). ");
 			}
 		}
 		
@@ -92,6 +105,27 @@ public class DateValidator {
 			    }
 			}
 		}
+		
+		if (scopeTestValue!=null) { 
+			if (DateUtils.specificToDay(scopeTestValue)) { 
+				result.addCurationComment("dwc:eventDate specifies a date to a day or less.");
+			} else { 
+				if (DateUtils.specificToMonthScale(scopeTestValue)) { 
+				    result.addCurationComment("dwc:eventDate specifies a date range of between a day and a month.");
+				} else { 
+					if (DateUtils.specificToYearScale(scopeTestValue)) { 
+						result.addCurationComment("dwc:eventDate specifies a date range of between a month and a year.");
+					} else { 
+						if (DateUtils.specificToDecadeScale(scopeTestValue)) { 
+						    result.addCurationComment("dwc:eventDate specifies a date range of between a year and a decade.");
+						} else { 
+						    result.addCurationComment("dwc:eventDate specifies a date range spanning more than a decade.");
+						}
+					}
+				}   
+			}
+		}
+		
 		
 		return result;
 	}

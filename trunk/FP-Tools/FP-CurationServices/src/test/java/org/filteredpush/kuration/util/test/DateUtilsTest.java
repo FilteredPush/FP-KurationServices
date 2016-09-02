@@ -266,6 +266,7 @@ public class DateUtilsTest {
     	assertEquals(true, DateUtils.isConsistent("1884-03-18", "078", "078", "1884", "03", "18"));
     	assertEquals(true, DateUtils.isConsistent("1884-03-18/1884-03-19", "078", "079", "1884", "03", "18"));
     	assertEquals(true, DateUtils.isConsistent("1884-03-18/1884-03-19", "078", "079", null, null, null));
+    	assertEquals(true, DateUtils.isConsistent("1884-03-18/1884-03-19", null, null, null, null, null));
     }
     
     @Test

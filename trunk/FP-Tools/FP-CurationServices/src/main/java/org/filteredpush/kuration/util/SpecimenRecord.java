@@ -27,6 +27,9 @@ public class SpecimenRecord extends HashMap<String,String> {
     public static final String date_Comment_Label = "dateComment";
     public static final String date_Status_Label = "dateStatus";
     public static final String date_Source_Label = "dateSource";
+    public static final String eventDate_Comment_Label = "eventDateComment";
+    public static final String eventDate_Status_Label = "eventDateStatus";
+    public static final String eventDate_Source_Label = "eventDateSource";    
     public static final String geoRef_Comment_Label = "geoRefComment";
     public static final String geoRef_Status_Label = "geoRefStatus";
     public static final String geoRef_Source_Label = "geoRefSource";

@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateMidnight;
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
@@ -1001,16 +1000,20 @@ public class DateUtils {
     /**
      * Identify whether an event date is consistent with its atomic parts.  
      * 
-     * @param eventDate
+     * @param eventDate  dwc:eventDate string to compare with atomic parts.
      * @param startDayOfYear
      * @param endDayOfYear
      * @param year
      * @param month
      * @param day
      * 
-     * @return true if consistent, otherwise false.
+     * @return true if consistent, or if eventDate is empty, or if all 
+     *    atomic parts are empty, otherwise false.
      */
     public static boolean isConsistent(String eventDate, String startDayOfYear, String endDayOfYear, String year, String month, String day) {
+    	if (isEmpty(eventDate) || (isEmpty(startDayOfYear) && isEmpty(endDayOfYear) && isEmpty(year) && isEmpty(month) && isEmpty(day))) { 
+    		return true;
+    	}
 		// TODO: Add support for eventTime
     	boolean result = false;
     	result = isConsistent(eventDate,year,month,day);

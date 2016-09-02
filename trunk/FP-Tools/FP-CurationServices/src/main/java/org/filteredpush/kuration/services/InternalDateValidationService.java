@@ -393,13 +393,14 @@ public class InternalDateValidationService extends BaseCurationService implement
         }
 
         try{
-            int yearInt = Integer.parseInt(year);
-            int monthInt = Integer.parseInt(month);
-            int dayInt = Integer.parseInt(day);
-            constructedDate = new DateMidnight(yearInt, monthInt, dayInt);
+        	if (!DateUtils.isEmpty(year)) { int yearInt = Integer.parseInt(year); }
+        	if (!DateUtils.isEmpty(month)) {int monthInt = Integer.parseInt(month); }
+        	if (!DateUtils.isEmpty(day)) {int dayInt = Integer.parseInt(day); }
+            constructedDate = DateUtils.extractDate(DateUtils.createEventDateFromParts(null, null, null, year, month, day));
+            if (constructedDate==null) { 
+                addToComment("Unable to construct eventDate from atomic fields.");
+            }
         }catch (NumberFormatException e) {
-           // System.out.println("unable to cast date string to int = " + e);
-            //System.out.println("can't construct eventDate from atomic fields: string casting error");
             addToComment("can't construct eventDate from atomic fields: string casting error");
             constructedDate = null;
         }catch (IllegalFieldValueException e) {
