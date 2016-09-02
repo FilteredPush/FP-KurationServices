@@ -1,11 +1,11 @@
 package org.filteredpush.kuration.util;
 
 /**
-* Created with IntelliJ IDEA.
+ * Object to hold a curation status value.
+ * 
 * User: cobalt
 * Date: 30.05.2013
 * Time: 15:50
-* To change this template use File | Settings | File Templates.
 */
 public class CurationStatus {
     private String status;

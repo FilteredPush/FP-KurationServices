@@ -37,9 +37,11 @@ public final class SpecimenRecordTypeConf {
            // {"DatasetName","datasetName","String"},
             {"Id", "id", "String"},
             {"IdentificationTaxon", "IdentificationTaxon", "String"},
+            {"EventTime", "eventTime", "String"},
             {"EventDate", "eventDate", "String"},
             {"Modified", "modified", "String"},
             {"StartDayOfYear", "startDayOfYear", "String"},
+            {"EndDayOfYear", "endDayOfYear", "String"},
             {"VerbatimEventDate", "verbatimEventDate", "String"}, 
             {"BasisOfRecord", "basisOfRecord", "String"}
 
