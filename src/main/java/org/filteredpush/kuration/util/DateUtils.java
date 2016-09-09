@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeFieldType;
 import org.joda.time.Instant;
 import org.joda.time.Interval;
@@ -939,14 +940,17 @@ public class DateUtils {
     			// must be at least a 4 digit year.
     			if (dateBits[0].length()>3 && dateBits[1].length()>3) { 
     				DateMidnight startDate = DateMidnight.parse(dateBits[0],formatter);
-    				DateMidnight endDate = DateMidnight.parse(dateBits[1],formatter);
+    				DateTime endDate = DateTime.parse(dateBits[1],formatter);
+    				logger.debug(startDate);
+    				logger.debug(endDate);
     				if (dateBits[1].length()==4) { 
-    	                  result = new Interval(startDate,endDate.plusMonths(12).minus(1l));
-    	               } else if (dateBits[1].length()==7) { 
-    	                  result = new Interval(startDate,endDate.plusMonths(1).minus(1l));
-    	               } else { 
-    				      result = new Interval(startDate, endDate.plusDays(1).minus(1l));
-    	               }
+    					result = new Interval(startDate,endDate.plusMonths(12).minus(1l));
+    				} else if (dateBits[1].length()==7) { 
+    					result = new Interval(startDate,endDate.plusMonths(1).minus(1l));
+    				} else { 
+    					result = new Interval(startDate, endDate.plusDays(1).minus(1l));
+    				}
+    				logger.debug(result);
     			}
     		} catch (Exception e) { 
     			// not a date range
@@ -957,11 +961,17 @@ public class DateUtils {
                DateMidnight startDate = DateMidnight.parse(eventDate, formatter);
                logger.debug(startDate);
                if (eventDate.length()==4) { 
-                  result = new Interval(startDate,startDate.plusMonths(12).minus(1l));
+                  DateTime endDate = startDate.toDateTime().plusMonths(12).minus(1l);
+                  result = new Interval(startDate, endDate);
+                  logger.debug(result);
                } else if (eventDate.length()==7) { 
-                  result = new Interval(startDate,startDate.plusMonths(1).minus(1l));
+                  DateTime endDate = startDate.toDateTime().plusMonths(1).minus(1l);
+                  result = new Interval(startDate,endDate);
+                  logger.debug(result);
                } else { 
-                  result = new Interval(startDate,startDate.plusDays(1).minus(1l));
+                  DateTime endDate = startDate.toDateTime().plusDays(1).minus(1l);
+                  result = new Interval(startDate,endDate);
+                  logger.debug(result);
                }
     		} catch (Exception e) { 
     			// not a date
@@ -1317,6 +1327,32 @@ public class DateUtils {
     	}
     	return result;
     }        
+    
+    /**
+     * Measure the duration of an event date in seconds, when a time is 
+     * specified, ceiling to the nearest second, when a time is not 
+     * specified, from the date midnight at the beginning of a date 
+     * range to the last second of the day at the end of the range.  This 
+     * may return one second less than your expectation for the number 
+     * of seconds in the interval (e.g. 86399 seconds for the duration of 
+     * a day specified as 1980-01-01.
+     * 
+     * Suggested by Alex Thompson in a TDWG data quality task group call.
+     * 
+     * @param eventDate to test.
+     * @return the duration of eventDate in seconds.
+     */    
+    public static long measureDurationSeconds(String eventDate) { 
+    	long result = 0l;
+    	if (!isEmpty(eventDate)) { 
+    		Interval eventDateInterval = DateUtils.extractInterval(eventDate);
+    		logger.debug(eventDateInterval.toDuration().getStandardDays());
+    		logger.debug(eventDateInterval);
+    		long mills = eventDateInterval.toDurationMillis();
+    		result = (long)Math.ceil(mills/1000l);
+    	}
+    	return result;
+    }    
     
     /**
      * Given an instant, return the time within one day that it represents as a string.
