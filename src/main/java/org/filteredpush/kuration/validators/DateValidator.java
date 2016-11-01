@@ -58,6 +58,20 @@ public class DateValidator {
 		
 		String scopeTestValue = null;
 		
+/*
+        // example alternative organization splitting more clearly into individual tests		
+		if (DateUtils.isEmpty(eventDate)) { 
+			result.addCurationComment("dwc:eventDate does not contain a value.");
+		}	
+		if (DateUtils.isEmpty(year) && DateUtils.isEmpty(verbatimEventDate) ) { 
+				result.addCurationComment("dwc:year and dwc:verbatimEventDate do not contain values.");
+		}
+		if (DateUtils.isEmpty(eventDate) && DateUtils.isEmpty(year) && DateUtils.isEmpty(verbatimEventDate) ) {				
+				result.addCurationComment("Event does not specify an identifiable date or date range.");
+				result.addCurationState(CurationComment.UNABLE_DETERMINE_VALIDITY);		
+		}
+*/		
+				
 		if (DateUtils.isEmpty(eventDate)) { 
 			result.addCurationComment("dwc:eventDate does not contain a value.");
 			if (DateUtils.isEmpty(year) && DateUtils.isEmpty(verbatimEventDate) ) { 
@@ -88,10 +102,14 @@ public class DateValidator {
 		
 		if (!DateUtils.isEmpty(verbatimEventDate)) { 
 			String extractedVerbatimDate = DateUtils.createEventDateFromParts(verbatimEventDate, null, null, null, null, null);
-			if (eventDate.trim().equals(extractedVerbatimDate.trim())) { 
-				result.addCurationComment("dwc:verbatimEventDate parses to the same value as dwc:eventDate.");
-			} else {
-				result.addCurationComment("dwc:verbatimEventDate does not parse to the same value as dwc:eventDate (["+ extractedVerbatimDate + "]<>["+ eventDate +"]). ");
+			if (!DateUtils.isEmpty(eventDate)) {
+				if (eventDate.trim().equals(extractedVerbatimDate.trim())) { 
+					result.addCurationComment("dwc:verbatimEventDate parses to the same value as dwc:eventDate.");
+				} else {
+					result.addCurationComment("dwc:verbatimEventDate does not parse to the same value as dwc:eventDate (["+ extractedVerbatimDate + "]<>["+ eventDate +"]). ");
+			    }
+			} else { 
+				result.addCurationComment("dwc:verbatimEventDate has a value while dwc:eventDate does not (["+ extractedVerbatimDate + "]). ");
 			}
 		}
 		
