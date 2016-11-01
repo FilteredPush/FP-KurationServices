@@ -1,0 +1,8 @@
+[{
+  "assertionType" : "Validation",
+  "namedContext" : "isEventDateConsistent",
+
+  "dimension" : "dimension text",
+  "specification" : "specification text",
+  "mechanism" : "mechanism text"
+}]

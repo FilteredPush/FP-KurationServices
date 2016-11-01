@@ -20,8 +20,10 @@ import static org.junit.Assert.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.filteredpush.kuration.provenance.BaseRecord;
+import org.filteredpush.kuration.provenance.NamedContext;
 import org.filteredpush.kuration.util.CurationComment;
-import org.filteredpush.kuration.util.CurationStatus;
+import org.filteredpush.kuration.provenance.CurationStatus;
 import org.filteredpush.kuration.util.DateUtils;
 import org.junit.Test;
 import org.kurator.akka.data.CurationStep;
@@ -82,4 +84,21 @@ public class DateValidatorTest {
 		//assertEquals(CurationComment.UNABLE_CURATED.toString(), testResult.getCurationStates().get(0));
 	}
 
+	/**
+	 * Test method for {@link org.filteredpush.kuration.validators.DateValidator#validateEventConsistency(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)}.
+	 */
+	@Test
+	public void testValidateEventConsistencyWithContext() {
+		BaseRecord testResult = DateValidator.validateEventConsistencyWithContext("1904-02-05", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
+		logger.debug(testResult.getCurationHistory().get(0).getCurationComments().get(0));
+		assertEquals(CurationStatus.CORRECT, testResult.getCurationStatus());
+
+		testResult = DateValidator.validateEventConsistencyWithContext("1904-02-08", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
+		logger.debug(testResult.getCurationHistory(new NamedContext("isEventDateConsistent")).get(0).getCurationComments().get(0));
+		assertEquals(CurationStatus.UNABLE_CURATE, testResult.getCurationStatus());
+	}
+
+	public void testValidateEventConsistencyFFDQAssertions() {
+
+	}
 }
