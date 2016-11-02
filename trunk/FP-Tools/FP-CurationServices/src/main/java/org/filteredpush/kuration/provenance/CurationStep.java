@@ -98,6 +98,26 @@ public class CurationStep {
         return finalElementValues;
     }
 
+    public List<String> getFieldsActedUpon() {
+        ArrayList<String> fieldsActedUpon = new ArrayList<String>();
+
+        if (finalElementValues != null) {
+            fieldsActedUpon.addAll(finalElementValues.keySet());
+        }
+
+        return fieldsActedUpon;
+    }
+
+    public List<String> getFieldsConsulted() {
+        ArrayList<String> fieldsConsulted = new ArrayList<>();
+
+        if (curationContext != null) {
+            fieldsConsulted.addAll(curationContext.getFieldsConsulted());
+        }
+
+        return fieldsConsulted;
+    }
+
     /**
      * @return the record curation status
      */

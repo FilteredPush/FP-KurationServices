@@ -30,7 +30,16 @@ public enum CurationStatus {
     /**
      * Indicates that no issues were found in the data per the specification.
      */
-    CORRECT,
+    COMPLIANT,
+
+    NOT_COMPLIANT,
+
+
+
+    COMPLETE,
+
+    NOT_COMPLETE,
+
     /**
      * Indicates that a change to the data has been proposed.
      */
@@ -40,17 +49,23 @@ public enum CurationStatus {
      * filled in with some non-blank value in the output.
      */
     FILLED_IN,
+
+
     /**
      * Indicates that it was possible to perform the tests of the specification on the
      * data, but that it was not possible to validate the provided data to the specification.
      * This tends to indicate a Solve_With_More_Data outcome.
      */
-    UNABLE_CURATE,
+    DATA_PREREQUISITES_NOT_MET,
+
+    SOLVE_WITH_MORE_DATA,
+
     /**
      * Some prerequisite for performing the tests in the specification was not met.  This could
      * be internal to the data (some required field was missing), or external (a webservice
      * was down and unable to be consulted).
      */
-    UNABLE_DETERMINE_VALIDITY
+    EXTERNAL_PREREQUISITES_NOT_MET,
+
 
 }
