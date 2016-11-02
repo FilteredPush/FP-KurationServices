@@ -77,6 +77,25 @@ public class BaseRecord {
         return updateHistory;
     }
 
+    public Map<NamedContext, List<CurationStep>> getCurationHistoryContexts() {
+        Map<NamedContext, List<CurationStep>> curationHistory = new HashMap<>();
+
+        for (CurationStep curationStep : updateHistory) {
+            if (curationStep.getContext() != null) {
+                List<CurationStep> curationSteps = curationHistory.get(curationStep.getContext());
+
+                if (curationSteps == null) {
+                    curationSteps = new LinkedList<>();
+                    curationHistory.put(curationStep.getContext(), curationSteps);
+                }
+
+                curationSteps.add(curationStep);
+            }
+        }
+
+        return curationHistory;
+    }
+
     public Map<String, String> getInitialValues() {
         return initialValues;
     }

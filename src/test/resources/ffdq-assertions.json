@@ -1,8 +1,87 @@
-[{
-  "assertionType" : "Validation",
-  "namedContext" : "isEventDateConsistent",
+{
+  "measures": [
+    {
+      "namedContext": "eventDateIsNotEmpty",
 
-  "dimension" : "dimension text",
-  "specification" : "specification text",
-  "mechanism" : "mechanism text"
-}]
+      "dimension": "dimension text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "eventDateContainsEventTime",
+
+      "dimension": "dimension text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "durationInSeconds",
+
+      "dimension": "dimension text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    }
+  ],
+
+  "validations": [
+    {
+      "namedContext": "eventDateIsConsistent",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "checkVerbatimEventDate",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "eventDateIsConsistentWithEventTime",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "eventDateSpecificToDay",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "eventDateSpecificToMonthScale",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "eventDateSpecificToYearScale",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    },
+    {
+      "namedContext": "eventDateSpecificToDecadeScale",
+
+      "criterion": "criterion text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    }
+  ],
+
+  "improvements": [
+    {
+      "namedContext": "eventDateFromAtomicParts",
+
+      "enhancement": "enhancement text",
+      "specification": "specification text",
+      "mechanism": "mechanism text"
+    }
+  ]
+}

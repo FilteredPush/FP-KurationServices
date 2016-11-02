@@ -17,14 +17,41 @@
 
 package org.filteredpush.kuration.provenance;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class NamedContext {
     private String context;
+    private List<String> fieldsActedUpon = new ArrayList<>();
+    private List<String> fieldsConsulted = new ArrayList<>();
+
+    public NamedContext(String context, List<String> fieldsActedUpon, List<String> fieldsConsulted) {
+        this.context = context;
+        this.fieldsConsulted = fieldsConsulted;
+        this.fieldsActedUpon = fieldsActedUpon;
+    }
+
+    public NamedContext(String context, List<String> fieldsActedUpon) {
+        this.context = context;
+        this.fieldsActedUpon = fieldsActedUpon;
+    }
+
 
     public NamedContext(String context) {
         this.context = context;
+    }
+
+    public String getName() {
+        return context;
+    }
+
+    public List<String> getFieldsConsulted() {
+        return fieldsConsulted;
+    }
+
+    public List<String> getFieldsActedUpon() {
+        return fieldsActedUpon;
     }
 
     @Override
