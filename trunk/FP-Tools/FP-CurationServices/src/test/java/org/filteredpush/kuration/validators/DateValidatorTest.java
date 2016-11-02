@@ -27,6 +27,16 @@ import org.filteredpush.kuration.provenance.CurationStatus;
 import org.filteredpush.kuration.util.DateUtils;
 import org.junit.Test;
 import org.kurator.akka.data.CurationStep;
+import org.kurator.data.ffdq.AssertionsConfig;
+import org.kurator.data.ffdq.DQConfigParser;
+import org.kurator.data.ffdq.assertions.Assertion;
+import org.kurator.data.ffdq.assertions.Improvement;
+import org.kurator.data.ffdq.assertions.Measure;
+import org.kurator.data.ffdq.assertions.Validation;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author mole
@@ -88,14 +98,70 @@ public class DateValidatorTest {
 	 * Test method for {@link org.filteredpush.kuration.validators.DateValidator#validateEventConsistency(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)}.
 	 */
 	@Test
-	public void testValidateEventConsistencyWithContext() {
+	public void testValidateEventConsistencyWithContext() throws IOException {
 		BaseRecord testResult = DateValidator.validateEventConsistencyWithContext("1904-02-05", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
 		logger.debug(testResult.getCurationHistory().get(0).getCurationComments().get(0));
-		assertEquals(CurationStatus.CORRECT, testResult.getCurationStatus());
+		assertEquals(CurationStatus.COMPLIANT, testResult.getCurationStatus());
+
+		printAssertions(testResult);
 
 		testResult = DateValidator.validateEventConsistencyWithContext("1904-02-08", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
-		logger.debug(testResult.getCurationHistory(new NamedContext("isEventDateConsistent")).get(0).getCurationComments().get(0));
-		assertEquals(CurationStatus.UNABLE_CURATE, testResult.getCurationStatus());
+
+		printAssertions(testResult);
+		//logger.debug(testResult.getCurationHistory(new NamedContext("isEventDateConsistent")).get(0).getCurationComments().get(0));
+		//assertEquals(CurationStatus.DATA_PREREQUISITES_NOT_MET, testResult.getCurationStatus());
+	}
+
+	private void printAssertions(BaseRecord testResult) throws IOException {
+		// TODO: Move this out of the test when finished
+		DQConfigParser config = DQConfigParser.getInstance();
+		config.load(DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json"));
+		AssertionsConfig assertions = config.getAssertions();
+
+		Map<NamedContext, List<org.filteredpush.kuration.provenance.CurationStep>> curationStepMap =
+				testResult.getCurationHistoryContexts();
+
+		for (NamedContext context : curationStepMap.keySet()) {
+			Assertion assertion = assertions.forContext(context.getName());
+
+			if (assertion instanceof Measure) {
+				Measure measure = (Measure) assertion;
+				System.out.println("MEASURE: ");
+				System.out.println("    dimension : " + measure.getDimension() + "\n    specification : "
+						+ measure.getSpecification() + "\n    mechanism : " + measure.getMechanism());
+			} else if (assertion instanceof Validation) {
+				Validation validation = (Validation) assertion;
+				System.out.println("VALIDATION: ");
+				System.out.println("    criterion : " + validation.getCriterion() + "\n    specification : "
+						+ validation.getSpecification() + "\n    mechanism : " + validation.getMechanism());
+			} else if (assertion instanceof Improvement) {
+				Improvement improvement = (Improvement) assertion;
+				System.out.println("IMPROVEMENT: ");
+				System.out.println("    enhancement : " + improvement.getEnhancement() + "\n    specification : "
+						+ improvement.getSpecification() + "\n    mechanism : " + improvement.getMechanism());
+			}
+			System.out.println();
+
+			System.out.println("    context : " + context.getName());
+			if (!context.getFieldsActedUpon().isEmpty()) {
+				System.out.println("    fieldsActedUpon : " + context.getFieldsActedUpon());
+			}
+			if (!context.getFieldsConsulted().isEmpty()) {
+				System.out.println("    fieldsConsulted : " + context.getFieldsConsulted());
+			}
+
+
+
+			System.out.println();
+
+			List<org.filteredpush.kuration.provenance.CurationStep> steps = curationStepMap.get(context);
+
+			for (org.filteredpush.kuration.provenance.CurationStep step : steps) {
+				System.out.print("    state: " + step.getCurationStatus() + "\n    comments: " + step.getCurationComments());
+				System.out.println();
+				System.out.println();
+			}
+		}
 	}
 
 	public void testValidateEventConsistencyFFDQAssertions() {
