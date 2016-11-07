@@ -69,7 +69,6 @@ public class DateValidator {
 
 		GlobalContext globalContext = new GlobalContext(DateValidator.class.getSimpleName(), DateValidator.getActorName());
         BaseRecord result = new BaseRecord(initialValues, globalContext);
-
 		String scopeTestValue = null;
 
         NamedContext eventDateIsNotEmpty = new NamedContext("eventDateIsNotEmpty",
@@ -92,7 +91,8 @@ public class DateValidator {
                         endDayOfYear, year, month, day);
 
 				if (newEventDate!=null) {
-					result.update(eventDateFromAtomicParts, "eventDate", newEventDate, CurationStatus.FILLED_IN);
+					result.update(eventDateFromAtomicParts, "eventDate", newEventDate, CurationStatus.FILLED_IN,
+							"Constructed event date from atomic parts.");
 					scopeTestValue = newEventDate;
 				} else {
 					result.update(eventDateFromAtomicParts, CurationStatus.DATA_PREREQUISITES_NOT_MET,
@@ -117,6 +117,7 @@ public class DateValidator {
 			}
 		}
 
+		// TODO: Add internal prerequisites not met cases
 		if (!DateUtils.isEmpty(verbatimEventDate)) {
             NamedContext checkVerbatimEventDate = new NamedContext("checkVerbatimEventDate",
                     Collections.singletonList("eventDate"), Arrays.asList("verbatimEventDate"));
@@ -143,7 +144,7 @@ public class DateValidator {
                         CurationStatus.COMPLETE, "dwc:eventDate contains eventTime");
 
                 NamedContext eventDateIsConsistentWithEventTime = new NamedContext("eventDateIsConsistentWithEventTime",
-                        Collections.singletonList("eventDate"));
+                        Collections.singletonList("eventDate"), Collections.singletonList("eventTime"));
 
 				if (!DateUtils.extractZuluTime(eventDate).equals(DateUtils.extractZuluTime("1970-01-10T" + eventTime))) {
 					result.update(eventDateIsConsistentWithEventTime, CurationStatus.NOT_COMPLIANT,
@@ -165,10 +166,20 @@ public class DateValidator {
                 Collections.singletonList("eventDate"));
 
         // Assert a measure (number of seconds in this event date)
-        result.update(durationInSeconds, "durationInSeconds",
-                Long.toString(DateUtils.measureDurationSeconds(eventDate)),
-                CurationStatus.COMPLETE,
-                "Number of seconds in this dwc:eventDate");
+		long duration = DateUtils.measureDurationSeconds(eventDate);
+
+		if (duration > 0) {
+			result.update(durationInSeconds, "durationInSeconds",
+					Long.toString(duration),
+					CurationStatus.COMPLETE,
+					"Number of seconds in this dwc:eventDate");
+		} else {
+			result.update(durationInSeconds, "durationInSeconds",
+					Long.toString(duration),
+					CurationStatus.NOT_COMPLETE,
+					"dwc:eventDate does not contain an interval of time");
+		}
+
 
 		if (scopeTestValue!=null) {
 

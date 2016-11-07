@@ -31,6 +31,7 @@ import org.kurator.data.provenance.BaseRecord;
 import org.kurator.data.provenance.CurationStatus;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -96,12 +97,15 @@ public class DateValidatorTest {
 	@Test
 	public void testValidateEventConsistencyWithContext() throws IOException {
 		BaseRecord testResult = DateValidator.validateEventConsistencyWithContext("1904-02-05", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
-		logger.debug(testResult.getCurationHistory().get(0).getCurationComments().get(0));
 		assertEquals(CurationStatus.COMPLIANT, testResult.getCurationStatus());
 
 		printAssertions(testResult);
 
 		testResult = DateValidator.validateEventConsistencyWithContext("1904-02-08", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
+
+		printAssertions(testResult);
+
+		testResult = DateValidator.validateEventConsistencyWithContext("", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
 
 		printAssertions(testResult);
 		//logger.debug(testResult.getCurationHistory(new NamedContext("isEventDateConsistent")).get(0).getCurationComments().get(0));
@@ -111,7 +115,11 @@ public class DateValidatorTest {
 	private void printAssertions(BaseRecord testResult) throws IOException {
 		DQConfigParser config = DQConfigParser.getInstance();
 		config.load(DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json"));
-		config.generateReport(testResult);
+		DQReport report = config.generateReport(testResult);
+
+		StringWriter writer = new StringWriter();
+		report.write(writer);
+		System.out.println(writer.toString());
 	}
 
 	public void testValidateEventConsistencyFFDQAssertions() {
