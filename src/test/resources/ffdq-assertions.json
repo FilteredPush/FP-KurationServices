@@ -3,23 +3,23 @@
     {
       "namedContext": "eventDateIsNotEmpty",
 
-      "dimension": "dimension text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "dimension": "Completeness",
+      "specification": "Check that the value of ${context.fieldsActedUpon} is not empty and that data prerequisites for determining validity are met ${context.fieldsConsulted}.",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "eventDateContainsEventTime",
 
-      "dimension": "dimension text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "dimension": "Completeness",
+      "specification": "Check that dwc:eventDate matches an ISO date that contains a time ",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "durationInSeconds",
 
-      "dimension": "dimension text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "dimension": "Precision",
+      "specification": "For values of dwc:eventDate specified as a date range, calculate the duration in seconds.",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     }
   ],
 
@@ -27,51 +27,51 @@
     {
       "namedContext": "eventDateIsConsistent",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "The value for eventDate must be consistent with atomic parts",
+      "specification": "Check that the value for dwc:eventDate is consistent with the values for atomic parts.",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "checkVerbatimEventDate",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "The value for eventDate must be consistent with verbatimEventDate",
+      "specification": "Check that the value of dwc:verbatimEventDate parses to the same value as dwc:eventDate.",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "eventDateIsConsistentWithEventTime",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "The time specified as part of eventDate must be consistent with eventTime",
+      "specification": "Check that the time extracted from dwc:eventDate matches the value for dwc:eventTime",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "eventDateSpecificToDay",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "dwc:eventDate specifies a date to a day or less.",
+      "specification": "Check that the value for dwc:eventDate specifies a duration of one day or less.",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "eventDateSpecificToMonthScale",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "dwc:eventDate specifies a date range of between a day and a month.",
+      "specification": "Check that the value for dwc:eventDate specifies a duration of 31 days or less",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "eventDateSpecificToYearScale",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "dwc:eventDate specifies a date range of between a month and a year.",
+      "specification": "Check that the value for dwc:eventDate specifies a duration of one year or less",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
       "namedContext": "eventDateSpecificToDecadeScale",
 
-      "criterion": "criterion text",
-      "specification": "specification text",
-      "mechanism": "mechanism text"
+      "criterion": "dwc:eventDate specifies a date range of between a year and a decade.",
+      "specification": "Check that the value for dwc:eventDate specifies a duration of 10 years or less",
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     }
   ],
 
@@ -79,9 +79,9 @@
     {
       "namedContext": "eventDateFromAtomicParts",
 
-      "enhancement": "enhancement text",
+      "enhancement": "Recommendation to fill in dwc:eventDate based on values from atomic fields",
       "specification": "specification text",
-      "mechanism": "mechanism text"
+      "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     }
   ]
 }
