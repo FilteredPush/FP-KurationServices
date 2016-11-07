@@ -21,17 +21,17 @@ import java.util.*;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
-import org.filteredpush.kuration.provenance.BaseRecord;
-import org.filteredpush.kuration.provenance.CurationStatus;
-import org.filteredpush.kuration.provenance.NamedContext;
 import org.filteredpush.kuration.util.CurationException;
 import org.kurator.akka.data.CurationStep;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.DateUtils;
+import org.kurator.data.provenance.BaseRecord;
+import org.kurator.data.provenance.CurationStatus;
+import org.kurator.data.provenance.GlobalContext;
+import org.kurator.data.provenance.NamedContext;
 
-import org.filteredpush.kuration.provenance.CurationStatus;
 
 /**
  * @author mole
@@ -40,6 +40,10 @@ import org.filteredpush.kuration.provenance.CurationStatus;
 public class DateValidator {
 	
 	private static final Log logger = LogFactory.getLog(DateValidator.class);
+
+	private static String getActorName() {
+		return "Event date validator";
+	}
 
 	/**
 	 * 
@@ -52,8 +56,8 @@ public class DateValidator {
 	 * @return
 	 */
 	public static BaseRecord validateEventConsistencyWithContext(String eventDate, String year, String month,
-                                                                 String day, String startDayOfYear, String endDayOfYear,
-                                                                 String eventTime, String verbatimEventDate) {
+																 String day, String startDayOfYear, String endDayOfYear,
+																 String eventTime, String verbatimEventDate) {
 		Map<String,String> initialValues = new HashMap<String,String>();
 		initialValues.put("eventDate", eventDate);
 		initialValues.put("year", year);
@@ -63,7 +67,8 @@ public class DateValidator {
 		initialValues.put("eventTime", eventTime);
 		initialValues.put("verbatimEventDate", verbatimEventDate);
 
-        BaseRecord result = new BaseRecord(initialValues);
+		GlobalContext globalContext = new GlobalContext(DateValidator.class.getSimpleName(), DateValidator.getActorName());
+        BaseRecord result = new BaseRecord(initialValues, globalContext);
 
 		String scopeTestValue = null;
 

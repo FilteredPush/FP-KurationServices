@@ -20,19 +20,15 @@ import static org.junit.Assert.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.filteredpush.kuration.provenance.BaseRecord;
-import org.filteredpush.kuration.provenance.NamedContext;
 import org.filteredpush.kuration.util.CurationComment;
-import org.filteredpush.kuration.provenance.CurationStatus;
 import org.filteredpush.kuration.util.DateUtils;
 import org.junit.Test;
 import org.kurator.akka.data.CurationStep;
 import org.kurator.data.ffdq.AssertionsConfig;
 import org.kurator.data.ffdq.DQConfigParser;
-import org.kurator.data.ffdq.assertions.Assertion;
-import org.kurator.data.ffdq.assertions.Improvement;
-import org.kurator.data.ffdq.assertions.Measure;
-import org.kurator.data.ffdq.assertions.Validation;
+import org.kurator.data.ffdq.assertions.*;
+import org.kurator.data.provenance.BaseRecord;
+import org.kurator.data.provenance.CurationStatus;
 
 import java.io.IOException;
 import java.util.List;
@@ -113,55 +109,9 @@ public class DateValidatorTest {
 	}
 
 	private void printAssertions(BaseRecord testResult) throws IOException {
-		// TODO: Move this out of the test when finished
 		DQConfigParser config = DQConfigParser.getInstance();
 		config.load(DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json"));
-		AssertionsConfig assertions = config.getAssertions();
-
-		Map<NamedContext, List<org.filteredpush.kuration.provenance.CurationStep>> curationStepMap =
-				testResult.getCurationHistoryContexts();
-
-		for (NamedContext context : curationStepMap.keySet()) {
-			Assertion assertion = assertions.forContext(context.getName());
-
-			if (assertion instanceof Measure) {
-				Measure measure = (Measure) assertion;
-				System.out.println("MEASURE: ");
-				System.out.println("    dimension : " + measure.getDimension() + "\n    specification : "
-						+ measure.getSpecification() + "\n    mechanism : " + measure.getMechanism());
-			} else if (assertion instanceof Validation) {
-				Validation validation = (Validation) assertion;
-				System.out.println("VALIDATION: ");
-				System.out.println("    criterion : " + validation.getCriterion() + "\n    specification : "
-						+ validation.getSpecification() + "\n    mechanism : " + validation.getMechanism());
-			} else if (assertion instanceof Improvement) {
-				Improvement improvement = (Improvement) assertion;
-				System.out.println("IMPROVEMENT: ");
-				System.out.println("    enhancement : " + improvement.getEnhancement() + "\n    specification : "
-						+ improvement.getSpecification() + "\n    mechanism : " + improvement.getMechanism());
-			}
-			System.out.println();
-
-			System.out.println("    context : " + context.getName());
-			if (!context.getFieldsActedUpon().isEmpty()) {
-				System.out.println("    fieldsActedUpon : " + context.getFieldsActedUpon());
-			}
-			if (!context.getFieldsConsulted().isEmpty()) {
-				System.out.println("    fieldsConsulted : " + context.getFieldsConsulted());
-			}
-
-
-
-			System.out.println();
-
-			List<org.filteredpush.kuration.provenance.CurationStep> steps = curationStepMap.get(context);
-
-			for (org.filteredpush.kuration.provenance.CurationStep step : steps) {
-				System.out.print("    state: " + step.getCurationStatus() + "\n    comments: " + step.getCurationComments());
-				System.out.println();
-				System.out.println();
-			}
-		}
+		config.generateReport(testResult);
 	}
 
 	public void testValidateEventConsistencyFFDQAssertions() {
