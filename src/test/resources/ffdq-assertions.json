@@ -33,7 +33,6 @@
     {
       "context": {
         "name": "eventDateIsConsistent"
-
       },
 
       "criterion": "The value for eventDate must be consistent with atomic parts",
