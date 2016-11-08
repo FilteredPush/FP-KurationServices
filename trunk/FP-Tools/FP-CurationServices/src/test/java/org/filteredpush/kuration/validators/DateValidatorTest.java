@@ -25,12 +25,13 @@ import org.filteredpush.kuration.util.DateUtils;
 import org.junit.Test;
 import org.kurator.akka.data.CurationStep;
 import org.kurator.data.ffdq.AssertionsConfig;
-import org.kurator.data.ffdq.DQConfigParser;
+import org.kurator.data.ffdq.DQReportBuilder;
 import org.kurator.data.ffdq.assertions.*;
 import org.kurator.data.provenance.BaseRecord;
 import org.kurator.data.provenance.CurationStatus;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
@@ -113,12 +114,16 @@ public class DateValidatorTest {
 	}
 
 	private void printAssertions(BaseRecord testResult) throws IOException {
-		DQConfigParser config = DQConfigParser.getInstance();
-		config.load(DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json"));
-		DQReport report = config.generateReport(testResult);
+		InputStream config = DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json");
+		DQReportBuilder builder = new DQReportBuilder(config);
 
+		List<DQReport> reports = builder.createReport(testResult);
 		StringWriter writer = new StringWriter();
-		report.write(writer);
+
+		for (DQReport report : reports) {
+			report.write(writer);
+		}
+
 		System.out.println(writer.toString());
 	}
 
