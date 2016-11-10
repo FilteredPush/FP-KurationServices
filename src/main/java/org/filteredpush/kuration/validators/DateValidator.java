@@ -54,11 +54,45 @@ public class DateValidator {
 		// Start pre enhancement stage
 		record.startStage(CurationStage.PRE_ENHANCEMENT);
 
+		checkEventDateCompleteness(record);
+
+		if (!DateUtils.isEmpty(record.getEventDate())) {
+			checkContainsEventTime(record);
+			checkDurationInSeconds(record);
+
+			validateConsistencyWithAtomicParts(record);
+			validateVerbatimEventDate(record);
+			validateConsistencyWithEventTime(record);
+			validateSpecificToDay(record);
+			validateSpecificToMonth(record);
+			validateSpecificToYear(record);
+			validateSpecificToDecade(record);
+		}
+
 		// Start enhancement stage
 		record.startStage(CurationStage.ENHANCEMENT);
 
+		if (DateUtils.isEmpty(record.getEventDate())) {
+			fillInFromAtomicParts(record);
+		}
+
 		// Start post enhancement stage
 		record.startStage(CurationStage.POST_ENHANCEMENT);
+
+		checkEventDateCompleteness(record);
+
+		if (!DateUtils.isEmpty(record.getEventDate())) {
+			checkContainsEventTime(record);
+			checkDurationInSeconds(record);
+
+			validateConsistencyWithAtomicParts(record);
+			validateVerbatimEventDate(record);
+			validateConsistencyWithEventTime(record);
+			validateSpecificToDay(record);
+			validateSpecificToMonth(record);
+			validateSpecificToYear(record);
+			validateSpecificToDecade(record);
+		}
 
 		return record;
 	}
@@ -75,13 +109,11 @@ public class DateValidator {
 
 		NamedContext eventDateContainsEventTime = new NamedContext("eventDateContainsEventTime", fields);
 
-		if (!DateUtils.isEmpty(record.get("eventTime"))) {
-			if (DateUtils.containsTime(record.get("eventDate"))) {
-				record.update(eventDateContainsEventTime, CurationStatus.COMPLETE, "dwc:eventDate contains eventTime");
-			} else {
-				record.update(eventDateContainsEventTime, CurationStatus.NOT_COMPLETE,
-						"dwc:eventDate does not contain eventTime");
-			}
+		if (DateUtils.containsTime(record.get("eventDate"))) {
+			record.update(eventDateContainsEventTime, CurationStatus.COMPLETE, "dwc:eventDate contains eventTime");
+		} else {
+			record.update(eventDateContainsEventTime, CurationStatus.NOT_COMPLETE,
+					"dwc:eventDate does not contain eventTime");
 		}
 	}
 
@@ -178,19 +210,23 @@ public class DateValidator {
 
 		NamedContext eventDateIsConsistentWithEventTime = new NamedContext("eventDateIsConsistentWithEventTime", fields);
 
-		boolean isConsistent = DateUtils.extractZuluTime(record.get("eventDate")).equals(
-				DateUtils.extractZuluTime("1970-01-10T" + record.get("eventTime")));
+		if (!DateUtils.isEmpty(record.getEventTime())) {
+			boolean isConsistent = DateUtils.extractZuluTime(record.get("eventDate")).equals(
+					DateUtils.extractZuluTime("1970-01-10T" + record.get("eventTime")));
 
-		if (!isConsistent) {
+			if (!isConsistent) {
+				record.update(eventDateIsConsistentWithEventTime, CurationStatus.NOT_COMPLIANT,
+						"dwc:eventDate is not consistent with eventTime");
+			} else {
+				record.update(eventDateIsConsistentWithEventTime, CurationStatus.COMPLIANT,
+						"dwc:eventDate is consistent with eventTime",
+						"([" + record.get("eventTime") + "]<>[" + record.get("eventDate") + "]");
 
-			record.update(eventDateIsConsistentWithEventTime, CurationStatus.NOT_COMPLIANT,
-					"dwc:eventDate is not consistent with eventTime");
+				logger.debug(isConsistent);
+			}
 		} else {
-			record.update(eventDateIsConsistentWithEventTime, CurationStatus.COMPLIANT,
-					"dwc:eventDate is consistent with eventTime",
-					"([" + record.get("eventTime") + "]<>[" + record.get("eventDate") + "]");
-
-			logger.debug(isConsistent);
+			record.update(eventDateIsConsistentWithEventTime, CurationStatus.DATA_PREREQUISITES_NOT_MET,
+					"dwc:eventTime does not contain a value.");
 		}
 	}
 
