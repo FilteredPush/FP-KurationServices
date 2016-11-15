@@ -55,9 +55,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.kurator</groupId>
+            <groupId>org.datakurator</groupId>
             <artifactId>kurator-ffdq</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
