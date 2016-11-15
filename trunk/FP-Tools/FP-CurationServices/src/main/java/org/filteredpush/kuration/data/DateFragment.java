@@ -1,6 +1,6 @@
 package org.filteredpush.kuration.data;
 
-import org.kurator.data.provenance.BaseRecord;
+import org.datakurator.data.provenance.BaseRecord;
 
 import java.util.HashMap;
 import java.util.Map;
