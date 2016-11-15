@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.datakurator.data.ffdq.DQReport;
 import org.filteredpush.kuration.util.CurationComment;
 import org.filteredpush.kuration.util.DateUtils;
 import org.junit.Test;
@@ -106,7 +107,7 @@ public class DateValidatorTest {
 
 		//printAssertions(testResult);
 
-        BaseRecord testResult = DateValidator.validateEventConsistencyWithContext("", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
+        BaseRecord testResult = DateValidator.validateEventConsistencyWithContext("01", "", "1904", "02", "05", "36", "36", null, "Feb 5, 1904");
 
 		printAssertions(testResult);
 		//logger.debug(testResult.getCurationHistory(new NamedContext("isEventDateConsistent")).get(0).getCurationComments().get(0));
@@ -117,12 +118,10 @@ public class DateValidatorTest {
 		InputStream config = DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json");
 		DQReportBuilder builder = new DQReportBuilder(config);
 
-		List<DQReport> reports = builder.createReport(testResult);
+		DQReport report = builder.createReport(testResult);
 		StringWriter writer = new StringWriter();
 
-		for (DQReport report : reports) {
-			report.write(writer);
-		}
+		report.write(writer);
 
 		System.out.println(writer.toString());
 	}

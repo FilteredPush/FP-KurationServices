@@ -11,9 +11,12 @@ import java.util.Map;
 public class DateFragment extends BaseRecord {
     private String scopeTestValue;
 
-    public DateFragment(String eventDate, String year, String month,
+    public DateFragment(String recordId, String eventDate, String year, String month,
                         String day, String startDayOfYear, String endDayOfYear,
                         String eventTime, String verbatimEventDate) {
+
+        setRecordId(recordId);
+
         Map<String, String> initialValues = new HashMap<>();
 
         initialValues.put("eventDate", eventDate);
