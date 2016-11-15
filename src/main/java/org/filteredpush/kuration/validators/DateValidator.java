@@ -41,12 +41,12 @@ public class DateValidator {
 	}
 
 
-	public static BaseRecord validateEventConsistencyWithContext(String eventDate, String year, String month,
+	public static BaseRecord validateEventConsistencyWithContext(String recordId, String eventDate, String year, String month,
 																 String day, String startDayOfYear, String endDayOfYear,
 																 String eventTime, String verbatimEventDate) {
 
 		// Initialize
-		DateFragment record = new DateFragment(eventDate, year, month, day, startDayOfYear, endDayOfYear,
+		DateFragment record = new DateFragment(recordId, eventDate, year, month, day, startDayOfYear, endDayOfYear,
 				eventTime, verbatimEventDate);
 
 		GlobalContext globalContext = new GlobalContext(DateValidator.class.getSimpleName(), DateValidator.getActorName());
@@ -131,7 +131,10 @@ public class DateValidator {
 	}
 
 	private static void checkDurationInSeconds(DateFragment record) {
-		NamedContext durationInSeconds = new NamedContext("durationInSeconds");
+		FieldContext fields = new FieldContext();
+		fields.setActedUpon("eventDate");
+
+		NamedContext durationInSeconds = new NamedContext("durationInSeconds", fields);
 
 		// Assert a measure (number of seconds in this event date)
 		long duration = DateUtils.measureDurationSeconds(record.get("eventDate"));
@@ -206,7 +209,6 @@ public class DateValidator {
 			record.update(specificToMonthScale, CurationStatus.DATA_PREREQUISITES_NOT_MET,
 					"dwc:eventDate does not contain a value.");
 		}
-
 	}
 
 	private static void validateSpecificToDay(DateFragment record) {
