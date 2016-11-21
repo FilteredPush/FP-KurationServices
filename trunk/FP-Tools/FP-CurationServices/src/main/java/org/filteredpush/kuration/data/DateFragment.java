@@ -1,6 +1,7 @@
 package org.filteredpush.kuration.data;
 
 import org.datakurator.data.provenance.BaseRecord;
+import org.datakurator.data.provenance.FFDQRecord;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +9,7 @@ import java.util.Map;
 /**
  * Created by lowery on 11/8/16.
  */
-public class DateFragment extends BaseRecord {
+public class DateFragment extends FFDQRecord {
     private String scopeTestValue;
 
     public DateFragment(String recordId, String eventDate, String year, String month,
