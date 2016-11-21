@@ -3,16 +3,13 @@ package org.filteredpush.kuration.validators;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.datakurator.data.DateFragment;
-import org.datakurator.data.Update;
 import org.datakurator.data.annotations.*;
-import org.datakurator.data.annotations.CurationStage;
 import org.datakurator.data.annotations.GlobalContext;
 import org.datakurator.data.annotations.NamedContext;
-import org.datakurator.data.assertions.Improvement;
-import org.datakurator.data.assertions.Measure;
-import org.datakurator.data.assertions.Validation;
 import org.datakurator.data.provenance.*;;
 import org.filteredpush.kuration.util.DateUtils;
+
+import java.util.Collections;
 
 @GlobalContext(actorName = "Event date validator")
 public class AnnotatedDateValidator implements Curation {
@@ -111,9 +108,10 @@ public class AnnotatedDateValidator implements Curation {
 
         if (!DateUtils.isEmpty(record.getEventDate())) {
             if (duration > 0) {
-                m.complete(new Update("durationInSeconds", Long.toString(duration)), "Number of seconds in this dwc:eventDate");
+                m.complete(Collections.singletonMap("durationInSeconds", Long.toString(duration)),
+                        "Number of seconds in this dwc:eventDate");
             } else {
-                m.incomplete(new Update("durationInSeconds", Long.toString(duration)),
+                m.incomplete(Collections.singletonMap("durationInSeconds", Long.toString(duration)),
                         "dwc:eventDate does not contain an interval of time");
             }
         } else {
@@ -296,7 +294,8 @@ public class AnnotatedDateValidator implements Curation {
                     record.getYear(), record.getMonth(), record.getDay());
 
             if (newEventDate!=null) {
-                i.fillIn(new Update("eventDate", newEventDate), "Constructed event date from atomic parts.");
+                i.fillIn(Collections.singletonMap("eventDate", newEventDate),
+                        "Constructed event date from atomic parts.");
                 record.setScopeTestValue(newEventDate);
             } else {
                 i.prereqUnmet("Unable to construct an event date from atomic parts.");
