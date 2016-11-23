@@ -18,7 +18,6 @@ package org.filteredpush.kuration.validators;
 
 import java.util.*;
 
-import org.datakurator.data.annotations.*;
 import org.datakurator.data.provenance.BaseRecord;
 import org.datakurator.data.provenance.CurationStage;
 import org.datakurator.data.provenance.GlobalContext;
