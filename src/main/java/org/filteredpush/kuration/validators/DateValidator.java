@@ -270,7 +270,7 @@ public class DateValidator {
 				String extractedVerbatimDate = DateUtils.createEventDateFromParts(record.getVerbatimEventDate(), null, null,
 						null, null, null);
 
-				if (record.getEventDate().trim().equals(extractedVerbatimDate.trim())) {
+				if (extractedVerbatimDate != null && record.getEventDate().trim().equals(extractedVerbatimDate.trim())) {
 					v.compliant("dwc:verbatimEventDate parses to the same value as dwc:eventDate.");
 				} else {
 					v.nonCompliant("dwc:verbatimEventDate does not parse to the same value as dwc:eventDate " +
