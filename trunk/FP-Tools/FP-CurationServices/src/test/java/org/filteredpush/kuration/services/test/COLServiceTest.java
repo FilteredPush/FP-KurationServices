@@ -95,6 +95,9 @@ public class COLServiceTest {
         assertEquals(CurationComment.UNABLE_CURATED.toString(), scientificNameService.getCurationStatus().toString());
         
         scientificNameService.validateScientificName("Speranza trilinearia", "");
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        logger.debug(scientificNameService.getCorrectedAuthor());
         //assertTrue(scientificNameService.getCorrectedScientificName().equals(""));
         assertTrue(scientificNameService.getCurationStatus().toString().equals(CurationComment.UNABLE_CURATED.toString()));
     }
