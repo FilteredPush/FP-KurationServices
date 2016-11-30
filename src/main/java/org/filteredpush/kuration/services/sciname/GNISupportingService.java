@@ -17,6 +17,8 @@
  */
 package org.filteredpush.kuration.services.sciname;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -25,6 +27,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpParams;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Node;
@@ -33,6 +36,8 @@ import org.filteredpush.kuration.util.CurationException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -53,6 +58,8 @@ import java.util.Vector;
  */
 public class GNISupportingService {
 	
+	private static final Log logger = LogFactory.getLog(GNISupportingService.class);
+
 	
 	   /**
 	    * Parse name into scientific name and authorship using result returned from 
@@ -74,10 +81,13 @@ public class GNISupportingService {
 
 	       try {
                HttpPost httpPost = new HttpPost(GNINameParsingURL);
+               HttpGet httpGet = new HttpGet(GNINameParsingURL + "?names=" + URLEncoder.encode(name, "UTF-8"));
                httpPost.setEntity(new UrlEncodedFormEntity(parameters));
-               HttpResponse resp = httpclient.execute(httpPost);
+               HttpResponse resp = httpclient.execute(httpGet);
 	           long statusCode = resp.getStatusLine().getStatusCode();
 	           if(statusCode!=200){
+	        	   logger.error(statusCode);
+	        	   logger.error(resp.getStatusLine().getReasonPhrase());
 	               throw new CurationException("Failed to parse name of "+ name+" by accessing GNI name parser service at: " +GNINameParsingURL);
 	           }           
                InputStream reponseStream = resp.getEntity().getContent();
@@ -109,7 +119,8 @@ public class GNISupportingService {
 	    * lexical groups of GNI to be used as a fuzzy match against names in authoritative data sources. 
 	    * 
 	    * @param scientificName the name for which to find a lexical group.
-	    * @param sourceID the GNI ID of the data source which must provide the returned name.  
+	    * @param sourceID the GNI ID of the data source which must provide the returned name (or a pipe
+	    *    delimited list of GNI IDs for data sources).  
 	    * @return the scientific name string in the same lexical group as the scientificName provided
 	    * which is also a name provided to GNI by the sourceID.
 	    * @throws CurationException
@@ -121,16 +132,22 @@ public class GNISupportingService {
 
            List<NameValuePair> parameters = new ArrayList<NameValuePair>();
            parameters.add(new BasicNameValuePair("names", scientificName));
-           parameters.add(new BasicNameValuePair("data_sources", sourceID));
+           parameters.add(new BasicNameValuePair("best_match_only", "true"));
+           parameters.add(new BasicNameValuePair("data_source_ids", sourceID));
 	       
-	       //System.out.println("Searching GNI for " + scientificName + " with limit of dataSource = " + sourceID);
+	       logger.debug("Searching GNI for " + scientificName + " with limit of best_match_only and data_source_ids = " + sourceID);
 	       
 	       try {
                HttpPost httpPost = new HttpPost(GNINameResolverURL);
                httpPost.setEntity(new UrlEncodedFormEntity(parameters));
+               logger.debug(httpPost.getURI());
+               logger.debug(scientificName);
+               logger.debug(sourceID);
                HttpResponse resp = httpclient.execute(httpPost);
 	           long statusCode = resp.getStatusLine().getStatusCode();
 	           if(statusCode!=200){
+	        	   logger.error(statusCode);
+	        	   logger.error(resp.getStatusLine().getReasonPhrase());
 	               throw new CurationException("Failed to search for the ScientificName in the same lexical group as "+ scientificName+" and from source "+sourceID+ " by accessing GNI service at: " +GNINameResolverURL);
 	           }           
                InputStream reponseStream = resp.getEntity().getContent();
@@ -138,8 +155,12 @@ public class GNISupportingService {
 	           //parse the output
 	           SAXReader reader = new SAXReader();
 	           Document document = reader.read(reponseStream);
-	           Node nameStringNode = document.selectSingleNode("/records/record/data_source_id[.="+sourceID+"]/following-sibling::name_string");
+	           // logger.debug(document.asXML());
+	           // Node nameStringNode = document.selectSingleNode("/records/record/data_source_id[.="+sourceID+"]/following-sibling::name_string");
+	           // Node nameStringNode = document.selectSingleNode("/hash/data/datum/results/result/data_source_id[.="+sourceID+"]/following-sibling::name-string");
+	           Node nameStringNode = document.selectSingleNode("/hash/data/datum/results/result/name-string");
 	           if(nameStringNode == null){
+	        	   logger.debug("xml node not found");
 	               //can't find any name string which is in the same lexical group as the queried one and comes from IPNI
 	               return null;
 	           }           
@@ -150,6 +171,88 @@ public class GNISupportingService {
 	       } catch (DocumentException e) {
 	           throw new CurationException("Failed to get the IPNI source ID by parsing the response from GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
 	       }           
+	   }		   
+	   
+	   
+	   /**
+	    * Given a scientific name return a name string that is the best match found in the global
+	    * names resolver.  This method allows name matches found in GNI to be used as a fuzzy match 
+	    * against names in authoritative data sources. 
+	    * 
+	    * @param scientificName the name for which to find a lexical group.
+	    * @param sourceID the GNI ID of the data source which must provide the returned name.  
+	    * @return the scientific name string in the same lexical group as the scientificName provided
+	    * which is also a name provided to GNI by the sourceID.
+	    * @throws CurationException
+	    */
+	   public static String searchAnyInGNI(String scientificName) throws CurationException{
+           org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
+           httpclient.getParams().setIntParameter(CoreConnectionPNames.SO_TIMEOUT,5000);
+           httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
+
+           List<NameValuePair> parameters = new ArrayList<NameValuePair>();
+           parameters.add(new BasicNameValuePair("names", scientificName));
+           parameters.add(new BasicNameValuePair("best_match_only", "true"));
+	       
+	       //System.out.println("Searching GNI for " + scientificName + " with limit of dataSource = " + sourceID);
+	       
+	       try {
+               HttpPost httpPost = new HttpPost(GNINameResolverURL);
+               httpPost.setEntity(new UrlEncodedFormEntity(parameters));
+               logger.debug(httpPost.getURI());
+               logger.debug(scientificName);
+               HttpResponse resp = httpclient.execute(httpPost);
+	           long statusCode = resp.getStatusLine().getStatusCode();
+	           if(statusCode!=200){
+	        	   logger.error(statusCode);
+	        	   logger.error(resp.getStatusLine().getReasonPhrase());
+	               throw new CurationException("Failed to search for the ScientificName in the same lexical group as "+ scientificName+" and from any source by accessing GNI service at: " +GNINameResolverURL);
+	           }           
+               InputStream reponseStream = resp.getEntity().getContent();
+	           
+	           //parse the output
+	           SAXReader reader = new SAXReader();
+	           Document document = reader.read(reponseStream);
+	           logger.debug(document.asXML());
+	           // Node nameStringNode = document.selectSingleNode("/records/record/data_source_id[.="+sourceID+"]/following-sibling::name_string");
+	           // Node nameStringNode = document.selectSingleNode("/hash/data/datum/results/result/data_source_id[.="+sourceID+"]/following-sibling::name-string");
+	           Node nameStringNode = document.selectSingleNode("/hash/data/datum/results/result/name-string");
+	           if(nameStringNode == null){
+	        	   logger.debug("xml node not found");
+	               //can't find any name string which is in the same lexical group as the queried one and comes from IPNI
+	               return null;
+	           }           
+	           System.out.println("GNI match: " + nameStringNode.getText());
+	           return nameStringNode.getText();            
+	       } catch (IOException e) {
+	           throw new CurationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
+	       } catch (DocumentException e) {
+	           throw new CurationException("Failed to get the IPNI source ID by parsing the response from GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
+	       }           
+	   }	   
+	   
+	   /**
+	    * Fallback to GNI to look for matching name strings.  Finds the best matching name from GNI in 
+	    * any data source. 
+	    * 
+	    * @param scientificName the name to check.
+	    * @return a string vector containing the scientificName and the scientificNameAuthorship.
+	    * @throws CurationException
+	    */
+	   public static Vector<String> resolveDataSourcesNameInLexicalGroupFromGNIAny(String scientificName) throws CurationException{
+		   
+
+		   Vector<String> result = null;
+
+			//search name in GNI
+			String nameFromIPNIInLexicalGroup = searchAnyInGNI(scientificName);
+			if(nameFromIPNIInLexicalGroup != null){
+				//parse name into scientific name and author by using the name parsing service in GNI
+				result = parseName(nameFromIPNIInLexicalGroup);
+			} 
+	
+		   
+		   return result;
 	   }	   
 	   
 	   /**
@@ -171,33 +274,39 @@ public class GNISupportingService {
 		   sourcesToCheck.add("AmphibiaWeb");
 		   sourcesToCheck.add("AntWeb");
 		   sourcesToCheck.add("ZooKeys");
+		   sourcesToCheck.add("ZooBank");
 		   sourcesToCheck.add("Diatoms");
 		   sourcesToCheck.add("Catalog of Fishes");
+		   sourcesToCheck.add("Mantodea Species File");
+		   sourcesToCheck.add("Orthoptera Species File");
+		   sourcesToCheck.add("The Mammal Species of The World");
+		   sourcesToCheck.add("The International Plant Names Index");
+		   sourcesToCheck.add("World Register of Marine Species");
+		   sourcesToCheck.add("The International Plant Names Index");
+		   sourcesToCheck.add("The Paleobiology Database");
 
 		   Vector<String> result = null;
 		   
-		   boolean found = false;
-		   
+		   StringBuilder dataSourceIds = new StringBuilder(); 
 		   Iterator<String> i = sourcesToCheck.iterator();
-		   while (i.hasNext() && !found) { 
+		   while (i.hasNext()) { 
 			   String source = i.next();
 			   String dataSourceId = null;
-			   
-			   if(dataSourceId == null){
-				   dataSourceId = GNISupportingService.getGNIDataSourceID(source);
-			   }
+			   dataSourceId = GNISupportingService.getGNIDataSourceID(source);
 
 			   //If GNI doesn't support the data source of IPNI, then do nothing.
 			   if(dataSourceId != null){
-				   //search name in GNI
-				   String nameFromIPNIInLexicalGroup = searchLexicalGroupInGNI(scientificName,dataSourceId);
-				   if(nameFromIPNIInLexicalGroup != null){
-					   //parse name into scientific name and author by using the name parsing service in GNI
-					   result = parseName(nameFromIPNIInLexicalGroup);
-					   found = true;
-				   } 
+				   if (dataSourceIds.length()>0) { dataSourceIds.append("|"); } 
+				   dataSourceIds.append(dataSourceId);
 			   }
 		   }
+		   
+		   //search name in GNI
+		   String nameFromIPNIInLexicalGroup = searchLexicalGroupInGNI(scientificName,dataSourceIds.toString());
+		   if(nameFromIPNIInLexicalGroup != null){
+			   //parse name into scientific name and author by using the name parsing service in GNI
+				result = parseName(nameFromIPNIInLexicalGroup);
+		   } 
 		   
 		   return result;
 	   }   
@@ -253,7 +362,8 @@ public class GNISupportingService {
 	   }	   
 	   
 	   private final static String GNIResourceURL = "http://gni.globalnames.org/data_sources.xml";
-	   private final static String GNINameResolverURL = "http://gni.globalnames.org/name_resolver.xml";
+	   //private final static String GNINameResolverURL = "http://gni.globalnames.org/name_resolver.xml";
+	   private final static String GNINameResolverURL = "http://resolver.globalnames.org/name_resolvers.xml";
 	   private final static String GNINameParsingURL = "http://gni.globalnames.org/parsers.xml";	   
 
 	   

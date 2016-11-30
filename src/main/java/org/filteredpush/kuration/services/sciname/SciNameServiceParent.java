@@ -349,7 +349,9 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
 				   if (hasResult){
 					   if(validatedNameUsage.getAuthorship().trim().equals("") || validatedNameUsage.getScientificName().trim().equals("")){
 						   // TODO: Handle botanical autonyms, which shouldn't have authorship.
-						   setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+						   if (getCurationStatus()==null) { 
+						      setCurationStatus(CurationComment.UNABLE_DETERMINE_VALIDITY);
+						   }
 						   if (validatedNameUsage.getAuthorship().trim().equals("")) {  addToComment("validated author is empty"); } 
 						   if (validatedNameUsage.getScientificName().trim().equals("")) {  addToComment("validated sciName is empty"); } 
 					   }else {
@@ -514,8 +516,9 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
             // access the GNI and try to get the name that is in the lexical group and from IPNI
             Vector<String> resolvedNameInfo = null;
             try {
-                resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNI(taxon);
+                resolvedNameInfo = GNISupportingService.resolveDataSourcesNameInLexicalGroupFromGNIAny(taxon);
             } catch (CurationException e) {
+            	logger.error(e.getMessage(),e);
                 addToComment("Fail to access GNI service");
                 failedAtGNI = true;
                 //return false;
@@ -555,6 +558,7 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
                     //failed to find the name got from GNI in service
                     setCurationStatus(CurationComment.UNABLE_CURATED);
                     addToComment("Found a name in the same lexical group as the searched scientific name but failed to find this name in remote service.");
+                    logger.debug(getCurationStatus());
                 }else{
                 	// TODO: Not sure that we need to set this, nameSearchAgainstServices should set it.
                     //correct the wrong scientific name or author by searching in both IPNI and GNI
