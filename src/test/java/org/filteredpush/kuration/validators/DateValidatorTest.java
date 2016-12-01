@@ -22,20 +22,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.datakurator.data.ffdq.DQReport;
 import org.filteredpush.kuration.util.CurationComment;
-import org.filteredpush.kuration.util.DateUtils;
 import org.junit.Test;
 import org.kurator.akka.data.CurationStep;
-import org.datakurator.data.ffdq.AssertionsConfig;
 import org.datakurator.data.ffdq.DQReportBuilder;
-import org.datakurator.data.ffdq.assertions.*;
 import org.datakurator.data.provenance.BaseRecord;
-import org.datakurator.data.provenance.CurationStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author mole
