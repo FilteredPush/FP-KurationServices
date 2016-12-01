@@ -636,7 +636,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 		try {
 			results = geolocateService.georef2(country, stateProvince, county, locality, hwyX, findWaterbody, restrictToLowestAdm, doUncert, doPoly, displacePoly, polyAsLinkID, languageKey);
             int numResults = results.getNumResults();
-            this.addToComment(" found " + numResults + " possible georeferences with Geolocate engine:" + results.getEngineVersion());
+            addToComment(" found " + numResults + " possible georeferences with Geolocate engine:" + results.getEngineVersion());
             for (int i=0; i<numResults; i++) { 
             	Georef_Result res = results.getResultSet(i);
             	try {

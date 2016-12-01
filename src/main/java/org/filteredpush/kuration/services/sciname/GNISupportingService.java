@@ -164,7 +164,7 @@ public class GNISupportingService {
 	               //can't find any name string which is in the same lexical group as the queried one and comes from IPNI
 	               return null;
 	           }           
-	           System.out.println("GNI match: " + nameStringNode.getText());
+	           logger.debug("GNI match: " + nameStringNode.getText());
 	           return nameStringNode.getText();            
 	       } catch (IOException e) {
 	           throw new CurationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
@@ -222,7 +222,7 @@ public class GNISupportingService {
 	               //can't find any name string which is in the same lexical group as the queried one and comes from IPNI
 	               return null;
 	           }           
-	           System.out.println("GNI match: " + nameStringNode.getText());
+	           logger.debug("GNI match: " + nameStringNode.getText());
 	           return nameStringNode.getText();            
 	       } catch (IOException e) {
 	           throw new CurationException("Failed to get the IPNI source ID by accessing GNI service at: "+GNINameResolverURL+" for: "+e.getMessage());
