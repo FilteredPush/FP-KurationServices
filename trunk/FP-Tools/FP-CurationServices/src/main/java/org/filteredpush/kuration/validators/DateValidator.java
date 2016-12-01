@@ -27,7 +27,7 @@ import org.kurator.akka.data.CurationStep;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.filteredpush.kuration.util.CurationComment;
-import org.filteredpush.kuration.util.DateUtils;
+import org.filteredpush.qc.date.DateUtils;
 import org.datakurator.data.provenance.*;
 
 
