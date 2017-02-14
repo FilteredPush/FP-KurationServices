@@ -58,7 +58,7 @@
             <artifactId>kurator-ffdq</artifactId>
             <version>1.0.3-SNAPSHOT</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.filteredpush</groupId>
             <artifactId>event_date_qc</artifactId>

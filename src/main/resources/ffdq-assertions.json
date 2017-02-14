@@ -1,6 +1,8 @@
 {
   "measures": [
     {
+      "label": "Event Date Completeness",
+
       "context": {
         "name": "eventDateIsNotEmpty"
       },
@@ -10,6 +12,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label" : "Event Date Contains Time",
+
       "context": {
         "name": "eventDateContainsEventTime"
       },
@@ -19,6 +23,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Event Date Precision",
+
       "context": {
         "name": "durationInSeconds"
       },
@@ -31,6 +37,8 @@
 
   "validations": [
     {
+      "label": "Event Date Is Consistent",
+
       "context": {
         "name": "eventDateIsConsistent"
       },
@@ -40,6 +48,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Check Verbatim Event Date",
+
       "context": {
         "name": "checkVerbatimEventDate"
       },
@@ -49,6 +59,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Event Date Is Consistent With Event Time",
+
       "context": {
         "name": "eventDateIsConsistentWithEventTime"
       },
@@ -58,6 +70,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Event Date Is Specific To Day",
+
       "context": {
         "name": "eventDateSpecificToDay"
       },
@@ -67,6 +81,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Event Date Is Specific To Month",
+
       "context": {
         "name": "eventDateSpecificToMonthScale"
       },
@@ -76,6 +92,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Event Date Is Specific To Year",
+
       "context": {
         "name": "eventDateSpecificToYearScale"
       },
@@ -85,6 +103,8 @@
       "mechanism": "Kurator: ${actor.class} - ${actor.name}"
     },
     {
+      "label": "Event Date Is Specific To Decade",
+
       "context": {
         "name": "eventDateSpecificToDecadeScale"
       },
@@ -97,6 +117,8 @@
 
   "improvements": [
     {
+      "label": "Event Date From Atomic Parts",
+
       "context": {
         "name": "eventDateFromAtomicParts"
       },
