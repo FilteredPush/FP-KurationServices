@@ -56,13 +56,13 @@
         <dependency>
             <groupId>org.datakurator</groupId>
             <artifactId>kurator-ffdq</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
+            <version>1.0.3-SNAPSHOT</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.filteredpush</groupId>
             <artifactId>event_date_qc</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.3</version>
         </dependency>
 
         <dependency>

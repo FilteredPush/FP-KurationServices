@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.datakurator.data.ffdq.DQReport;
+import org.datakurator.postprocess.FFDQPostProcessor;
 import org.filteredpush.kuration.util.CurationComment;
 import org.junit.Test;
 import org.kurator.akka.data.CurationStep;
@@ -30,6 +31,7 @@ import org.datakurator.data.provenance.BaseRecord;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Collections;
 
 /**
  * @author mole
@@ -116,6 +118,9 @@ public class DateValidatorTest {
 		StringWriter writer = new StringWriter();
 
 		report.write(writer);
+
+		config = DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json");
+		FFDQPostProcessor postProcessor = new FFDQPostProcessor(Collections.singletonList(report), config);
 
 		System.out.println(writer.toString());
 	}
