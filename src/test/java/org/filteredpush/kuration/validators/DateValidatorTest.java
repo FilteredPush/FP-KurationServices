@@ -117,7 +117,7 @@ public class DateValidatorTest {
 		DQReport report = builder.createReport(testResult);
 		StringWriter writer = new StringWriter();
 
-		report.write(writer);
+		writer.append(report.toJson());
 
 		config = DateValidatorTest.class.getResourceAsStream("/ffdq-assertions.json");
 		FFDQPostProcessor postProcessor = new FFDQPostProcessor(Collections.singletonList(report), config);
