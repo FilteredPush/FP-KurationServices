@@ -1,2 +1,4 @@
 target/
 FP-CurationServices.log
+.idea/
+*.iml
