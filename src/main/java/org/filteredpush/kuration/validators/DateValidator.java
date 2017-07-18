@@ -585,11 +585,16 @@ public class DateValidator {
 		if (!DateUtils.isEmpty(verbatimEventDate)) { 
 			String extractedVerbatimDate = DateUtils.createEventDateFromParts(verbatimEventDate, null, null, null, null, null);
 			if (!DateUtils.isEmpty(eventDate)) {
-				if (eventDate.trim().equals(extractedVerbatimDate.trim())) {
-					result.addCurationComment("dwc:verbatimEventDate parses to the same value as dwc:eventDate.");
+				if (extractedVerbatimDate != null) {
+					if (eventDate.trim().equals(extractedVerbatimDate.trim())) {
+						result.addCurationComment("dwc:verbatimEventDate parses to the same value as dwc:eventDate.");
+					} else {
+						result.addCurationComment("dwc:verbatimEventDate does not parse to the same value as dwc:eventDate ([" + extractedVerbatimDate + "]<>[" + eventDate + "]). ");
+					}
 				} else {
-					result.addCurationComment("dwc:verbatimEventDate does not parse to the same value as dwc:eventDate (["+ extractedVerbatimDate + "]<>["+ eventDate +"]). ");
-			    }
+					result.addCurationComment("Unable to parse dwc:verbatimEventDate");
+					result.replaceCurationStates(CurationComment.UNABLE_DETERMINE_VALIDITY);
+				}
 			} else {
 				result.addCurationComment("dwc:verbatimEventDate has a value while dwc:eventDate does not (["+ extractedVerbatimDate + "]). ");
 			}
