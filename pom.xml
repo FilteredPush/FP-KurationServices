@@ -162,6 +162,11 @@
 
     <repositories>
 
+        <repository>
+            <id>ossrh</id>
+            <name>Sonatype open source snapshot Repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
 
         <repository>
             <id>ncsa.oss-sonatype</id>
