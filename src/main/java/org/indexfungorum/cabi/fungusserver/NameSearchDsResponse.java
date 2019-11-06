@@ -32,7 +32,7 @@ public class NameSearchDsResponse  implements java.io.Serializable {
     /**
      * Sets the nameSearchDsResult value for this NameSearchDsResponse.
      * 
-     * @param nameSearchDsResult
+     * @param nameSearchDsResult to set
      */
     public void setNameSearchDsResult(org.indexfungorum.cabi.fungusserver.NameSearchDsResponseNameSearchDsResult nameSearchDsResult) {
         this.nameSearchDsResult = nameSearchDsResult;
@@ -88,12 +88,13 @@ public class NameSearchDsResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class NameSearchDsResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

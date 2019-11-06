@@ -1,4 +1,4 @@
-/**
+/*
  * AphiaNameServiceLocator.java
  *
  * This file was auto-generated from WSDL
@@ -9,7 +9,7 @@ package org.marinespecies.aphia.v1_0;
 
 public class AphiaNameServiceLocator extends org.apache.axis.client.Service implements org.marinespecies.aphia.v1_0.AphiaNameService {
 
-/**
+/*
  * The data is licensed under a Creative Commons 'BY' 4.0 License,
  * see http://creativecommons.org/licenses/by/4.0/deed.en. For more information,
  * please visit http://marinespecies.org/aphia.php?p=webservice.
@@ -71,7 +71,7 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
         AphiaNameServicePort_address = address;
     }
 
-    /**
+    /*
      * For the given interface, get the stub implementation.
      * If this service has no port for the given interface,
      * then ServiceException is thrown.
@@ -90,7 +90,7 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
         throw new javax.xml.rpc.ServiceException("There is no stub implementation for the interface:  " + (serviceEndpointInterface == null ? "null" : serviceEndpointInterface.getName()));
     }
 
-    /**
+    /*
      * For the given interface, get the stub implementation.
      * If this service has no port for the given interface,
      * then ServiceException is thrown.
@@ -124,7 +124,7 @@ public class AphiaNameServiceLocator extends org.apache.axis.client.Service impl
         return ports.iterator();
     }
 
-    /**
+    /*
     * Set the endpoint address for the specified port name.
     */
     public void setEndpointAddress(java.lang.String portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
@@ -138,7 +138,7 @@ if ("AphiaNameServicePort".equals(portName)) {
         }
     }
 
-    /**
+    /*
     * Set the endpoint address for the specified port name.
     */
     public void setEndpointAddress(javax.xml.namespace.QName portName, java.lang.String address) throws javax.xml.rpc.ServiceException {

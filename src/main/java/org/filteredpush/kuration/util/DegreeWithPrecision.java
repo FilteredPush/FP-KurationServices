@@ -16,8 +16,8 @@ public class DegreeWithPrecision {
 	private Integer decimalPlaces;
 	
 	/**
-	 * @param degrees
-	 * @param decimalPlaces
+	 * @param degrees to set
+	 * @param decimalPlaces to set
 	 */
 	public DegreeWithPrecision(Double degrees, int decimalPlaces) {
 		this.degrees = degrees;

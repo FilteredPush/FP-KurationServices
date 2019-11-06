@@ -123,7 +123,7 @@ public class GNISupportingService {
 	    *    delimited list of GNI IDs for data sources).  
 	    * @return the scientific name string in the same lexical group as the scientificName provided
 	    * which is also a name provided to GNI by the sourceID.
-	    * @throws CurationException
+	    * @throws CurationException if unable to obtain a result from GNI
 	    */
 	   public static String searchLexicalGroupInGNI(String scientificName, String sourceID) throws CurationException{
            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
@@ -180,10 +180,9 @@ public class GNISupportingService {
 	    * against names in authoritative data sources. 
 	    * 
 	    * @param scientificName the name for which to find a lexical group.
-	    * @param sourceID the GNI ID of the data source which must provide the returned name.  
 	    * @return the scientific name string in the same lexical group as the scientificName provided
 	    * which is also a name provided to GNI by the sourceID.
-	    * @throws CurationException
+	    * @throws CurationException if unable to obtain a result from GNI
 	    */
 	   public static String searchAnyInGNI(String scientificName) throws CurationException{
            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
@@ -237,7 +236,7 @@ public class GNISupportingService {
 	    * 
 	    * @param scientificName the name to check.
 	    * @return a string vector containing the scientificName and the scientificNameAuthorship.
-	    * @throws CurationException
+	    * @throws CurationException in case of an error
 	    */
 	   public static Vector<String> resolveDataSourcesNameInLexicalGroupFromGNIAny(String scientificName) throws CurationException{
 		   
@@ -262,7 +261,7 @@ public class GNISupportingService {
 	    * 
 	    * @param scientificName the name to check.
 	    * @return a string vector containing the scientificName and the scientificNameAuthorship.
-	    * @throws CurationException
+	    * @throws CurationException in case of an error
 	    */
 	   public static Vector<String> resolveDataSourcesNameInLexicalGroupFromGNI(String scientificName) throws CurationException{
 		   
@@ -315,8 +314,9 @@ public class GNISupportingService {
 	    * Find the ID of a GNI data source from the data source title (e.g. IPNI, WoRMS, Index Fungorum, 
 	    * AmphibiaWeb, AntWeb, ZooKeys, Diatoms, Catalog of Fishes
 	    * 
-	    * @param title
-	    * @return
+	    * @param title of the service
+	    * @return the idNode value of the data source
+        * @throws CurationException on a problem with the GNI service
 	    */
 	   public static String getGNIDataSourceID(String title)  throws CurationException  {
            org.apache.http.client.HttpClient httpclient = new DefaultHttpClient();
@@ -355,7 +355,7 @@ public class GNISupportingService {
 	   /**
 	    * Wrapper for getGNIDataSourceID("IPNI"). 
 	    * @return GNI dataSourceID for data source with the title IPNI.
-	    * @throws CurationException
+	    * @throws CurationException if unable to get the IPNI source id in GNI
 	    */
 	   public static String getIPNISourceId() throws CurationException {
 		   return getGNIDataSourceID("IPNI");         

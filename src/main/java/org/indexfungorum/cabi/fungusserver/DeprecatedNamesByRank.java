@@ -36,7 +36,7 @@ public class DeprecatedNamesByRank  implements java.io.Serializable {
     /**
      * Sets the rank value for this DeprecatedNamesByRank.
      * 
-     * @param rank
+     * @param rank to set
      */
     public void setRank(java.lang.String rank) {
         this.rank = rank;
@@ -56,7 +56,7 @@ public class DeprecatedNamesByRank  implements java.io.Serializable {
     /**
      * Sets the startDate value for this DeprecatedNamesByRank.
      * 
-     * @param startDate
+     * @param startDate to set
      */
     public void setStartDate(java.lang.String startDate) {
         this.startDate = startDate;
@@ -125,12 +125,13 @@ public class DeprecatedNamesByRank  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -142,7 +143,7 @@ public class DeprecatedNamesByRank  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

@@ -32,7 +32,7 @@ public class NamesByCurrentKey  implements java.io.Serializable {
     /**
      * Sets the currentKey value for this NamesByCurrentKey.
      * 
-     * @param currentKey
+     * @param currentKey to set
      */
     public void setCurrentKey(long currentKey) {
         this.currentKey = currentKey;
@@ -83,12 +83,13 @@ public class NamesByCurrentKey  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -100,7 +101,7 @@ public class NamesByCurrentKey  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

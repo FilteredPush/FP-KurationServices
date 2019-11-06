@@ -496,9 +496,10 @@ public class InternalDateValidationService extends BaseCurationService implement
     }
 
     /**
-     * 
-     * @param eventDate
-     * @param collector
+     * Depricated method, check if date is within collector's lifespan.
+     *
+     * @param eventDate to check 
+     * @param collector to check
      * @return true if event date is inside collector's lifespan, false if it is outside, null if collector
      * is not found or if there is an error.
      */
@@ -739,11 +740,11 @@ public class InternalDateValidationService extends BaseCurationService implement
     }
 
 
-    /**
+    /* *
      * Given a string that may be a date or a date range, extract an interval of
      * time from that date range.
      * 
-     * @param eventDate
+     * @param eventDate 
      * @return
      */
 /*    
@@ -788,7 +789,7 @@ public class InternalDateValidationService extends BaseCurationService implement
     	return result;
     }
 */    
-    /**
+    /* *
      * Extract a joda date from an event date.
      * 
      * @param eventDate
@@ -813,7 +814,7 @@ public class InternalDateValidationService extends BaseCurationService implement
     	return result;
     }    
 */    
-    /**
+    /* *
      * Test to see if a string appears to represent a date range.
      * 
      * @param eventDate to check

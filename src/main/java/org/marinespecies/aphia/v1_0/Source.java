@@ -56,7 +56,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the source_id value for this Source.
      * 
-     * @param source_id
+     * @param source_id to set
      */
     public void setSource_id(int source_id) {
         this.source_id = source_id;
@@ -76,7 +76,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the use value for this Source.
      * 
-     * @param use
+     * @param use to set
      */
     public void setUse(java.lang.String use) {
         this.use = use;
@@ -96,7 +96,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the reference value for this Source.
      * 
-     * @param reference
+     * @param reference to set
      */
     public void setReference(java.lang.String reference) {
         this.reference = reference;
@@ -116,7 +116,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the page value for this Source.
      * 
-     * @param page
+     * @param page to set
      */
     public void setPage(java.lang.String page) {
         this.page = page;
@@ -136,7 +136,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the url value for this Source.
      * 
-     * @param url
+     * @param url to set
      */
     public void setUrl(java.lang.String url) {
         this.url = url;
@@ -156,7 +156,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the link value for this Source.
      * 
-     * @param link
+     * @param link to set
      */
     public void setLink(java.lang.String link) {
         this.link = link;
@@ -176,7 +176,7 @@ public class Source  implements java.io.Serializable {
     /**
      * Sets the fulltext value for this Source.
      * 
-     * @param fulltext
+     * @param fulltext to set
      */
     public void setFulltext(java.lang.String fulltext) {
         this.fulltext = fulltext;
@@ -299,12 +299,13 @@ public class Source  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -316,7 +317,7 @@ public class Source  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

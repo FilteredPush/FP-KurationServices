@@ -44,7 +44,7 @@ public class Georef_Result_Set  implements java.io.Serializable {
     /**
      * Sets the engineVersion value for this Georef_Result_Set.
      * 
-     * @param engineVersion
+     * @param engineVersion to set
      */
     public void setEngineVersion(java.lang.String engineVersion) {
         this.engineVersion = engineVersion;
@@ -64,7 +64,7 @@ public class Georef_Result_Set  implements java.io.Serializable {
     /**
      * Sets the numResults value for this Georef_Result_Set.
      * 
-     * @param numResults
+     * @param numResults to set
      */
     public void setNumResults(int numResults) {
         this.numResults = numResults;
@@ -84,7 +84,7 @@ public class Georef_Result_Set  implements java.io.Serializable {
     /**
      * Sets the executionTimems value for this Georef_Result_Set.
      * 
-     * @param executionTimems
+     * @param executionTimems to set
      */
     public void setExecutionTimems(double executionTimems) {
         this.executionTimems = executionTimems;
@@ -104,7 +104,7 @@ public class Georef_Result_Set  implements java.io.Serializable {
     /**
      * Sets the resultSet value for this Georef_Result_Set.
      * 
-     * @param resultSet
+     * @param resultSet to set
      */
     public void setResultSet(edu.tulane.museum.www.webservices.Georef_Result[] resultSet) {
         this.resultSet = resultSet;
@@ -206,12 +206,13 @@ public class Georef_Result_Set  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -223,7 +224,7 @@ public class Georef_Result_Set  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

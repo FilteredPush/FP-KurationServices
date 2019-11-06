@@ -514,14 +514,17 @@ public class DateValidator {
 //	}
 
 	/**
-	 *
-	 * @param eventDate
-	 * @param year
-	 * @param month
-	 * @param day
-	 * @param dayOfYear
-	 * @param eventTime
-	 * @return
+	 * validate the consistency of the values in the Event terms for a record.
+     *
+	 * @param eventDate the dwc:eventDate value
+	 * @param year the dwc:year value
+	 * @param month the dwc:month value
+	 * @param day the dwc:day value
+	 * @param startDayOfYear the dwc:startDayOfYear value
+	 * @param endDayOfYear the dwc:endDayOfYear value
+	 * @param eventTime the dwc:eventTime value
+	 * @param verbatimEventDate the dwc:verbatimEventDate value
+	 * @return a CurationStep value reporting on the consistency of the provided terms.
 	 */
 	public static CurationStep validateEventConsistency(String eventDate, String year, String month, String day, String startDayOfYear, String endDayOfYear, String eventTime, String verbatimEventDate) { 
 		Map<String,String> initialValues = new HashMap<String,String>();
@@ -531,6 +534,7 @@ public class DateValidator {
 		initialValues.put("month", month);
 		initialValues.put("day", day);
 		initialValues.put("startDayOfYear", startDayOfYear);
+		initialValues.put("endDayOfYear", endDayOfYear);
 		initialValues.put("eventTime", eventTime);
 		initialValues.put("verbatimEventDate", verbatimEventDate);
 		String specification = "";

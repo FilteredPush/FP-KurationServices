@@ -44,7 +44,7 @@ public class LocalityDescription  implements java.io.Serializable {
     /**
      * Sets the localityString value for this LocalityDescription.
      * 
-     * @param localityString
+     * @param localityString to set
      */
     public void setLocalityString(java.lang.String localityString) {
         this.localityString = localityString;
@@ -64,7 +64,7 @@ public class LocalityDescription  implements java.io.Serializable {
     /**
      * Sets the country value for this LocalityDescription.
      * 
-     * @param country
+     * @param country to set
      */
     public void setCountry(java.lang.String country) {
         this.country = country;
@@ -84,7 +84,7 @@ public class LocalityDescription  implements java.io.Serializable {
     /**
      * Sets the state value for this LocalityDescription.
      * 
-     * @param state
+     * @param state to set
      */
     public void setState(java.lang.String state) {
         this.state = state;
@@ -104,7 +104,7 @@ public class LocalityDescription  implements java.io.Serializable {
     /**
      * Sets the county value for this LocalityDescription.
      * 
-     * @param county
+     * @param county to set
      */
     public void setCounty(java.lang.String county) {
         this.county = county;
@@ -199,12 +199,13 @@ public class LocalityDescription  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -216,7 +217,7 @@ public class LocalityDescription  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

@@ -32,7 +32,7 @@ public class AuthorSearchDsResponse  implements java.io.Serializable {
     /**
      * Sets the authorSearchDsResult value for this AuthorSearchDsResponse.
      * 
-     * @param authorSearchDsResult
+     * @param authorSearchDsResult to set
      */
     public void setAuthorSearchDsResult(org.indexfungorum.cabi.fungusserver.AuthorSearchDsResponseAuthorSearchDsResult authorSearchDsResult) {
         this.authorSearchDsResult = authorSearchDsResult;
@@ -88,12 +88,13 @@ public class AuthorSearchDsResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class AuthorSearchDsResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

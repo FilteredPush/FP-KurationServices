@@ -112,14 +112,14 @@ public class CurationStep {
 	}
 	
 	/**
-	 * @return the actorName
+	 * @return the validationMethodSpecification
 	 */
 	public String getValidationMethodSpecification() {
 		return validationMethodSpecification;
 	}
 
 	/**
-	 * @param actorName the actorName to set
+	 * @param validationMethodSpecification the validationMethodSpecification to set
 	 */
 	public void setValidationMethodSpecification(String validationMethodSpecification) {
 		this.validationMethodSpecification = validationMethodSpecification;

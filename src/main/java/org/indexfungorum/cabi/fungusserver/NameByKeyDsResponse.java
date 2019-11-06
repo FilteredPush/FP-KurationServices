@@ -32,7 +32,7 @@ public class NameByKeyDsResponse  implements java.io.Serializable {
     /**
      * Sets the nameByKeyDsResult value for this NameByKeyDsResponse.
      * 
-     * @param nameByKeyDsResult
+     * @param nameByKeyDsResult to set
      */
     public void setNameByKeyDsResult(org.indexfungorum.cabi.fungusserver.NameByKeyDsResponseNameByKeyDsResult nameByKeyDsResult) {
         this.nameByKeyDsResult = nameByKeyDsResult;
@@ -88,12 +88,13 @@ public class NameByKeyDsResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class NameByKeyDsResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

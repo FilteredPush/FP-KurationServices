@@ -56,8 +56,8 @@ public class SciNameServiceUtil {
      * Check to see if a scientific name is an autonym 
      * (trinomial where specific and infraspecific epithets are the same).
      * 
-     * @param scientificName
-     * @return
+     * @param scientificName to check
+     * @return true if autonym, otherwise false.
      */
     public static boolean isAutonym(String scientificName) {
     	boolean result = false;
@@ -353,9 +353,15 @@ public class SciNameServiceUtil {
    /**
     * Resolve a taxon name with the GBIF checklist bank service: http://ecat-dev.gbif.org/api/clb
     *
-    * @param taxon
-    * @param author
+    * @param taxon to check
+    * @param author to check
     * @param rank one letter rank code for the gbif service rank constraint.
+    * @param kingdom for the taxon
+    * @param phylum for the taxon
+    * @param tclass class for the taxon
+    * @param order for the taxon
+    * @param family for the taxon
+    * @param datasetKey to use
     * @return the GBIF ChecklistBank ID for the name if found, otherwise null.
     * //@throws ptolemy.kernel.util.CurrationException
     */

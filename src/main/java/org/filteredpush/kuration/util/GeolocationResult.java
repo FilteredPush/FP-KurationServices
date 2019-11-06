@@ -36,10 +36,11 @@ public class GeolocationResult implements Serializable {
 	private Integer confidence;
 	private String parseString;
 	/**
-	 * @param latitude
-	 * @param longitude
-	 * @param confidence
-	 * @param parseString
+	 * @param latitude to set
+	 * @param longitude to set
+	 * @param coordinateUncertainty to set
+	 * @param confidence to set
+	 * @param parseString to set
 	 */
 	public GeolocationResult(double latitude, double longitude, int coordinateUncertainty, int confidence,
 			String parseString) {

@@ -32,7 +32,7 @@ public class NamesByCurrentKeyResponse  implements java.io.Serializable {
     /**
      * Sets the namesByCurrentKeyResult value for this NamesByCurrentKeyResponse.
      * 
-     * @param namesByCurrentKeyResult
+     * @param namesByCurrentKeyResult to set
      */
     public void setNamesByCurrentKeyResult(org.indexfungorum.cabi.fungusserver.NamesByCurrentKeyResponseNamesByCurrentKeyResult namesByCurrentKeyResult) {
         this.namesByCurrentKeyResult = namesByCurrentKeyResult;
@@ -88,12 +88,13 @@ public class NamesByCurrentKeyResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class NamesByCurrentKeyResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

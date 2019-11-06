@@ -32,7 +32,7 @@ public class NameByKey  implements java.io.Serializable {
     /**
      * Sets the nameKey value for this NameByKey.
      * 
-     * @param nameKey
+     * @param nameKey to set
      */
     public void setNameKey(long nameKey) {
         this.nameKey = nameKey;
@@ -83,12 +83,13 @@ public class NameByKey  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -100,7 +101,7 @@ public class NameByKey  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

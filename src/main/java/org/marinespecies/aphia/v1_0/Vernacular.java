@@ -40,7 +40,7 @@ public class Vernacular  implements java.io.Serializable {
     /**
      * Sets the vernacular value for this Vernacular.
      * 
-     * @param vernacular
+     * @param vernacular to set
      */
     public void setVernacular(java.lang.String vernacular) {
         this.vernacular = vernacular;
@@ -60,7 +60,7 @@ public class Vernacular  implements java.io.Serializable {
     /**
      * Sets the language_code value for this Vernacular.
      * 
-     * @param language_code
+     * @param language_code to set
      */
     public void setLanguage_code(java.lang.String language_code) {
         this.language_code = language_code;
@@ -80,7 +80,7 @@ public class Vernacular  implements java.io.Serializable {
     /**
      * Sets the language value for this Vernacular.
      * 
-     * @param language
+     * @param language to set
      */
     public void setLanguage(java.lang.String language) {
         this.language = language;
@@ -158,13 +158,14 @@ public class Vernacular  implements java.io.Serializable {
     }
 
     /**
-     * Return type metadata object
+     * Return type metadata object 
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -176,7 +177,7 @@ public class Vernacular  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

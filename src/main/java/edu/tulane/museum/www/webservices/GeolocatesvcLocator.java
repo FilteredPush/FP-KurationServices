@@ -65,7 +65,7 @@ public class GeolocatesvcLocator extends org.apache.axis.client.Service implemen
         geolocatesvcSoap_address = address;
     }
 
-    /**
+    /*
      * For the given interface, get the stub implementation.
      * If this service has no port for the given interface,
      * then ServiceException is thrown.
@@ -84,7 +84,7 @@ public class GeolocatesvcLocator extends org.apache.axis.client.Service implemen
         throw new javax.xml.rpc.ServiceException("There is no stub implementation for the interface:  " + (serviceEndpointInterface == null ? "null" : serviceEndpointInterface.getName()));
     }
 
-    /**
+    /*
      * For the given interface, get the stub implementation.
      * If this service has no port for the given interface,
      * then ServiceException is thrown.
@@ -118,7 +118,7 @@ public class GeolocatesvcLocator extends org.apache.axis.client.Service implemen
         return ports.iterator();
     }
 
-    /**
+    /*
     * Set the endpoint address for the specified port name.
     */
     public void setEndpointAddress(java.lang.String portName, java.lang.String address) throws javax.xml.rpc.ServiceException {
@@ -132,7 +132,7 @@ if ("geolocatesvcSoap".equals(portName)) {
         }
     }
 
-    /**
+    /*
     * Set the endpoint address for the specified port name.
     */
     public void setEndpointAddress(javax.xml.namespace.QName portName, java.lang.String address) throws javax.xml.rpc.ServiceException {

@@ -32,7 +32,7 @@ public class DeprecatedNamesByRankResponse  implements java.io.Serializable {
     /**
      * Sets the deprecatedNamesByRankResult value for this DeprecatedNamesByRankResponse.
      * 
-     * @param deprecatedNamesByRankResult
+     * @param deprecatedNamesByRankResult to set
      */
     public void setDeprecatedNamesByRankResult(org.indexfungorum.cabi.fungusserver.DeprecatedNamesByRankResponseDeprecatedNamesByRankResult deprecatedNamesByRankResult) {
         this.deprecatedNamesByRankResult = deprecatedNamesByRankResult;
@@ -88,12 +88,13 @@ public class DeprecatedNamesByRankResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class DeprecatedNamesByRankResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

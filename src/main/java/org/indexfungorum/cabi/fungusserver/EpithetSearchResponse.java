@@ -32,7 +32,7 @@ public class EpithetSearchResponse  implements java.io.Serializable {
     /**
      * Sets the epithetSearchResult value for this EpithetSearchResponse.
      * 
-     * @param epithetSearchResult
+     * @param epithetSearchResult to set
      */
     public void setEpithetSearchResult(org.indexfungorum.cabi.fungusserver.EpithetSearchResponseEpithetSearchResult epithetSearchResult) {
         this.epithetSearchResult = epithetSearchResult;
@@ -88,12 +88,13 @@ public class EpithetSearchResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class EpithetSearchResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

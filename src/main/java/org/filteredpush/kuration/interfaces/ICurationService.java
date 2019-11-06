@@ -28,7 +28,7 @@ public interface ICurationService {
     /**
      * Turn on/off the use of caching by the curation service. 
      * 
-     * @param use
+     * @param use to set caching
      */
     public void setUseCache(boolean use);
     /**
@@ -42,7 +42,7 @@ public interface ICurationService {
      * Add a comment to the list of comments for validation of a record 
      * by the implemented service.  Adds an appropriate comment separator.
      * 
-     * @param aComment comment to add to the current list of comments.
+     * @param comment comment to add to the current list of comments.
      */
 	public void addToComment(String comment);
 	
@@ -52,7 +52,7 @@ public interface ICurationService {
      * Add a service to the list of invoked services for validation of a record.
      * Adds an appropriate separator.
      * 
-     * @param aServiceName comment to add to the current list of comments.
+     * @param serviceName comment to add to the current list of comments.
      */
 	public void addToServiceName(String serviceName);
 	/**

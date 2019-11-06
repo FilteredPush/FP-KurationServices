@@ -68,7 +68,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the WGS84Coordinate value for this Georef_Result.
      * 
-     * @param WGS84Coordinate
+     * @param WGS84Coordinate to set
      */
     public void setWGS84Coordinate(edu.tulane.museum.www.webservices.GeographicPoint WGS84Coordinate) {
         this.WGS84Coordinate = WGS84Coordinate;
@@ -88,7 +88,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the parsePattern value for this Georef_Result.
      * 
-     * @param parsePattern
+     * @param parsePattern to set
      */
     public void setParsePattern(java.lang.String parsePattern) {
         this.parsePattern = parsePattern;
@@ -108,7 +108,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the precision value for this Georef_Result.
      * 
-     * @param precision
+     * @param precision to set
      */
     public void setPrecision(java.lang.String precision) {
         this.precision = precision;
@@ -128,7 +128,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the score value for this Georef_Result.
      * 
-     * @param score
+     * @param score to set
      */
     public void setScore(int score) {
         this.score = score;
@@ -148,7 +148,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the uncertaintyRadiusMeters value for this Georef_Result.
      * 
-     * @param uncertaintyRadiusMeters
+     * @param uncertaintyRadiusMeters to set
      */
     public void setUncertaintyRadiusMeters(java.lang.String uncertaintyRadiusMeters) {
         this.uncertaintyRadiusMeters = uncertaintyRadiusMeters;
@@ -168,7 +168,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the uncertaintyPolygon value for this Georef_Result.
      * 
-     * @param uncertaintyPolygon
+     * @param uncertaintyPolygon to set
      */
     public void setUncertaintyPolygon(java.lang.String uncertaintyPolygon) {
         this.uncertaintyPolygon = uncertaintyPolygon;
@@ -188,7 +188,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the referenceLocation value for this Georef_Result.
      * 
-     * @param referenceLocation
+     * @param referenceLocation to set
      */
     public void setReferenceLocation(java.lang.String referenceLocation) {
         this.referenceLocation = referenceLocation;
@@ -208,7 +208,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the displacedDistanceMiles value for this Georef_Result.
      * 
-     * @param displacedDistanceMiles
+     * @param displacedDistanceMiles to set
      */
     public void setDisplacedDistanceMiles(double displacedDistanceMiles) {
         this.displacedDistanceMiles = displacedDistanceMiles;
@@ -228,7 +228,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the displacedHeadingDegrees value for this Georef_Result.
      * 
-     * @param displacedHeadingDegrees
+     * @param displacedHeadingDegrees to set
      */
     public void setDisplacedHeadingDegrees(double displacedHeadingDegrees) {
         this.displacedHeadingDegrees = displacedHeadingDegrees;
@@ -248,7 +248,7 @@ public class Georef_Result  implements java.io.Serializable {
     /**
      * Sets the debug value for this Georef_Result.
      * 
-     * @param debug
+     * @param debug to set
      */
     public void setDebug(java.lang.String debug) {
         this.debug = debug;
@@ -405,12 +405,13 @@ public class Georef_Result  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -422,7 +423,7 @@ public class Georef_Result  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

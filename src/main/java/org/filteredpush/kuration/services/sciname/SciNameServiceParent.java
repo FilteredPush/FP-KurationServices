@@ -104,8 +104,8 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
     /**
      * Convenience method for validating scientific names on minimal information.
      * 
-     * @param scientificNameToValidate
-     * @param authorToValidate
+     * @param scientificName  the scientific name to validate
+     * @param author the author To Validate
      * 
      */
 	public void validateScientificName(String scientificName, String author){
@@ -116,19 +116,19 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
     * Validate a scientific name, make results of the validation available from other methods of this
     * class.
     * 
-    * @param scientificNameToValidate
-    * @param authorToValidate
-    * @param genus
-    * @param subgenus
-    * @param specificEpithet
-    * @param verbatimTaxonRank
-    * @param infraspecificEpithet
-    * @param taxonRank
-    * @param kingdom
-    * @param phylum
-    * @param tclass
-    * @param order
-    * @param family
+    * @param scientificNameToValidate the scientific name to validate
+    * @param authorToValidate the author to validate
+    * @param genus the generic name
+    * @param subgenus the subgeneric name
+    * @param specificEpithet the specific epithet 
+    * @param verbatimTaxonRank the verbatim taxon rank
+    * @param infraspecificEpithet the infraspecific epithet
+    * @param taxonRank the normalized taxon trank
+    * @param kingdom the kingdom placement of the scientific name 
+    * @param phylum the phylum placement of the scientific name
+    * @param tclass the class placement of the scientific name
+    * @param order the ordinal placement of the scientific name
+    * @param family the familial placement of the scientific name
     * @param genericEpithet not yet available as a DarwinCore term.
     */
    public void validateScientificName(String scientificNameToValidate, String authorToValidate, String genus, String subgenus, String specificEpithet, String verbatimTaxonRank, String infraspecificEpithet, String taxonRank, String kingdom, String phylum, String tclass, String order, String family, String genericEpithet) {
@@ -492,15 +492,15 @@ public abstract class SciNameServiceParent extends BaseCurationService implement
    /**
     * Attempt to validate the provided scientific name against alternative services.
     * 
-    * @param taxon
-    * @param author
-    * @param taxonRank
-    * @param kingdom
-    * @param phylum
-    * @param tclass
-    * @param order
-    * @param family
-    * @return
+    * @param taxon to validate
+    * @param author to validate
+    * @param taxonRank to validate
+    * @param kingdom for the taxon
+    * @param phylum for the taxon 
+    * @param tclass for the taxon
+    * @param order for the taxon
+    * @param family for the taxon
+    * @return true if validated against service.
     */
     protected boolean validateScientificNameAgainstServices(String taxon, String author, String taxonRank, String kingdom, String phylum, String tclass, String order, String family){
         boolean failedAtGNI = false;

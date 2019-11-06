@@ -36,7 +36,7 @@ public class GeographicPoint  implements java.io.Serializable {
     /**
      * Sets the latitude value for this GeographicPoint.
      * 
-     * @param latitude
+     * @param latitude to set
      */
     public void setLatitude(double latitude) {
         this.latitude = latitude;
@@ -46,7 +46,7 @@ public class GeographicPoint  implements java.io.Serializable {
     /**
      * Gets the longitude value for this GeographicPoint.
      * 
-     * @return longitude
+     * @return longitude 
      */
     public double getLongitude() {
         return longitude;
@@ -56,7 +56,7 @@ public class GeographicPoint  implements java.io.Serializable {
     /**
      * Sets the longitude value for this GeographicPoint.
      * 
-     * @param longitude
+     * @param longitude to set
      */
     public void setLongitude(double longitude) {
         this.longitude = longitude;
@@ -115,12 +115,13 @@ public class GeographicPoint  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -132,7 +133,7 @@ public class GeographicPoint  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

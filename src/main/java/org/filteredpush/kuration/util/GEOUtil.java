@@ -32,12 +32,13 @@ public class GEOUtil {
 	private static double EARTH_MEAN_RADIUS_METERS = 6370949.0d;  // Mean radius, from CRC
 	
 	/**
+     * Obtain a distance in kilometers between two points.
 	 * 
-	 * @param lat1
-	 * @param lng1
-	 * @param lat2
-	 * @param lng2
-	 * @return
+	 * @param lat1 latitude of start point
+	 * @param lng1 longitude of start point
+	 * @param lat2 latitude of end point 
+	 * @param lng2 longitude of end point
+	 * @return distance in kilometers between points 
 	 */
 	public static double getDistanceKm(double lat1, double lng1, double lat2, double lng2)
 	{
@@ -125,11 +126,11 @@ public class GEOUtil {
 	 */
 	
     /**
-     * Test to see if an x/y coordinate is inside any of a set of polygons.
+     * Test to see if an x/y coordinate is inside (or outside) any of a set of polygons.
      * 
-     * @param polygonSet
-     * @param Xvalue
-     * @param Yvalue
+     * @param polygonSet the 2d path for a set of polygons 
+     * @param Xvalue the x value to check for location withing the polygonSet
+     * @param Yvalue the y value to check for location within the pologon set
      * @param invertSense true to invert the result, false to keep the result unchanged.
      * 
      * @return true if the x/y value is inside polygonSet and invertSense is false 
@@ -146,9 +147,9 @@ public class GEOUtil {
     /**
      * Test to see if an x/y coordinate is inside any of a set of polygons.
      * 
-     * @param polygonSet
-     * @param Xvalue
-     * @param Yvalue
+     * @param polygonSet the 2d path for a set of polygons 
+     * @param Xvalue the x value to check for location withing the polygonSet
+     * @param Yvalue the y value to check for location within the pologon set
      * 
      * @return true if the x/y value is inside polygonSet
      *         false if the x/y value is outside or on a boundary of polygonSet
@@ -191,10 +192,10 @@ public class GEOUtil {
 	/**
 	 * Test to see if a point is near (to a specified distance in km) or within a country.
 	 * 
-	 * @param country
-	 * @param latitude
-	 * @param longitude
-	 * @param distanceKm
+	 * @param country the country to provide the bounds
+	 * @param latitude the latitude to check 
+	 * @param longitude the longitude to check
+	 * @param distanceKm buffer distance outside the country bounds 
 	 * 
 	 * @return true if latitude/longitude is inside or within distanceKm of any part of country.
 	 */
@@ -224,11 +225,11 @@ public class GEOUtil {
 	/**
 	 * Is a given point inside a primary division (state/province) of a given country.
 	 * 
-	 * @param country
-	 * @param primaryDivision
-	 * @param latitude
-	 * @param longitude
-	 * @return 
+	 * @param country the country for the primary division
+	 * @param primaryDivision the primary division to provide the bounds
+	 * @param latitude to check
+	 * @param longitude to check
+	 * @return true if latitude/longitude are a point inside the specified primary civision
 	 */
 	public static boolean isPointInPrimary(String country, String primaryDivision, double latitude, double longitude) { 
 		boolean result = false;
@@ -277,9 +278,9 @@ public class GEOUtil {
 	/**
 	 * Is a combination of country name and primary division (state/province) name known the primary division data set. 
 	 * 
-	 * @param country
-	 * @param primaryDivision
-	 * @return
+	 * @param country the country to check
+	 * @param primaryDivision the primary division to check
+	 * @return true if the combination of primary division and the country are found in the data set, 
 	 */
 	public static boolean isPrimaryKnown(String country, String primaryDivision) { 
 		boolean result = false;

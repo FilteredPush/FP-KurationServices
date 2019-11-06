@@ -32,7 +32,7 @@ public class UpdatedNamesResponse  implements java.io.Serializable {
     /**
      * Sets the updatedNamesResult value for this UpdatedNamesResponse.
      * 
-     * @param updatedNamesResult
+     * @param updatedNamesResult to set
      */
     public void setUpdatedNamesResult(org.indexfungorum.cabi.fungusserver.UpdatedNamesResponseUpdatedNamesResult updatedNamesResult) {
         this.updatedNamesResult = updatedNamesResult;
@@ -88,12 +88,13 @@ public class UpdatedNamesResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class UpdatedNamesResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

@@ -32,7 +32,7 @@ public class AuthorSearchDsResponseAuthorSearchDsResult  implements java.io.Seri
     /**
      * Sets the _any value for this AuthorSearchDsResponseAuthorSearchDsResult.
      * 
-     * @param _any
+     * @param _any to set
      */
     public void set_any(org.apache.axis.message.MessageElement [] _any) {
         this._any = _any;
@@ -89,12 +89,13 @@ public class AuthorSearchDsResponseAuthorSearchDsResult  implements java.io.Seri
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -106,7 +107,7 @@ public class AuthorSearchDsResponseAuthorSearchDsResult  implements java.io.Seri
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

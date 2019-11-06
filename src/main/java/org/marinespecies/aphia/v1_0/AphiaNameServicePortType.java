@@ -1,4 +1,4 @@
-/**
+/*
  * AphiaNameServicePortType.java
  *
  * This file was auto-generated from WSDL
@@ -9,25 +9,24 @@ package org.marinespecies.aphia.v1_0;
 
 public interface AphiaNameServicePortType extends java.rmi.Remote {
 
-    /**
-     * <strong>Get the AphiaID for a given name.<br />
-     * <br/>Parameters:
+    /*
+     * <strong>Get the AphiaID for a given name.</strong><br>
+     * <br>Parameters:
      *    <ul>
      *     <li><u>marine_only</u>: limit to marine taxa. Default=true.</li>
      * </ul>
-     * <br/>Returns:
+     * <br>Returns:
      * <ul>
      * 	<li> NULL when no matches are found</li>
      * 	<li> -999 when multiple matches was found</li>
      * 	<li> an integer (AphiaID) when one exact match was found</li>
      * </ul>
-     *   </strong>
      */
     public int getAphiaID(java.lang.String scientificname, boolean marine_only) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get one or more matching (max. 50) AphiaRecords for
-     * a given name.<br/>Parameters:
+     * a given name.</strong><br>Parameters:
      *    <ul>
      *     <li><u>like</u>: add a '%'-sign added after the ScientificName
      * (SQL LIKE function). Default=true.</li>
@@ -38,20 +37,19 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      * 	<li><u>offset</u>: starting recordnumber, when retrieving next chunk
      * of (50) records. Default=1.</li>
      *    </ul>
-     *   </strong><br /> For the structure of the returned AphiaRecords,
+     *  <br> For the structure of the returned AphiaRecords,
      * please refer to the function getAphiaRecordByID()
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[] getAphiaRecords(java.lang.String scientificname, boolean like, boolean fuzzy, boolean marine_only, int offset) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get the correct name for a given AphiaID</strong>.
      */
     public java.lang.String getAphiaNameByID(int aphiaID) throws java.rmi.RemoteException;
 
-    /**
-     * <strong>Get the complete AphiaRecord for a given AphiaID.</strong><br
-     * />
-     *  The returned AphiaRecord has this format:<br /><ul><li><u><b>AphiaID</b></u>:
+    /*
+     * <strong>Get the complete AphiaRecord for a given AphiaID.</strong><br>
+     *  The returned AphiaRecord has this format:<br><ul><li><u><b>AphiaID</b></u>:
      * unique and persistent identifier within WoRMS. Primary key in the
      * database.</li><li><u><b>url</b></u>: HTTP URL to the AphiaRecord</li><li><u><b>scientificname</b></u>:
      * the full scientific name without authorship</li><li><u><b>authority</b></u>:
@@ -89,9 +87,9 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord getAphiaRecordByID(int aphiaID) throws java.rmi.RemoteException;
 
-    /**
-     * <strong>Get the Aphia Record for a given external identifier.
-     * <br/>Parameters:
+    /*
+     * <strong>Get the Aphia Record for a given external identifier.</strong>
+     * <br>Parameters:
      * <ul>
      *  <li>
      *   <u>type</u>: Should have one of the following values:
@@ -106,13 +104,13 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      *     <li><u>tsn</u>: ITIS Taxonomic Serial Number</li>
      *   </ul>
      *  </li>
-     * </ul></strong>
+     * </ul>
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord getAphiaRecordByExtID(java.lang.String id, java.lang.String type) throws java.rmi.RemoteException;
 
-    /**
-     * <strong>Get any external identifier(s) for a given AphiaID.
-     * <br/>Parameters:
+    /*
+     * <strong>Get any external identifier(s) for a given AphiaID.</strong>
+     * <br>Parameters:
      * <ul>
      *  <li>
      *   <u>type</u>: Should have one of the following values:
@@ -127,16 +125,16 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      *     <li><u>tsn</u>: ITIS Taxonomic Serial Number</li>
      *   </ul>
      *  </li>
-     * </ul></strong>
+     * </ul>
      */
     public java.lang.String[] getExtIDbyAphiaID(int aphiaID, java.lang.String type) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>For each given scientific name, try to find one or
-     * more AphiaRecords.<br/>
+     * more AphiaRecords.</strong><br>
      *   This allows you to match multiple names in one call. Limited to
      * 500 names at once for performance reasons.
-     *   <br/>Parameters:
+     *   <br>Parameters:
      *    <ul>
      *     <li><u>like</u>: add a '%'-sign after the ScientificName (SQL
      * LIKE function). Default=false.</li>
@@ -144,31 +142,30 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      * 2013-07-17). Please use the function matchAphiaRecordsByNames() for
      * fuzzy/near matching.</li>
      * 	<li><u>marine_only</u>: limit to marine taxa. Default=true.</li>
-     *    </ul></strong>
-     *    <br /> For the structure of the returned AphiaRecords, please refer
+     *    </ul>
+     *    <br> For the structure of the returned AphiaRecords, please refer
      * to the function getAphiaRecordByID()
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[][] getAphiaRecordsByNames(java.lang.String[] scientificnames, boolean like, boolean fuzzy, boolean marine_only) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get one or more Aphia Records (max. 50) for a given
-     * vernacular.</strong><br/>Parameters:
+     * vernacular.</strong><br>Parameters:
      *    <ul>
      *     <li><u>like</u>: add a '%'-sign before and after the input (SQL
      * LIKE '%vernacular%' function). Default=false.</li>
      * 	<li><u>offset</u>: starting record number, when retrieving next chunk
      * of (50) records. Default=1.</li>
      *    </ul>
-     *   </strong>
-     *   <br /> For the structure of the returned AphiaRecords, please refer
+     *   <br> For the structure of the returned AphiaRecords, please refer
      * to the function getAphiaRecordByID()
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[] getAphiaRecordsByVernacular(java.lang.String vernacular, boolean like, int offset) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Lists all AphiaRecords (taxa) modified or added between
-     * a specific time interval.<br/>
-     *  <br/>Parameters:
+     * a specific time interval.</strong><br>
+     *  <br>Parameters:
      *   <ul>
      *    <li><u>startdate</u>: ISO 8601 formatted start date(time). Default=today().
      * i.e. 2015-03-06T15:38:40+00:00</li>
@@ -177,37 +174,37 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      *    <li><u>marine_only</u>: limit to marine taxa. Default=true.</li>
      * <li><u>offset</u>: starting record number, when retrieving next chunk
      * of (50) records. Default=1.</li>
-     *   </ul></strong>
-     *   <br /> For the structure of the returned AphiaRecords, please refer
+     *   </ul>
+     *   <br> For the structure of the returned AphiaRecords, please refer
      * to the function getAphiaRecordByID()
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[] getAphiaRecordsByDate(java.lang.String startdate, java.lang.String enddate, boolean marine_only, int offset) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get the complete classification for one taxon. This
      * also includes any sub or super ranks.</strong>
      */
     public org.marinespecies.aphia.v1_0.Classification getAphiaClassificationByID(int aphiaID) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get one or more sources/references including links,
      * for one AphiaID</strong>
      */
     public org.marinespecies.aphia.v1_0.Source[] getSourcesByAphiaID(int aphiaID) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get all synonyms for a given AphiaID.</strong>
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[] getAphiaSynonymsByID(int aphiaID) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>Get all vernaculars for a given AphiaID.</strong>
      */
     public org.marinespecies.aphia.v1_0.Vernacular[] getAphiaVernacularsByID(int aphiaID) throws java.rmi.RemoteException;
 
-    /**
-     * <strong>Get the direct children (max. 50) for a given AphiaID.</strong><br
-     * />Parameters:
+    /*
+     * <strong>Get the direct children (max. 50) for a given AphiaID.</strong><br>
+     * Parameters:
      *    <ul>
      * 	<li><u>offset</u>: starting record number, when retrieving next chunk
      * of (50) records. Default=1.</li>
@@ -216,17 +213,17 @@ public interface AphiaNameServicePortType extends java.rmi.Remote {
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[] getAphiaChildrenByID(int aphiaID, int offset, boolean marine_only) throws java.rmi.RemoteException;
 
-    /**
+    /*
      * <strong>For each given scientific name (may include authority),
      * try to find one or more AphiaRecords, using the TAXAMATCH fuzzy matching
-     * algorithm by Tony Rees.<br/>
+     * algorithm by Tony Rees.</strong><br>
      *  This allows you to (fuzzy) match multiple names in one call. Limited
      * to 50 names at once for performance reasons.
-     *  <br/>Parameters:
+     *  <br>Parameters:
      *   <ul>
      * 	<li><u>marine_only</u>: limit to marine taxa. Default=true.</li>
-     *   </ul></strong>
-     *   <br /> For the structure of the returned AphiaRecords, please refer
+     *   </ul>
+     *   <br> For the structure of the returned AphiaRecords, please refer
      * to the function getAphiaRecordByID()
      */
     public org.marinespecies.aphia.v1_0.AphiaRecord[][] matchAphiaRecordsByNames(java.lang.String[] scientificnames, boolean marine_only) throws java.rmi.RemoteException;

@@ -32,7 +32,7 @@ public class NameByKeyRDFResponse  implements java.io.Serializable {
     /**
      * Sets the nameByKeyRDFResult value for this NameByKeyRDFResponse.
      * 
-     * @param nameByKeyRDFResult
+     * @param nameByKeyRDFResult to set
      */
     public void setNameByKeyRDFResult(org.indexfungorum.cabi.fungusserver.NameByKeyRDFResponseNameByKeyRDFResult nameByKeyRDFResult) {
         this.nameByKeyRDFResult = nameByKeyRDFResult;
@@ -88,12 +88,13 @@ public class NameByKeyRDFResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class NameByKeyRDFResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

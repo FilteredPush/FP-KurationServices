@@ -89,7 +89,7 @@ public class IPNIService extends SciNameServiceParent {
 	 * @param taxon the scientific name to check
 	 * @param author the author to find amongst the results
 	 * @return a list of NameUsage instances on for each case of a matching name and authorship
-	 * @throws CurationException
+	 * @throws CurationException if unable to connect with the IPNI service.
 	 */
 	public List<NameUsage> plantNameSearch(String taxon, String author) throws CurationException { 
 		List<NameUsage> result = new ArrayList<NameUsage>();

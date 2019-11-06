@@ -40,7 +40,7 @@ public class NewNamesInRange  implements java.io.Serializable {
     /**
      * Sets the rank value for this NewNamesInRange.
      * 
-     * @param rank
+     * @param rank to set
      */
     public void setRank(java.lang.String rank) {
         this.rank = rank;
@@ -50,7 +50,7 @@ public class NewNamesInRange  implements java.io.Serializable {
     /**
      * Gets the startDate value for this NewNamesInRange.
      * 
-     * @return startDate
+     * @return startDate 
      */
     public java.lang.String getStartDate() {
         return startDate;
@@ -60,7 +60,7 @@ public class NewNamesInRange  implements java.io.Serializable {
     /**
      * Sets the startDate value for this NewNamesInRange.
      * 
-     * @param startDate
+     * @param startDate to set
      */
     public void setStartDate(java.lang.String startDate) {
         this.startDate = startDate;
@@ -80,7 +80,7 @@ public class NewNamesInRange  implements java.io.Serializable {
     /**
      * Sets the endDate value for this NewNamesInRange.
      * 
-     * @param endDate
+     * @param endDate to set
      */
     public void setEndDate(java.lang.String endDate) {
         this.endDate = endDate;
@@ -162,12 +162,13 @@ public class NewNamesInRange  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -179,7 +180,7 @@ public class NewNamesInRange  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

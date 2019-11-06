@@ -32,7 +32,7 @@ public class NamesByCurrentKeyDsResponse  implements java.io.Serializable {
     /**
      * Sets the namesByCurrentKeyDsResult value for this NamesByCurrentKeyDsResponse.
      * 
-     * @param namesByCurrentKeyDsResult
+     * @param namesByCurrentKeyDsResult to set
      */
     public void setNamesByCurrentKeyDsResult(org.indexfungorum.cabi.fungusserver.NamesByCurrentKeyDsResponseNamesByCurrentKeyDsResult namesByCurrentKeyDsResult) {
         this.namesByCurrentKeyDsResult = namesByCurrentKeyDsResult;
@@ -88,12 +88,13 @@ public class NamesByCurrentKeyDsResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class NamesByCurrentKeyDsResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

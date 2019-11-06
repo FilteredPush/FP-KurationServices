@@ -30,7 +30,6 @@ public class Classification  implements java.io.Serializable {
            this.child = child;
     }
 
-
     /**
      * Gets the aphiaID value for this Classification.
      * 
@@ -44,7 +43,7 @@ public class Classification  implements java.io.Serializable {
     /**
      * Sets the aphiaID value for this Classification.
      * 
-     * @param aphiaID
+     * @param aphiaID to set
      */
     public void setAphiaID(int aphiaID) {
         this.aphiaID = aphiaID;
@@ -64,7 +63,7 @@ public class Classification  implements java.io.Serializable {
     /**
      * Sets the rank value for this Classification.
      * 
-     * @param rank
+     * @param rank to set
      */
     public void setRank(java.lang.String rank) {
         this.rank = rank;
@@ -84,7 +83,7 @@ public class Classification  implements java.io.Serializable {
     /**
      * Sets the scientificname value for this Classification.
      * 
-     * @param scientificname
+     * @param scientificname to set
      */
     public void setScientificname(java.lang.String scientificname) {
         this.scientificname = scientificname;
@@ -104,7 +103,7 @@ public class Classification  implements java.io.Serializable {
     /**
      * Sets the child value for this Classification.
      * 
-     * @param child
+     * @param child to set
      */
     public void setChild(org.marinespecies.aphia.v1_0.Classification child) {
         this.child = child;
@@ -191,12 +190,13 @@ public class Classification  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata object.
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -208,7 +208,7 @@ public class Classification  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

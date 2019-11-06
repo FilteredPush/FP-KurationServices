@@ -32,7 +32,7 @@ public class NameByKeyResponse  implements java.io.Serializable {
     /**
      * Sets the nameByKeyResult value for this NameByKeyResponse.
      * 
-     * @param nameByKeyResult
+     * @param nameByKeyResult to set
      */
     public void setNameByKeyResult(org.indexfungorum.cabi.fungusserver.NameByKeyResponseNameByKeyResult nameByKeyResult) {
         this.nameByKeyResult = nameByKeyResult;
@@ -88,12 +88,13 @@ public class NameByKeyResponse  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +106,7 @@ public class NameByKeyResponse  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

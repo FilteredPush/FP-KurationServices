@@ -150,10 +150,10 @@ public class NameUsage implements LinneanClassification {
 	 * authorship, and with sourceAuthority and authorNameComparator.  Expected 
 	 * formulation for a call to validate on SciNameServiceParent.
 	 * 
-	 * @param sourceAuthority
-	 * @param authorNameComparator
-	 * @param originalScientificName
-	 * @param originalAuthorship
+	 * @param sourceAuthority to check
+	 * @param authorNameComparator to check
+	 * @param originalScientificName to check
+	 * @param originalAuthorship to check
 	 */
 	public NameUsage(String sourceAuthority, AuthorNameComparator authorNameComparator, String originalScientificName, String originalAuthorship) { 
 		init();
@@ -700,7 +700,7 @@ public class NameUsage implements LinneanClassification {
 	}
 
 	/**
-	 * @param scientificNameStringSimilarity the scientificNameStringSimilarity to set
+	 * @param scientificNameStringEditDistance the scientificNameStringSimilarity to set
 	 */
 	public void setScientificNameStringEditDistance(
 			double scientificNameStringEditDistance) {
@@ -716,7 +716,7 @@ public class NameUsage implements LinneanClassification {
 	}
 
 	/**
-	 * @param authorshipStringSimilarity the authorshipStringSimilarity to set
+	 * @param authorshipStringEditDistance the authorshipStringSimilarity to set
 	 */
 	public void setAuthorshipStringEditDistance(double authorshipStringEditDistance) {
 		this.authorshipStringSimilarity = authorshipStringEditDistance;

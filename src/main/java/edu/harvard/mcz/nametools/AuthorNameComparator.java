@@ -34,8 +34,8 @@ public abstract class AuthorNameComparator {
 	 * Compare two authorship strings, and assert a comparison between the
 	 * two in the form of a NameComparison.
 	 * 
-	 * @param anAuthor
-	 * @param toOtherAuthor
+	 * @param anAuthor to compare
+	 * @param toOtherAuthor to compare
 	 * @return a string description classifying the match between the two 
 	 * authorship strings, with awareness of string distance, parenthesies, and year.
 	 * 
@@ -46,9 +46,9 @@ public abstract class AuthorNameComparator {
 	/**
 	 * Given an authorship string and a kingdom, guess at the correct author name comparator to use.
 	 * 
-	 * @param authorship
-	 * @param kingdom
-	 * @return
+	 * @param authorship to check
+	 * @param kingdom to select a comparator type
+	 * @return an appropriate author name comaparator
 	 */
 	public static AuthorNameComparator authorNameComparatorFactory(String authorship, String kingdom) { 
 		AuthorNameComparator result = new ICZNAuthorNameComparator(.75d, .5d);
@@ -185,8 +185,8 @@ public abstract class AuthorNameComparator {
 	 * 0 (no similarity) to 1 (exact same strings), using a measure of the
 	 * string edit distance scaled to the length differences of the two strings.
 	 * 
-	 * @param string1
-	 * @param string2
+	 * @param string1 to compare
+	 * @param string2 to compare with string1
 	 * @return a double in the range 0 to 1.
 	 */
 	public static double stringSimilarity(String string1, String string2) {

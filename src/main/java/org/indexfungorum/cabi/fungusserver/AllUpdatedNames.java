@@ -1,4 +1,4 @@
-/**
+/*
  * AllUpdatedNames.java
  *
  * This file was auto-generated from WSDL
@@ -19,7 +19,7 @@ public class AllUpdatedNames  implements java.io.Serializable {
     }
 
 
-    /**
+    /*
      * Gets the startDate value for this AllUpdatedNames.
      * 
      * @return startDate
@@ -29,7 +29,7 @@ public class AllUpdatedNames  implements java.io.Serializable {
     }
 
 
-    /**
+    /*
      * Sets the startDate value for this AllUpdatedNames.
      * 
      * @param startDate
@@ -86,14 +86,14 @@ public class AllUpdatedNames  implements java.io.Serializable {
         typeDesc.addFieldDesc(elemField);
     }
 
-    /**
+    /*
      * Return type metadata object
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -105,7 +105,7 @@ public class AllUpdatedNames  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

@@ -23,8 +23,8 @@ public interface INewScientificNameValidationService {
 	 * 
 	 * TODO: This belongs inside SciNameServiceParent, not in the exposed interface.
 	 * 
-	 * @param authorship
-	 * @param kingdom
+	 * @param authorship to check
+	 * @param kingdom for the name using the authorship
 	 * @return an AuthorNameComparator
 	 */
 	public AuthorNameComparator getAuthorNameComparator(String authorship, String kingdom);

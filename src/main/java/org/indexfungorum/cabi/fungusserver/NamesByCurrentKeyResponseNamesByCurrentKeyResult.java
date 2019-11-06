@@ -32,7 +32,7 @@ public class NamesByCurrentKeyResponseNamesByCurrentKeyResult  implements java.i
     /**
      * Sets the _any value for this NamesByCurrentKeyResponseNamesByCurrentKeyResult.
      * 
-     * @param _any
+     * @param _any to set
      */
     public void set_any(org.apache.axis.message.MessageElement [] _any) {
         this._any = _any;
@@ -89,12 +89,13 @@ public class NamesByCurrentKeyResponseNamesByCurrentKeyResult  implements java.i
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -106,7 +107,7 @@ public class NamesByCurrentKeyResponseNamesByCurrentKeyResult  implements java.i
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*a
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(

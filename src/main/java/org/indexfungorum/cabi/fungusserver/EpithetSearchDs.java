@@ -40,7 +40,7 @@ public class EpithetSearchDs  implements java.io.Serializable {
     /**
      * Sets the searchText value for this EpithetSearchDs.
      * 
-     * @param searchText
+     * @param searchText to set
      */
     public void setSearchText(java.lang.String searchText) {
         this.searchText = searchText;
@@ -60,7 +60,7 @@ public class EpithetSearchDs  implements java.io.Serializable {
     /**
      * Sets the anywhereInText value for this EpithetSearchDs.
      * 
-     * @param anywhereInText
+     * @param anywhereInText to set
      */
     public void setAnywhereInText(boolean anywhereInText) {
         this.anywhereInText = anywhereInText;
@@ -80,7 +80,7 @@ public class EpithetSearchDs  implements java.io.Serializable {
     /**
      * Sets the maxNumber value for this EpithetSearchDs.
      * 
-     * @param maxNumber
+     * @param maxNumber to set
      */
     public void setMaxNumber(long maxNumber) {
         this.maxNumber = maxNumber;
@@ -152,12 +152,13 @@ public class EpithetSearchDs  implements java.io.Serializable {
 
     /**
      * Return type metadata object
+     * @return typeDesc metadata
      */
     public static org.apache.axis.description.TypeDesc getTypeDesc() {
         return typeDesc;
     }
 
-    /**
+    /*
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
@@ -169,7 +170,7 @@ public class EpithetSearchDs  implements java.io.Serializable {
             _javaType, _xmlType, typeDesc);
     }
 
-    /**
+    /*
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
