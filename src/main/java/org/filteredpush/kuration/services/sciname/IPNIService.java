@@ -51,6 +51,8 @@ public class IPNIService extends SciNameServiceParent {
 	
 	private static final Log logger = LogFactory.getLog(IPNIService.class);
 	
+	/** Currently redirecting to www.ipni.org/?q= which does not support the same API.
+	 */
 	private final static String IPNIurl = "http://www.ipni.org/ipni/simplePlantNameSearch.do";
     //private final static String IPNIurl = "http://lore.genomecenter.ucdavis.edu/cache/ipni.php";
     //private final static String IPNIurl = "http://localhost/cache/ipni.php";
@@ -277,6 +279,7 @@ public class IPNIService extends SciNameServiceParent {
         httpclient.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,30000);
 
         List<org.apache.http.NameValuePair> parameters = new ArrayList<org.apache.http.NameValuePair>();
+        parameters.add(new BasicNameValuePair("q", taxon));
         parameters.add(new BasicNameValuePair("find_wholeName", taxon));
         parameters.add(new BasicNameValuePair("output_format", outputFormat));
 		
@@ -287,7 +290,7 @@ public class IPNIService extends SciNameServiceParent {
             resp = httpclient.execute(httpPost);
             logger.debug(resp.getStatusLine());
             if (resp.getStatusLine().getStatusCode() != 200) {
-				throw new CurationException("IPNIService failed to send request to IPNI for "+resp.getStatusLine().getStatusCode());
+				throw new CurationException("IPNIService failed to send request to IPNI response code: "+resp.getStatusLine().getStatusCode());
 			}				
             InputStream response = resp.getEntity().getContent();
 			
