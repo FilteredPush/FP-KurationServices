@@ -85,15 +85,20 @@ public class InternalDateValidationServiceTest {
         assertEquals(CurationComment.UNABLE_CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
         
         // Try range partly overlapping
-        internalDateValidationService.validateDate("1848-08-24/1948-09-01","","","","","","2012-09-26 02:54:34","A.C. Cole");
+        // A.C. Cole, entomologist, service nolonger available, test with botanists.
+        //internalDateValidationService.validateDate("1848-08-24/1948-09-01","","","","","","2012-09-26 02:54:34","A.C. Cole");
+        internalDateValidationService.validateDate("1848-08-24/1948-09-01","","","","","","2012-09-26 02:54:34","Cole");
         assertEquals(CurationComment.CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
-        assertEquals("1918-01-01/1948-09-01",internalDateValidationService.getCorrectedDate());
-        internalDateValidationService.validateDate("1948-08-24/2048-09-01","","","","","","2012-09-26 02:54:34","A.C. Cole");
+        //assertEquals("1918-01-01/1948-09-01",internalDateValidationService.getCorrectedDate());
+        assertEquals("1910-01-01/1948-09-01",internalDateValidationService.getCorrectedDate());
+        //internalDateValidationService.validateDate("1948-08-24/2048-09-01","","","","","","2012-09-26 02:54:34","A.C. Cole");
+        internalDateValidationService.validateDate("1948-08-24/2048-09-01","","","","","","2012-09-26 02:54:34","A.G. Jones");
         assertEquals(CurationComment.CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
-        assertEquals("1948-08-24/1995-12-31",internalDateValidationService.getCorrectedDate());
-        internalDateValidationService.validateDate("1848-08-24/2048-09-01","","","","","","2012-09-26 02:54:34","A.C. Cole");
+        assertEquals("1948-08-24/2013-12-31",internalDateValidationService.getCorrectedDate());
+        //assertEquals("1948-08-24/1995-12-31",internalDateValidationService.getCorrectedDate());
+        internalDateValidationService.validateDate("1848-08-24/2048-09-01","","","","","","2012-09-26 02:54:34","A.G. Jones");
         assertEquals(CurationComment.CURATED.toString(), internalDateValidationService.getCurationStatus().toString());
-        assertEquals("1918-01-01/1995-12-31",internalDateValidationService.getCorrectedDate());
+        assertEquals("1933-01-01/2013-12-31",internalDateValidationService.getCorrectedDate());
     } 
 
 
@@ -116,6 +121,11 @@ public class InternalDateValidationServiceTest {
             eventDate = DateMidnight.parse("1904/01/01", formatter);
 		    assertTrue(service.checkWithAuthorHarvard(eventDate, collector));
         } catch (Exception e) {
+        	// NOTE: Jena parsing of a URL that redirects fails with a non-helpful error message.
+        	// java.lang.AssertionError: Unexpected exception org.xml.sax.SAXParseException; systemId: http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=J.%20F.%20Rock; lineNumber: 1; columnNumber: 50; White spaces are required between publicId and systemId.
+        	//	at org.junit.Assert.fail(Assert.java:93)
+        	//	at org.filteredpush.kuration.services.test.InternalDateValidationServiceTest.testValidateDateHUHBotanists(InternalDateValidationServiceTest.java:124)
+        	// If test fails with this message, the service is redirecting (currently http to https).
         	fail("Unexpected exception " + e.getMessage());
         }
         try{

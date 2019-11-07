@@ -507,7 +507,7 @@ public class InternalDateValidationService extends BaseCurationService implement
     public Boolean checkWithAuthorHarvard(DateMidnight eventDate, String collector){
     	Boolean result = null;
         addToServiceName("Harvard List of Botanists");
-        String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
+        String baseUrl = "https://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
         String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
         Model model = ModelFactory.createDefaultModel();
