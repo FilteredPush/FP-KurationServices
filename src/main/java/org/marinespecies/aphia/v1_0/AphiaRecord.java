@@ -8,54 +8,65 @@
 package org.marinespecies.aphia.v1_0;
 
 public class AphiaRecord  implements java.io.Serializable {
+
+/* Current (2019 Nov 6) elements in the AphiaRecord in the WSDL (for v1.0, which keeps changing without a version number change).
+<xsd:all>
+<xsd:element name="AphiaID" type="xsd:int"/>
+<xsd:element name="url" type="xsd:string"/>
+<xsd:element name="scientificname" type="xsd:string"/>
+<xsd:element name="authority" type="xsd:string"/>
+<xsd:element name="taxonRankID" type="xsd:int"/>
+<xsd:element name="rank" type="xsd:string"/>
+<xsd:element name="status" type="xsd:string"/>
+<xsd:element name="unacceptreason" type="xsd:string"/>
+<xsd:element name="valid_AphiaID" type="xsd:int"/>
+<xsd:element name="valid_name" type="xsd:string"/>
+<xsd:element name="valid_authority" type="xsd:string"/>
+<xsd:element name="parentNameUsageID" type="xsd:int"/>
+<xsd:element name="kingdom" type="xsd:string"/>
+<xsd:element name="phylum" type="xsd:string"/>
+<xsd:element name="class" type="xsd:string"/>
+<xsd:element name="order" type="xsd:string"/>
+<xsd:element name="family" type="xsd:string"/>
+<xsd:element name="genus" type="xsd:string"/>
+<xsd:element name="citation" type="xsd:string"/>
+<xsd:element name="lsid" type="xsd:string"/>
+<xsd:element name="isMarine" type="xsd:int"/>
+<xsd:element name="isBrackish" type="xsd:int"/>
+<xsd:element name="isFreshwater" type="xsd:int"/>
+<xsd:element name="isTerrestrial" type="xsd:int"/>
+<xsd:element name="isExtinct" type="xsd:int"/>
+<xsd:element name="match_type" type="xsd:string"/>
+<xsd:element name="modified" type="xsd:string"/>
+</xsd:all>
+*/
+
     private int aphiaID;
-
     private java.lang.String url;
-
     private java.lang.String scientificname;
-
     private java.lang.String authority;
-
     private java.lang.String rank;
-
+    private java.lang.Integer taxonRankID;  // new element, but API version still 1.0
     private java.lang.String status;
-
     private java.lang.String unacceptreason;
-
     private int valid_AphiaID;
-
     private java.lang.String valid_name;
-
     private java.lang.String valid_authority;
-
+    private java.lang.Integer parentNameUsageID;  // new element, but API version still 1.0
     private java.lang.String kingdom;
-
     private java.lang.String phylum;
-
     private java.lang.String _class;
-
     private java.lang.String order;
-
     private java.lang.String family;
-
     private java.lang.String genus;
-
     private java.lang.String citation;
-
     private java.lang.String lsid;
-
     private int isMarine;
-
     private int isBrackish;
-
     private int isFreshwater;
-
     private int isTerrestrial;
-
     private int isExtinct;
-
     private java.lang.String match_type;
-
     private java.lang.String modified;
 
     public AphiaRecord() {
@@ -67,6 +78,8 @@ public class AphiaRecord  implements java.io.Serializable {
            java.lang.String scientificname,
            java.lang.String authority,
            java.lang.String rank,
+           java.lang.Integer taxonRankID,
+           java.lang.Integer parentNameUsageID,
            java.lang.String status,
            java.lang.String unacceptreason,
            int valid_AphiaID,
@@ -92,6 +105,8 @@ public class AphiaRecord  implements java.io.Serializable {
            this.scientificname = scientificname;
            this.authority = authority;
            this.rank = rank;
+           this.taxonRankID = taxonRankID;
+           this.parentNameUsageID = parentNameUsageID;
            this.status = status;
            this.unacceptreason = unacceptreason;
            this.valid_AphiaID = valid_AphiaID;
@@ -204,6 +219,9 @@ public class AphiaRecord  implements java.io.Serializable {
         return rank;
     }
 
+    public java.lang.Integer getTaxonRankID() {
+        return taxonRankID;
+    }
 
     /**
      * Sets the rank value for this AphiaRecord.
@@ -214,7 +232,16 @@ public class AphiaRecord  implements java.io.Serializable {
         this.rank = rank;
     }
 
+    public void setTaxonRankID(java.lang.Integer taxonRankID) {
+        this.taxonRankID = taxonRankID;
+    }
 
+    public java.lang.Integer getParentNameUsageID() {
+        return parentNameUsageID;
+    }
+    public void setParentNameUsageID(java.lang.Integer parentNameUsageID) {
+        this.parentNameUsageID = parentNameUsageID;
+    }
     /**
      * Gets the status value for this AphiaRecord.
      * 
@@ -639,6 +666,12 @@ public class AphiaRecord  implements java.io.Serializable {
             ((this.rank==null && other.getRank()==null) || 
              (this.rank!=null &&
               this.rank.equals(other.getRank()))) &&
+            ((this.taxonRankID==null && other.getTaxonRankID()==null) || 
+             (this.taxonRankID!=null &&
+              this.taxonRankID.equals(other.getTaxonRankID()))) &&
+            ((this.parentNameUsageID==null && other.getParentNameUsageID()==null) || 
+             (this.parentNameUsageID!=null &&
+              this.parentNameUsageID.equals(other.getParentNameUsageID()))) &&
             ((this.status==null && other.getStatus()==null) || 
              (this.status!=null &&
               this.status.equals(other.getStatus()))) &&
@@ -797,6 +830,18 @@ public class AphiaRecord  implements java.io.Serializable {
         elemField.setFieldName("rank");
         elemField.setXmlName(new javax.xml.namespace.QName("", "rank"));
         elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
+        elemField.setNillable(false);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("taxonRankID");
+        elemField.setXmlName(new javax.xml.namespace.QName("", "taxonRankID"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+        elemField.setNillable(false);
+        typeDesc.addFieldDesc(elemField);
+        elemField = new org.apache.axis.description.ElementDesc();
+        elemField.setFieldName("parentNameUsageID");
+        elemField.setXmlName(new javax.xml.namespace.QName("", "parentNameUsageID"));
+        elemField.setXmlType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
         elemField.setNillable(false);
         typeDesc.addFieldDesc(elemField);
         elemField = new org.apache.axis.description.ElementDesc();

@@ -22,7 +22,8 @@ public class GeolocatesvcLocator extends org.apache.axis.client.Service implemen
     }
 
     // Use to get a proxy class for geolocatesvcSoap
-    private java.lang.String geolocatesvcSoap_address = "http://www.museum.tulane.edu/webservices/geolocatesvcv2/geolocatesvc.asmx";
+    //private java.lang.String geolocatesvcSoap_address = "http://www.museum.tulane.edu/webservices/geolocatesvcv2/geolocatesvc.asmx";
+    private java.lang.String geolocatesvcSoap_address = "https://www.geo-locate.org/webservices/geolocatesvcv2/geolocatesvc.asmx";
 
     public java.lang.String getgeolocatesvcSoapAddress() {
         return geolocatesvcSoap_address;
@@ -105,7 +106,7 @@ public class GeolocatesvcLocator extends org.apache.axis.client.Service implemen
     }
 
     public javax.xml.namespace.QName getServiceName() {
-        return new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "geolocatesvc");
+        return new javax.xml.namespace.QName("http://www.geo-locate.org/webservices/", "geolocatesvc");
     }
 
     private java.util.HashSet ports = null;
@@ -113,7 +114,7 @@ public class GeolocatesvcLocator extends org.apache.axis.client.Service implemen
     public java.util.Iterator getPorts() {
         if (ports == null) {
             ports = new java.util.HashSet();
-            ports.add(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "geolocatesvcSoap"));
+            ports.add(new javax.xml.namespace.QName("http://www.geo-locate.org/webservices/", "geolocatesvcSoap"));
         }
         return ports.iterator();
     }

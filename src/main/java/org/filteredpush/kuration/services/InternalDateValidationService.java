@@ -860,7 +860,7 @@ public class InternalDateValidationService extends BaseCurationService implement
     public Interval lookUpHarvardBotanist(String collector) { 
     	Interval result = null;
     	addToServiceName("Harvard List of Botanists");
-    	String baseUrl = "http://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
+    	String baseUrl = "https://kiki.huh.harvard.edu/databases/rdfgen.php?query=agent&name=";
     	String url = baseUrl + collector.replace(" ", "%20"); //may need to change
 
     	Model model = ModelFactory.createDefaultModel();
@@ -949,6 +949,9 @@ public class InternalDateValidationService extends BaseCurationService implement
     
     public Interval lookupEntomologist(String collector) { 
     	Interval result = null;
+    	
+    	return result;
+    	/* Service is no longer available.
     	 addToServiceName("FilteredPush Entomologists List");
          String url = "http://fp2.acis.ufl.edu:8983/solr/ento-bios/" ;
          String birthLabel = "birth";
@@ -1078,6 +1081,7 @@ public class InternalDateValidationService extends BaseCurationService implement
              }
          }   	
          return result;
+         */
     }
     
 }

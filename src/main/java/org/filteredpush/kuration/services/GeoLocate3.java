@@ -69,9 +69,11 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
 	private Vector<String> newFoundCoordinates;
 	private static final String ColumnDelimiterInCacheFile = "\t";
 	
-	private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
+	private final String url = "http://www.geo-locate.org/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
+	//private final String url = "http://www.museum.tulane.edu/webservices/geolocatesvc/geolocatesvc.asmx/Georef2?";
     //private final String url = "http://lore.genomecenter.ucdavis.edu/cache/geolocate.php";
-	private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";    
+	//private final String defaultNameSpace = "http://www.museum.tulane.edu/webservices/";    
+	private final String defaultNameSpace = "http://www.geo-locate.org/webservices/";    
 	
 	/*
 	 * If latitude or longitude is null, it means such information is missing in the original records
@@ -616,6 +618,7 @@ public class GeoLocate3 extends BaseCurationService implements IGeoRefValidation
         GeolocatesvcSoapProxy geolocateService = new GeolocatesvcSoapProxy();
         
         // Test page for georef2 at: http://www.museum.tulane.edu/webservices/geolocatesvcv2/geolocatesvc.asmx?op=Georef2
+        // now moved to: http://www.geo-locate.org/webservices/geolocatesvcv2/geolocatesvc.asmx?op=Georef2
         
         boolean hwyX = false;   // look for road/river crossing
         if (locality!=null && locality.toLowerCase().matches("bridge")) { 

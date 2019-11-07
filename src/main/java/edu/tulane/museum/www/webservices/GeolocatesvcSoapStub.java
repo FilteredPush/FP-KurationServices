@@ -25,117 +25,117 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.description.ParameterDesc param;
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("FindWaterBodiesWithinLocality");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription"), edu.tulane.museum.www.webservices.LocalityDescription.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription"), edu.tulane.museum.www.webservices.LocalityDescription.class, false, false);
         oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "ArrayOfString"));
+        oper.setReturnType(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "ArrayOfString"));
         oper.setReturnClass(java.lang.String[].class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "FindWaterBodiesWithinLocalityResult"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "FindWaterBodiesWithinLocalityResult"));
         param = oper.getReturnParamDesc();
-        param.setItemQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "string"));
+        param.setItemQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "string"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[0] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("Georef");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription"), edu.tulane.museum.www.webservices.LocalityDescription.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription"), edu.tulane.museum.www.webservices.LocalityDescription.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
         oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef_Result_Set"));
+        oper.setReturnType(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef_Result_Set"));
         oper.setReturnClass(edu.tulane.museum.www.webservices.Georef_Result_Set.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Result"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Result"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[1] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("Georef2");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Country"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Country"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "State"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "State"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "County"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "County"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityString"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityString"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
         oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef_Result_Set"));
+        oper.setReturnType(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef_Result_Set"));
         oper.setReturnClass(edu.tulane.museum.www.webservices.Georef_Result_Set.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Result"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Result"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[2] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("Georef3");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "vLocality"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "vLocality"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "vGeography"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "vGeography"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
         oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef_Result_Set"));
+        oper.setReturnType(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef_Result_Set"));
         oper.setReturnClass(edu.tulane.museum.www.webservices.Georef_Result_Set.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Result"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Result"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[3] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("SnapPointToNearestFoundWaterBody");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription"), edu.tulane.museum.www.webservices.LocalityDescription.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription"), edu.tulane.museum.www.webservices.LocalityDescription.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "WGS84Coordinate"), org.apache.axis.description.ParameterDesc.INOUT, new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "GeographicPoint"), edu.tulane.museum.www.webservices.GeographicPoint.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "WGS84Coordinate"), org.apache.axis.description.ParameterDesc.INOUT, new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "GeographicPoint"), edu.tulane.museum.www.webservices.GeographicPoint.class, false, false);
         oper.addParameter(param);
         oper.setReturnType(org.apache.axis.encoding.XMLType.AXIS_VOID);
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
@@ -144,74 +144,74 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("SnapPointToNearestFoundWaterBody2");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Country"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Country"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "State"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "State"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "County"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "County"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityString"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityString"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "WGS84Latitude"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "double"), double.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "WGS84Latitude"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "double"), double.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "WGS84Longitude"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "double"), double.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "WGS84Longitude"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "double"), double.class, false, false);
         oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "GeographicPoint"));
+        oper.setReturnType(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "GeographicPoint"));
         oper.setReturnClass(edu.tulane.museum.www.webservices.GeographicPoint.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "WGS84Coordinate"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "WGS84Coordinate"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[5] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("CalcUncertaintyPoly");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "PolyGenerationKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "PolyGenerationKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
         oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"));
         oper.setReturnClass(java.lang.String.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "CalcUncertaintyPolyResult"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "CalcUncertaintyPolyResult"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[6] = oper;
 
         oper = new org.apache.axis.description.OperationDesc();
         oper.setName("Georef2plusBG");
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Country"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Country"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "State"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "State"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "County"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "County"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityString"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityString"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string"), java.lang.String.class, false, false);
         param.setOmittable(true);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "HwyX"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "FindWaterbody"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "RestrictToLowestAdm"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doUncert"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "doPoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "displacePoly"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "polyAsLinkID"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"), boolean.class, false, false);
         oper.addParameter(param);
-        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
+        param = new org.apache.axis.description.ParameterDesc(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LanguageKey"), org.apache.axis.description.ParameterDesc.IN, new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"), int.class, false, false);
         oper.addParameter(param);
-        oper.setReturnType(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef_Result_Set"));
+        oper.setReturnType(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef_Result_Set"));
         oper.setReturnClass(edu.tulane.museum.www.webservices.Georef_Result_Set.class);
-        oper.setReturnQName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Result"));
+        oper.setReturnQName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Result"));
         oper.setStyle(org.apache.axis.constants.Style.WRAPPED);
         oper.setUse(org.apache.axis.constants.Use.LITERAL);
         _operations[7] = oper;
@@ -247,37 +247,37 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
             java.lang.Class simpledf = org.apache.axis.encoding.ser.SimpleDeserializerFactory.class;
             java.lang.Class simplelistsf = org.apache.axis.encoding.ser.SimpleListSerializerFactory.class;
             java.lang.Class simplelistdf = org.apache.axis.encoding.ser.SimpleListDeserializerFactory.class;
-            qName = new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "ArrayOfString");
+            qName = new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "ArrayOfString");
             cachedSerQNames.add(qName);
             cls = java.lang.String[].class;
             cachedSerClasses.add(cls);
             qName = new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "string");
-            qName2 = new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "string");
+            qName2 = new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "string");
             cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
             cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
 
-            qName = new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "GeographicPoint");
+            qName = new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "GeographicPoint");
             cachedSerQNames.add(qName);
             cls = edu.tulane.museum.www.webservices.GeographicPoint.class;
             cachedSerClasses.add(cls);
             cachedSerFactories.add(beansf);
             cachedDeserFactories.add(beandf);
 
-            qName = new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef_Result");
+            qName = new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef_Result");
             cachedSerQNames.add(qName);
             cls = edu.tulane.museum.www.webservices.Georef_Result.class;
             cachedSerClasses.add(cls);
             cachedSerFactories.add(beansf);
             cachedDeserFactories.add(beandf);
 
-            qName = new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef_Result_Set");
+            qName = new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef_Result_Set");
             cachedSerQNames.add(qName);
             cls = edu.tulane.museum.www.webservices.Georef_Result_Set.class;
             cachedSerClasses.add(cls);
             cachedSerFactories.add(beansf);
             cachedDeserFactories.add(beandf);
 
-            qName = new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "LocalityDescription");
+            qName = new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "LocalityDescription");
             cachedSerQNames.add(qName);
             cls = edu.tulane.museum.www.webservices.LocalityDescription.class;
             cachedSerClasses.add(cls);
@@ -357,12 +357,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[0]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/FindWaterBodiesWithinLocality");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/FindWaterBodiesWithinLocality");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "FindWaterBodiesWithinLocality"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "FindWaterBodiesWithinLocality"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
@@ -391,12 +391,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[1]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/Georef");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/Georef");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
@@ -425,16 +425,25 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[2]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/Georef2");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/Georef2");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef2"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef2"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {country, state, county, localityString, new java.lang.Boolean(hwyX), new java.lang.Boolean(findWaterbody), new java.lang.Boolean(restrictToLowestAdm), new java.lang.Boolean(doUncert), new java.lang.Boolean(doPoly), new java.lang.Boolean(displacePoly), new java.lang.Boolean(polyAsLinkID), new java.lang.Integer(languageKey)});
+ try {        java.lang.Object _resp = _call.invoke(
+		 		new java.lang.Object[] {country, state, county, localityString, 
+		 		new java.lang.Boolean(hwyX), 
+		 		new java.lang.Boolean(findWaterbody), 
+		 		new java.lang.Boolean(restrictToLowestAdm), 
+		 		new java.lang.Boolean(doUncert), 
+		 		new java.lang.Boolean(doPoly), 
+		 		new java.lang.Boolean(displacePoly), 
+		 		new java.lang.Boolean(polyAsLinkID), 
+		 		new java.lang.Integer(languageKey)});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
@@ -459,12 +468,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[3]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/Georef3");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/Georef3");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef3"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef3"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
@@ -493,12 +502,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[4]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/SnapPointToNearestFoundWaterBody");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/SnapPointToNearestFoundWaterBody");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "SnapPointToNearestFoundWaterBody"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "SnapPointToNearestFoundWaterBody"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
@@ -512,9 +521,9 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
             java.util.Map _output;
             _output = _call.getOutputParams();
             try {
-                WGS84Coordinate.value = (edu.tulane.museum.www.webservices.GeographicPoint) _output.get(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "WGS84Coordinate"));
+                WGS84Coordinate.value = (edu.tulane.museum.www.webservices.GeographicPoint) _output.get(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "WGS84Coordinate"));
             } catch (java.lang.Exception _exception) {
-                WGS84Coordinate.value = (edu.tulane.museum.www.webservices.GeographicPoint) org.apache.axis.utils.JavaUtils.convert(_output.get(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "WGS84Coordinate")), edu.tulane.museum.www.webservices.GeographicPoint.class);
+                WGS84Coordinate.value = (edu.tulane.museum.www.webservices.GeographicPoint) org.apache.axis.utils.JavaUtils.convert(_output.get(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "WGS84Coordinate")), edu.tulane.museum.www.webservices.GeographicPoint.class);
             }
         }
   } catch (org.apache.axis.AxisFault axisFaultException) {
@@ -529,12 +538,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[5]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/SnapPointToNearestFoundWaterBody2");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/SnapPointToNearestFoundWaterBody2");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "SnapPointToNearestFoundWaterBody2"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "SnapPointToNearestFoundWaterBody2"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
@@ -563,12 +572,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[6]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/CalcUncertaintyPoly");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/CalcUncertaintyPoly");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "CalcUncertaintyPoly"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "CalcUncertaintyPoly"));
 
         setRequestHeaders(_call);
         setAttachments(_call);
@@ -597,12 +606,12 @@ public class GeolocatesvcSoapStub extends org.apache.axis.client.Stub implements
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[7]);
         _call.setUseSOAPAction(true);
-        _call.setSOAPActionURI("http://www.museum.tulane.edu/webservices/Georef2plusBG");
+        _call.setSOAPActionURI("http://geo-locate.org/webservices/Georef2plusBG");
         _call.setEncodingStyle(null);
         _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
         _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
-        _call.setOperationName(new javax.xml.namespace.QName("http://www.museum.tulane.edu/webservices/", "Georef2plusBG"));
+        _call.setOperationName(new javax.xml.namespace.QName("http://geo-locate.org/webservices/", "Georef2plusBG"));
 
         setRequestHeaders(_call);
         setAttachments(_call);

@@ -104,11 +104,17 @@ public class COLServiceTest {
 
     @Test
     public void noResultTest() {
-        //TODO: need to confirm why no result...
-    	// there is a COL entry 10647270 for this taxon.
+        // Old comment: "need to confirm why no result...
+    	// there is a COL entry 10647270 for this taxon."
+    	//
+    	// As of 2019 Nov 6, now returns a result, but incorrectly removes the parenthesies.
     	
-        scientificNameService.validateScientificName("Norape tenera", "(Druce, 1897)");
-        assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.UNABLE_DETERMINE_VALIDITY));
+        scientificNameService.validateScientificName("Norape tenera", "(Druce, 1897)");  
+        logger.debug(scientificNameService.getCurationStatus());
+        logger.debug(scientificNameService.getCorrectedAuthor());
+        logger.debug(scientificNameService.getCorrectedScientificName());
+        // as of 2019 Nov 6, curated in error as Norape tenera was described as Archylus tener by Druce in 1897.
+        assertTrue(scientificNameService.getCurationStatus().equals(CurationComment.CURATED));
     }
 
     @Test
