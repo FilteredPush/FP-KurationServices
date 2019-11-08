@@ -27,8 +27,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>2.3.2</version>
           <configuration>
-            <source>1.7</source>
-            <target>1.7</target>
+            <source>1.8</source>
+            <target>1.8</target>
           </configuration>
         </plugin>
 
@@ -89,11 +89,16 @@
             <artifactId>kurator-ffdq</artifactId>
             <version>1.0.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.datakurator</groupId>
+            <artifactId>ffdq-api</artifactId>
+            <version>1.0.4</version>
+        </dependency>
         
         <dependency>
             <groupId>org.filteredpush</groupId>
             <artifactId>event_date_qc</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.5</version>
         </dependency>
 
         <dependency>
@@ -157,11 +162,13 @@
           <artifactId>jaxen</artifactId>
           <version>1.1.1</version>
         </dependency>
+<!--
         <dependency>
         	<groupId>axis</groupId>
         	<artifactId>axis</artifactId>
         	<version>1.4</version>
         </dependency>
+-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -187,7 +194,68 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>18.0</version>
+        </dependency>
+
+        <!-- listed in eclipse but not with dependency:resolve -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jcl</artifactId>
+            <version>2.7</version>
+        </dependency>
+
+
+        <!-- From Eclipse build path libraries -->
+        <dependency>
+        	<groupId>org.apache.axis</groupId>
+        	<artifactId>axis</artifactId>
+        	<version>1.4</version>
+        </dependency>
+        <dependency>
+        	<groupId>org.apache.axis</groupId>
+        	<artifactId>axis-jaxrpc</artifactId>
+        	<version>1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.axis</groupId>
+            <artifactId>axis-saaj</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-discovery</groupId>
+            <artifactId>commons-discovery</artifactId>
+            <version>0.5</version>
         </dependency>   
+        <dependency>
+        	<groupId>javax.xml.soap</groupId>
+        	<artifactId>saaj-impl</artifactId>
+        	<version>1.3</version>
+        </dependency>
+        <dependency>
+        	<groupId>javax.xml</groupId>
+        	<artifactId>jaxrpc</artifactId>
+        	<version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>wsdl4j</groupId>
+            <artifactId>wsdl4j</artifactId>
+            <version>1.6.3</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -197,7 +265,7 @@
             <name>Sonatype open source snapshot Repository</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
-
+<!--
         <repository>
             <id>ncsa.oss-sonatype</id>
             <name>NCSA OSS-Sonatype Repository</name>
@@ -209,7 +277,7 @@
             <name>NCSA 3rd party jar maven repository</name>
             <url>https://opensource.ncsa.illinois.edu/nexus/content/repositories/thirdparty/</url>
         </repository>
-
+-->
         <repository>
             <id>gbif-all</id>
             <name>GBIF repository</name>

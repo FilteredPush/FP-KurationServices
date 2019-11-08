@@ -16,7 +16,15 @@ public class WoRMSServiceTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		service = new WoRMSService(true);
+		try { 
+		    service = new WoRMSService(true);
+		} catch (java.lang.ExceptionInInitializerError e) {
+			logger.debug(e.getMessage());
+			service = new WoRMSService(false);
+		} catch (java.lang.NoClassDefFoundError e) {
+			logger.debug(e.getMessage());
+			service = new WoRMSService(false);
+		}
 	}
 
 
