@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.filteredpush</groupId>
     <artifactId>FP-KurationServices</artifactId>
-    <version>1.1.8</version>
+    <version>1.1.9-SNAPSHOT</version>
     <name>FP-KurationServices</name>
     <description>FilteredPush FP-KurationServices quality library.  Tools for quality control of biodiversity data.</description>
     <url>https://wiki.filteredpush.org/</url>
