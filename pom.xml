@@ -5,18 +5,53 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.filteredpush</groupId>
     <artifactId>FP-KurationServices</artifactId>
-    <version>1.1.8-SNAPSHOT</version>
-
-    <!--
-    <parent>
-        <groupId>org.filteredpush</groupId>
-        <artifactId>FP-Parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </parent>
-    -->
+    <version>1.1.8</version>
+    <name>FP-KurationServices</name>
+    <description>FilteredPush FP-KurationServices quality library.  Tools for quality control of biodiversity data.</description>
+    <url>https://wiki.filteredpush.org/</url>
+    <licenses>
+        <license>
+            <name>Apache license, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.html</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Paul J. Morris</name>
+            <email>mole@morris.net</email>
+            <organization>Museum of Comparative Zoology, Harvard University</organization>
+            <organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Lei Dou</name>
+            <organization>University of California, Davis</organization>
+        </developer>
+        <developer>
+            <name>Tianhong Song</name>
+            <organization>University of California, Davis</organization>
+        </developer>
+        <developer>
+            <name>David B. Lowery</name>
+            <email>lowerydb@gmail.com</email>
+            <organization>Museum of Comparative Zoology, Harvard University</organization>
+            <organizationUrl>https://www.mcz.harvard.edu/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Timothy McPhillips</name>
+            <email>tmcphillips@absoluteflow.org</email>
+            <organization>University of Illinois Urbana-Champaign</organization>
+            <organizationUrl>http://cirss.ischool.illinois.edu/index.php</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:FilteredPush/FP-KurationServices.git</connection>
+        <developerConnection>scm:git:git@github.com:FilteredPush/FP-KurationServices.git</developerConnection>
+        <url>git@github.com:FilteredPush/FP-KurationServices.git</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <geotools.version>13.2</geotools.version>
     </properties>
 
