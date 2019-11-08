@@ -4,6 +4,11 @@ Actor internals for biodiversity data quality control used in FP-Akka and in Kur
 
 See: http://wiki.datakurator.org/wiki/FP-Akka_User_Documentation 
 
+doi:10.5281/zenodo.3533267
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3533267.svg)](https://doi.org/10.5281/zenodo.3533267)
+
+
 # To Build
 
     mvn clean install -DskipTests
