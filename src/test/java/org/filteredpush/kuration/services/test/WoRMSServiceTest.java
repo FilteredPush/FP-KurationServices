@@ -107,7 +107,10 @@ public class WoRMSServiceTest {
     	String author = "";
 		service.validateScientificName(name, author);
 		logger.debug(service.getCorrectedScientificName() + " " + service.getCorrectedAuthor() + " " + service.getCurationStatus());
-		assertFalse(service.getCorrectedScientificName().equals("Limea lata"));
+		// NOTE: either the fuzzy matching or the WoRMS data has improvied, this case is now returning the correct result.
+		assertTrue(service.getCorrectedScientificName().equals("Limea lata"));
+		
+		// assertFalse(service.getCorrectedScientificName().equals("Limea lata"));
 		
 		// TODO: Mucella lima Martyn gets curated to Nucella lima (Gmelin, 1791).
 		// Shouldn't be curating if the genera and author differ.
