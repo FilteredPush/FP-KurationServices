@@ -122,18 +122,33 @@
         <dependency>
             <groupId>org.datakurator</groupId>
             <artifactId>kurator-ffdq</artifactId>
-            <version>1.0.4</version>
+            <version>3.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.datakurator</groupId>
             <artifactId>ffdq-api</artifactId>
-            <version>1.0.4</version>
+            <version>2.0.2</version>
         </dependency>
         
         <dependency>
             <groupId>org.filteredpush</groupId>
             <artifactId>event_date_qc</artifactId>
-            <version>1.0.5</version>
+            <version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>sci_name_qc</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>geo_ref_qc</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.filteredpush</groupId>
+            <artifactId>rec_occur_qc</artifactId>
+            <version>1.0.1</version>
         </dependency>
 
         <dependency>
@@ -147,11 +162,13 @@
             <version>4.0.0</version>
             <type>jar</type>
         </dependency>
+		<!-- no longer available 
         <dependency>
             <groupId>org.nocrala</groupId>
             <artifactId>shapefile-reader</artifactId>
             <version>1.0</version>
         </dependency>
+		-->
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>name-parser</artifactId>
